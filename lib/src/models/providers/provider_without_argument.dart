@@ -109,16 +109,14 @@ class Provider<T extends Object> extends InstantiableProvider {
 
   /// Function internally used by [_ProviderScopeState] that calls [_dispose].
   ///
-  /// This method is necessary to ensure that `value` is treated as `T`
-  /// instead of `dynamic` (what the dispose method of [_ProviderScopeState]
-  /// otherwise assumes).
+  /// This method is necessary to ensure that `value` is correctly casted as
+  /// `T` instead of `dynamic` (what the dispose method of
+  /// [_ProviderScopeState] otherwise assumes).
   ///
   /// It will dispose of the value held by the provider only if it was
   /// created (i.e. if [value] is null).
-  void _safeDisposeFn(Object? value) {
-    if (value != null) {
-      _dispose?.call(value as T);
-    }
+  void _safeDisposeFn(Object value) {
+    _dispose?.call(value as T);
   }
 
   /// Returns the type of the value.

@@ -39,16 +39,16 @@ class ProviderScope extends StatefulWidget {
   /// {@endtemplate}
   static _ProviderScopeState? _findState<T extends Object>(
     BuildContext context, {
-    required Provider<T> id,
+    required Provider id,
   }) {
     // try and find the override first
     final providerScopeOverride = ProviderScopeOverride._maybeOf(context);
     if (providerScopeOverride != null) {
       final state = providerScopeOverride.providerScopeState;
-      if (state.isProviderInScope<T>(id)) return state;
+      if (state.isProviderInScope(id)) return state;
     }
 
-    return _InheritedProvider.inheritFromNearest<T>(context, id, null)?.state;
+    return _InheritedProvider.inheritFromNearest(context, id, null)?.state;
   }
 
   /// {@template _getOrCreateProvider}
@@ -73,7 +73,7 @@ class ProviderScope extends StatefulWidget {
     final createdProvider = state.createdProviderValues[id];
     if (createdProvider != null) return createdProvider as T;
     // if the provider is not already present, create it lazily
-    return state.createProviderValue<T>(id);
+    return state.createProviderValue(id) as T;
   }
 
   /// {@macro _findState}
@@ -85,10 +85,10 @@ class ProviderScope extends StatefulWidget {
     final providerScopeOverride = ProviderScopeOverride._maybeOf(context);
     if (providerScopeOverride != null) {
       final state = providerScopeOverride.providerScopeState;
-      if (state.isArgProviderInScope<T, A>(id)) return state;
+      if (state.isArgProviderInScope(id)) return state;
     }
 
-    return _InheritedProvider.inheritFromNearest<T>(context, null, id)?.state;
+    return _InheritedProvider.inheritFromNearest(context, null, id)?.state;
   }
 
   /// {@macro _getOrCreateProvider}
@@ -105,7 +105,7 @@ class ProviderScope extends StatefulWidget {
     final createdProvider = state.createdProviderValues[providerAsId];
     if (createdProvider != null) return createdProvider as T;
     // if the provider is not already present, create it lazily
-    return state.createProviderValueForArgProvider<T, A>(id);
+    return state.createProviderValueForArgProvider(id) as T;
   }
 }
 
@@ -114,18 +114,17 @@ class _ProviderScopeState extends State<ProviderScope> {
   /// Stores all the argument providers in the current scope. The values are
   /// intermediate providers, which are used as internal IDs by
   /// [createdProviderValues].
-  final allArgProvidersInScope =
-      HashMap<ArgProvider<Object, dynamic>, Provider<Object>>();
+  final allArgProvidersInScope = HashMap<ArgProvider, Provider>();
 
   /// Stores all the providers without argument in the current scope.
   /// The values are intermediate providers, which are used as internal IDs
   /// by [createdProviderValues].
-  final allProvidersInScope = HashMap<Provider<Object>, Provider<Object>>();
+  final allProvidersInScope = HashMap<Provider, Provider>();
 
   /// Stores all the created values (associated to the providers).
   /// The keys are the intermediate providers (which are not necessarily the
   /// globally defined providers), while the values are the provided values.
-  final createdProviderValues = HashMap<Provider<Object>, Object?>();
+  final createdProviderValues = HashMap<Provider, Object>();
 
   @override
   void initState() {
@@ -134,13 +133,12 @@ class _ProviderScopeState extends State<ProviderScope> {
     if (widget.providers != null) {
       // Providers and ArgProviders logic ---------------------------------------
 
-      final providers =
-          widget.providers!.whereType<Provider<Object>>().toList();
+      final providers = widget.providers!.whereType<Provider>().toList();
 
       assert(
         () {
           // check if there are multiple providers of the same type
-          final ids = <Provider<Object>>[];
+          final ids = <Provider>[];
           for (final provider in providers) {
             final id = provider; // the instance of the provider
             if (ids.contains(id)) {
@@ -169,14 +167,13 @@ class _ProviderScopeState extends State<ProviderScope> {
         }
       }
 
-      final argProviderInits = widget.providers!
-          .whereType<ArgProviderWithArg<Object, dynamic>>()
-          .toList();
+      final argProviderInits =
+          widget.providers!.whereType<ArgProviderWithArg>().toList();
 
       assert(
         () {
           // check if there are multiple providers of the same type
-          final ids = <ArgProvider<Object, dynamic>>[];
+          final ids = <ArgProvider>[];
           for (final provider in argProviderInits) {
             final id = provider._argProvider; // the instance of the provider
             if (ids.contains(id)) {
@@ -212,7 +209,7 @@ class _ProviderScopeState extends State<ProviderScope> {
       assert(
         () {
           // check if there are multiple providers of the same type
-          final ids = <Provider<Object>>[];
+          final ids = <Provider>[];
           for (final override in providerOverrides) {
             final id = override._provider; // the instance of the provider
             if (ids.contains(id)) {
@@ -244,7 +241,7 @@ class _ProviderScopeState extends State<ProviderScope> {
       assert(
         () {
           // check if there are multiple providers of the same type
-          final ids = <ArgProvider<Object, dynamic>>[];
+          final ids = <ArgProvider>[];
           for (final override in argProviderOverrides) {
             final id = override._argProvider; // the instance of the provider
             if (ids.contains(id)) {
@@ -291,15 +288,15 @@ class _ProviderScopeState extends State<ProviderScope> {
   // Providers logic ----------------------------------------------------------
 
   /// Tries to find the intermediate [Provider] associated with this [id].
-  Provider<T>? getIntermediateProvider<T extends Object>(Provider<T> id) {
-    return allProvidersInScope[id] as Provider<T>?;
+  Provider? getIntermediateProvider(Provider id) {
+    return allProvidersInScope[id];
   }
 
   /// Creates a provider value and stores it to [createdProviderValues].
-  T createProviderValue<T extends Object>(Provider<T> id) {
-    // find the provider in the list
-    final provider = getIntermediateProvider<T>(id)!;
-    // create and return it
+  dynamic createProviderValue(Provider id) {
+    // find the intermediate provider in the list
+    final provider = getIntermediateProvider(id)!;
+    // create and return its value
     final value = provider._create(context);
     // store the created provider value
     createdProviderValues[id] = value;
@@ -308,36 +305,37 @@ class _ProviderScopeState extends State<ProviderScope> {
 
   /// Used to determine if the requested provider is present in the current
   /// scope.
-  bool isProviderInScope<T extends Object>(Provider<T> id) {
+  bool isProviderInScope(Provider id) {
     // Find the provider by type
-    return getIntermediateProvider<T>(id) != null;
+    return getIntermediateProvider(id) != null;
   }
 
   // ArgProviders logic -------------------------------------------------------
 
   /// Tries to find the intermediate [Provider] associated with this [id].
-  Provider<T>? getIntermediateProviderForArgProvider<T extends Object, A>(
-    ArgProvider<T, A> id,
+  Provider? getIntermediateProviderForArgProvider(
+    ArgProvider id,
   ) {
-    return allArgProvidersInScope[id] as Provider<T>?;
+    return allArgProvidersInScope[id];
   }
 
   /// Creates a provider value and stores it to [createdProviderValues].
-  T createProviderValueForArgProvider<T extends Object, A>(
-    ArgProvider<T, A> id,
+  dynamic createProviderValueForArgProvider(
+    ArgProvider id,
   ) {
-    // find the provider in the list
-    final provider = getIntermediateProviderForArgProvider<T, A>(id)!;
-    // create and return it
+    // find the intermediate provider in the list
+    final provider = getIntermediateProviderForArgProvider(id)!;
+    // create and return its value
     final value = provider._create(context);
-    // store the created provider
+    // store the created provider value
     createdProviderValues[allArgProvidersInScope[id]!] = value;
     return value;
   }
 
-  /// Used to determine if the requested provider is present in the current scope.
-  bool isArgProviderInScope<T extends Object, A>(ArgProvider<T, A> id) {
-    return getIntermediateProviderForArgProvider<T, A>(id) != null;
+  /// Used to determine if the requested provider is present in the current
+  /// scope.
+  bool isArgProviderInScope(ArgProvider id) {
+    return getIntermediateProviderForArgProvider(id) != null;
   }
 
   // Rest of _ProviderScopeState ----------------------------------------------
@@ -355,7 +353,7 @@ class _ProviderScopeState extends State<ProviderScope> {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties.add(
-      IterableProperty('createdProviders', createdProviderValues.values),
+      IterableProperty('createdProviderValues', createdProviderValues.values),
     );
   }
   // coverage:ignore-end
@@ -372,18 +370,18 @@ class _InheritedProvider extends InheritedModel<Object> {
     return false;
   }
 
-  bool isSupportedAspectWithType<T extends Object>(
-    Provider<T>? providerId,
-    ArgProvider<T, dynamic>? argProviderId,
+  bool isSupportedAspectWithType(
+    Provider? providerId,
+    ArgProvider? argProviderId,
   ) {
     assert(
       (providerId != null) ^ (argProviderId != null),
       'Either a Provider or an ArgProvider must be used as ID.',
     );
     if (providerId != null) {
-      return state.isProviderInScope<T>(providerId);
+      return state.isProviderInScope(providerId);
     }
-    return state.isArgProviderInScope<T, dynamic>(argProviderId!);
+    return state.isArgProviderInScope(argProviderId!);
   }
 
   @override
@@ -399,10 +397,10 @@ class _InheritedProvider extends InheritedModel<Object> {
   /// the searched provider (aspect).
   /// This is a small optimization that avoids traversing all of the
   /// [ProviderScope] ancestors.
-  static InheritedElement? _findNearestModel<T extends Object>(
+  static InheritedElement? _findNearestModel(
     BuildContext context,
-    Provider<T>? providerId,
-    ArgProvider<T, dynamic>? argProviderId,
+    Provider? providerId,
+    ArgProvider? argProviderId,
   ) {
     assert(
       (providerId != null) ^ (argProviderId != null),
@@ -422,7 +420,7 @@ class _InheritedProvider extends InheritedModel<Object> {
     final modelWidget = model.widget as _InheritedProvider;
 
     // The model contains the aspect, the ancestor has been found, return it.
-    if (modelWidget.isSupportedAspectWithType<T>(providerId, argProviderId)) {
+    if (modelWidget.isSupportedAspectWithType(providerId, argProviderId)) {
       return model;
     }
 
@@ -438,7 +436,7 @@ class _InheritedProvider extends InheritedModel<Object> {
       return null;
     }
 
-    return _findNearestModel<T>(modelParent!, providerId, argProviderId);
+    return _findNearestModel(modelParent!, providerId, argProviderId);
   }
 
   /// Makes [context] dependent on the specified [providerId] of an
@@ -448,10 +446,10 @@ class _InheritedProvider extends InheritedModel<Object> {
   /// [_InheritedProvider] ancestor whose [isSupportedAspect] returns true.
   ///
   /// If no ancestor of type _InheritedProvider exists, null is returned.
-  static _InheritedProvider? inheritFromNearest<T extends Object>(
+  static _InheritedProvider? inheritFromNearest(
     BuildContext context,
-    Provider<T>? providerId,
-    ArgProvider<T, dynamic>? argProviderId,
+    Provider? providerId,
+    ArgProvider? argProviderId,
   ) {
     assert(
       (providerId != null) ^ (argProviderId != null),
@@ -460,7 +458,7 @@ class _InheritedProvider extends InheritedModel<Object> {
 
     // Try and find a model in the ancestors for which isSupportedAspect(aspect)
     // is true.
-    final model = _findNearestModel<T>(context, providerId, argProviderId);
+    final model = _findNearestModel(context, providerId, argProviderId);
     if (model == null) {
       return null;
     }
@@ -477,7 +475,7 @@ class ProviderWithoutScopeError extends Error {
   ProviderWithoutScopeError(this.provider);
 
   // ignore: public_member_api_docs
-  final Provider<Object> provider;
+  final Provider provider;
 
   @override
   String toString() {
@@ -494,7 +492,7 @@ class ArgProviderWithoutScopeError extends Error {
   ArgProviderWithoutScopeError(this.argProvider);
 
   // ignore: public_member_api_docs
-  final ArgProvider<Object, dynamic> argProvider;
+  final ArgProvider argProvider;
 
   @override
   String toString() {

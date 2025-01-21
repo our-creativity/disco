@@ -18,7 +18,39 @@ class NumberContainer {
 }
 
 void main() {
-  testWidgets('Test ProviderScopePortal', (tester) async {
+  testWidgets('Test ProviderScope throws an error for a not found provider',
+      (tester) async {
+    final zeroProvider = Provider((_) => 0);
+    final tenProvider = Provider((_) => 10);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [
+              zeroProvider,
+            ],
+            child: Builder(
+              builder: (context) {
+                final ten = tenProvider.get(context);
+                return Text(ten.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.takeException(),
+      const TypeMatcher<ProviderWithoutScopeError>().having(
+        (error) => error.provider,
+        'Matching the wrong ID should result in a ProviderError.',
+        equals(tenProvider),
+      ),
+    );
+  });
+
+  testWidgets('Test ProviderScopePortal works', (tester) async {
     final numberContainerProvider = Provider((_) => const NumberContainer(1));
 
     Future<void> showNumberDialog({required BuildContext context}) {
