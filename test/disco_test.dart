@@ -43,7 +43,9 @@ void main() {
   });
 
   testWidgets('Test ProviderScopePortal works', (tester) async {
-    final numberContainerProvider = Provider((_) => const NumberContainer(1));
+    final numberContainerProvider = Provider(
+      (_) => const NumberContainer(1),
+    );
 
     Future<void> showNumberDialog({required BuildContext context}) {
       return showDialog(
@@ -99,7 +101,7 @@ void main() {
     var count = 0;
     final numberProvider = Provider((_) => count);
 
-    final keyNotifier = ValueNotifier<Key>(Key("initial"));
+    final keyNotifier = ValueNotifier<Key>(const Key('initial'));
 
     await tester.pumpWidget(
       MaterialApp(
@@ -117,11 +119,11 @@ void main() {
                     final number = numberProvider.get(context);
                     return Column(
                       children: [
-                        Text("number: ${number.toString()}"),
+                        Text('number: $number'),
                         ElevatedButton(
                           onPressed: () {
                             count = 1;
-                            keyNotifier.value = Key("changed");
+                            keyNotifier.value = const Key('changed');
                           },
                           child: const Text('change key'),
                         ),
@@ -138,21 +140,21 @@ void main() {
     Finder textFinder(String value) => find.textContaining(value);
 
     await tester.pumpAndSettle();
-    expect(textFinder("number: 0"), findsOneWidget);
+    expect(textFinder('number: 0'), findsOneWidget);
 
     final buttonFinder = find.text('change key');
     expect(buttonFinder, findsOneWidget);
     await tester.tap(buttonFinder);
     await tester.pumpAndSettle();
 
-    expect(textFinder("number: 1"), findsOneWidget);
+    expect(textFinder('number: 1'), findsOneWidget);
   });
 
   testWidgets('Test key change in ProviderScope (with ArgProvider)',
       (tester) async {
     final numberProvider = Provider.withArgument((_, int arg) => arg);
 
-    final initialKey = Key("initial");
+    const initialKey = Key('initial');
 
     final keyNotifier = ValueNotifier<Key>(initialKey);
 
@@ -172,10 +174,10 @@ void main() {
                     final number = numberProvider.get(context);
                     return Column(
                       children: [
-                        Text("number: ${number.toString()}"),
+                        Text('number: $number'),
                         ElevatedButton(
                           onPressed: () {
-                            keyNotifier.value = Key("changed");
+                            keyNotifier.value = const Key('changed');
                           },
                           child: const Text('change key'),
                         ),
@@ -192,13 +194,13 @@ void main() {
     Finder textFinder(String value) => find.text(value);
 
     await tester.pumpAndSettle();
-    expect(textFinder("number: 0"), findsOneWidget);
+    expect(textFinder('number: 0'), findsOneWidget);
 
     final buttonFinder = find.text('change key');
     expect(buttonFinder, findsOneWidget);
     await tester.tap(buttonFinder);
     await tester.pumpAndSettle();
 
-    expect(textFinder("number: 1"), findsOneWidget);
+    expect(textFinder('number: 1'), findsOneWidget);
   });
 }

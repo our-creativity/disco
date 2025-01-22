@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors_in_immutables
-
 part of '../../../disco.dart';
 
 /// A function that creates an object of type [T].
@@ -107,7 +105,8 @@ class Provider<T extends Object> extends InstantiableProvider {
 
   // Utils leveraged by ProviderScope -----------------------------------------
 
-  /// Function internally used by [_ProviderScopeState] that calls [_disposeValue].
+  /// Function internally used by [_ProviderScopeState] that calls
+  /// [_disposeValue].
   ///
   /// This method is necessary to ensure that `value` is correctly casted as
   /// `T` instead of `Object` (what the dispose method of

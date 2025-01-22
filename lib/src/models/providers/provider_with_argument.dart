@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_const_constructors_in_immutables
-
 part of '../../../disco.dart';
 
 /// A function that creates an object of type [T] with an argument of type [A].
@@ -34,6 +32,8 @@ class ArgProvider<T extends Object, A> {
 
   // Overrides ----------------------------------------------------------------
 
+  /// It creates an override of this provider to be passed to
+  /// [ProviderScopeOverride].
   ArgProviderOverride<T, A> overrideWith({
     required A argument,
     CreateArgProviderValue<T, A>? createValue,

@@ -24,9 +24,9 @@ class _InheritedProviderScopePortal extends InheritedWidget {
 class ProviderScopePortal extends StatelessWidget {
   /// {@macro ProviderScopePortal}
   const ProviderScopePortal({
-    super.key,
     required this.mainContext,
     required this.child,
+    super.key,
   });
 
   /// The context belonging to the main widget tree, which is used to retrieve

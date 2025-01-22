@@ -18,9 +18,9 @@ class MultipleProviderScopeOverrideError extends Error {
 class ProviderScopeOverride extends StatefulWidget {
   /// {@macro ProviderScopeOverride}
   const ProviderScopeOverride({
-    super.key,
     required this.overrides,
     required this.child,
+    super.key,
   });
 
   /// The widget child that gets access to the [overrides].

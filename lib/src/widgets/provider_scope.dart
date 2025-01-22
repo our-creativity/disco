@@ -1,3 +1,7 @@
+// It is a bit simpler to follow the internal logic if the generic types are
+// not displayed for all providers and argument providers.
+// ignore_for_file: strict_raw_type
+
 part of '../../disco.dart';
 
 /// {@template ProviderScope}
@@ -7,15 +11,15 @@ part of '../../disco.dart';
 class ProviderScope extends StatefulWidget {
   /// {@macro ProviderScope}
   const ProviderScope({
-    super.key,
     required this.child,
     required List<InstantiableProvider> this.providers,
+    super.key,
   }) : overrides = null;
 
   const ProviderScope._overrides({
-    super.key,
     required this.child,
     required List<Override> this.overrides,
+    super.key,
   }) : providers = null;
 
   /// {@template ProviderScope.child}
@@ -131,7 +135,7 @@ class _ProviderScopeState extends State<ProviderScope> {
     super.initState();
 
     if (widget.providers != null) {
-      // Providers and ArgProviders logic ---------------------------------------
+      // Providers and ArgProviders logic --------------------------------------
 
       final providers = widget.providers!.whereType<Provider>().toList();
 
@@ -477,7 +481,7 @@ class ProviderWithoutScopeError extends Error {
   /// {@macro ProviderWithoutScopeError}
   ProviderWithoutScopeError(this.provider);
 
-  // ignore: public_member_api_docs
+  /// The provider that is not found
   final Provider provider;
 
   @override
@@ -494,7 +498,7 @@ class ArgProviderWithoutScopeError extends Error {
   /// {@macro ArgProviderWithoutScopeError}
   ArgProviderWithoutScopeError(this.argProvider);
 
-  // ignore: public_member_api_docs
+  /// The provider that is not found
   final ArgProvider argProvider;
 
   @override
