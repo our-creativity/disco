@@ -65,11 +65,11 @@ class ArgProvider<T extends Object, A> {
 
   // Utils leveraged by ProviderScope -----------------------------------------
 
-  /// It creates an [ArgProviderWithArg] with the passed argument.
+  /// It creates an [InstantiableArgProvider] with the passed argument.
   /// This ensures that an [ArgProvider] inserted into the widget tree always
   /// has an initial argument and, thus, can be created.
-  ArgProviderWithArg<T, A> call(A arg) {
-    return ArgProviderWithArg._(this, arg);
+  InstantiableArgProvider<T, A> call(A arg) {
+    return InstantiableArgProvider._(this, arg);
   }
 
   /// Returns the type of the value
@@ -80,22 +80,23 @@ class ArgProvider<T extends Object, A> {
 
   /// Given an argument, creates a [Provider] with that argument.
   /// This method is used internally by [ProviderScope].
-  Provider<T> _generateProvider(A arg) => Provider<T>(
+  Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
         (context) => _create(context, arg),
         dispose: _dispose,
         lazy: _lazy,
       );
 }
 
-/// {@template ArgProviderWithArg}
+/// {@template InstantiableArgProvider}
 /// An instance of this class is needed to insert an [ArgProvider] into the
 /// widget tree. This ensures that an initial argument is always present and,
 /// thus, the [ArgProvider] can be correctly created.
 /// {@endtemplate}
 @immutable
-class ArgProviderWithArg<T extends Object, A> extends InstantiableProvider {
-  /// {@macro ArgProviderWithArg}
-  ArgProviderWithArg._(this._argProvider, this._arg) : super._();
+class InstantiableArgProvider<T extends Object, A>
+    extends InstantiableProvider {
+  /// {@macro InstantiableArgProvider}
+  InstantiableArgProvider._(this._argProvider, this._arg) : super._();
   final ArgProvider<T, A> _argProvider;
   final A _arg;
 }

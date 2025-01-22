@@ -32,7 +32,7 @@ class ArgProviderOverride<T extends Object, A> extends Override {
 
   /// Given an argument, creates a [Provider] with that argument.
   /// This method is used internally by [ProviderScope].
-  Provider<T> _generateProvider(A arg) => Provider<T>(
+  Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
         (context) =>
             _create?.call(context, arg) ?? _argProvider._create(context, arg),
         dispose: _dispose ?? _argProvider._dispose,

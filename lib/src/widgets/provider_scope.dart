@@ -168,7 +168,7 @@ class _ProviderScopeState extends State<ProviderScope> {
       }
 
       final argProviderInits =
-          widget.providers!.whereType<ArgProviderWithArg>().toList();
+          widget.providers!.whereType<InstantiableArgProvider>().toList();
 
       assert(
         () {
@@ -189,7 +189,7 @@ class _ProviderScopeState extends State<ProviderScope> {
       for (final argProviderInit in argProviderInits) {
         final id = argProviderInit._argProvider;
         allArgProvidersInScope[id] = argProviderInit._argProvider
-            ._generateProvider(argProviderInit._arg);
+            ._generateIntermediateProvider(argProviderInit._arg);
 
         // create non lazy providers.
         if (!argProviderInit._argProvider._lazy) {
@@ -225,7 +225,7 @@ class _ProviderScopeState extends State<ProviderScope> {
       for (final override in providerOverrides) {
         final id = override._provider;
 
-        allProvidersInScope[id] = override._generateProvider();
+        allProvidersInScope[id] = override._generateIntermediateProvider();
 
         // create non lazy providers.
         if (!(override._lazy ?? override._provider._lazy)) {
@@ -258,7 +258,7 @@ class _ProviderScopeState extends State<ProviderScope> {
         final id = override._argProvider;
 
         allArgProvidersInScope[id] =
-            override._generateProvider(override._argument);
+            override._generateIntermediateProvider(override._argument);
 
         // create non lazy providers.
         if (!(override._lazy ?? override._argProvider._lazy)) {

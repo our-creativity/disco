@@ -27,7 +27,7 @@ class ProviderOverride<T extends Object> extends Override {
 
   /// Creates a [Provider].
   /// This method is used internally by [ProviderScope].
-  Provider<T> _generateProvider() => Provider<T>(
+  Provider<T> _generateIntermediateProvider() => Provider<T>(
         (context) => _create?.call(context) ?? _provider._create(context),
         dispose: _dispose ?? _provider._dispose,
         lazy: _lazy ?? _provider._lazy,
