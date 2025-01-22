@@ -6,4 +6,115 @@
 # https://dart.dev/guides/libraries/private-files#pubspeclock.
 pubspec.lock
 
+# Flutter/Dart/Pub related
 build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VSCode (allow launch configs, extensions, common settings, ...)
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Web (flutter and node)
+lib/generated_plugin_registrant.dart
+node_modules
+package-lock.json
+
+# Example's Platforms
+example/android/
+example/ios/
+example/linux/
+example/macos/
+!example/macos/Runner/DebugProfile.entitlements
+example/web/
+example/windows/
+# Example's Flutter/Dart/Pub related
+example/build/
+example/.dart_tool/
+example/.flutter-plugins
+example/.flutter-plugins-dependencies
+example/.packages
+example/.pub-cache/
+example/.pub/
+# Example's Miscellaneous
+example/.DS_Store
+example/.atom/
+example/.build/
+example/.buildlog/
+example/.history
+example/.svn/
+example/.swiftpm/
+example/migrate_working_dir/
+# Example's IntelliJ
+example/.idea/
+# Example's Symbolication related
+example/app.*.symbols
+# Example's Obfuscation related
+example/app.*.map.json
+# Example's Web (flutter and node)
+example/lib/generated_plugin_registrant.dart
+example/node_modules
+example/package-lock.json
+
+# Further examples' Platforms
+further_examples/**/android/
+further_examples/**/ios/
+further_examples/**/linux/
+further_examples/**/macos/
+!further_examples/**/macos/Runner/DebugProfile.entitlements
+further_examples/**/web/
+further_examples/**/windows/
+# Further examples' Flutter/Dart/Pub related
+further_examples/**/build/
+further_examples/**/.dart_tool/
+further_examples/**/.flutter-plugins
+further_examples/**/.flutter-plugins-dependencies
+further_examples/**/.packages
+further_examples/**/.pub-cache/
+further_examples/**/.pub/
+# Further examples' Miscellaneous
+further_examples/**/.DS_Store
+further_examples/**/.atom/
+further_examples/**/.build/
+further_examples/**/.buildlog/
+further_examples/**/.history
+further_examples/**/.svn/
+further_examples/**/.swiftpm/
+further_examples/**/migrate_working_dir/
+# Further examples' IntelliJ
+further_examples/**/.idea/
+# Further examples' Symbolication related
+further_examples/**/app.*.symbols
+# Further examples' Obfuscation related
+further_examples/**/app.*.map.json
+# Further examples' Web (flutter and node)
+further_examples/**/lib/generated_plugin_registrant.dart
+further_examples/**/node_modules
+further_examples/**/package-lock.json

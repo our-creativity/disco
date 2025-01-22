@@ -15,9 +15,10 @@ class MultipleProviderScopeOverrideError extends Error {
 ///
 /// This is useful for widget testing where mocking is needed.
 /// {@endtemplate}
+@visibleForTesting
 class ProviderScopeOverride extends StatefulWidget {
   /// {@macro ProviderScopeOverride}
-  const ProviderScopeOverride({
+  ProviderScopeOverride({
     required this.overrides,
     required this.child,
     super.key,

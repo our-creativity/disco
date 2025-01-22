@@ -23,7 +23,7 @@ class _InheritedProviderScopePortal extends InheritedWidget {
 /// {@endtemplate}
 class ProviderScopePortal extends StatelessWidget {
   /// {@macro ProviderScopePortal}
-  const ProviderScopePortal({
+  ProviderScopePortal({
     required this.mainContext,
     required this.child,
     super.key,

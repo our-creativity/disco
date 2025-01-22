@@ -1,0 +1,21 @@
+name: example
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  disco:
+    path: "../."
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^7.0.0
+
+flutter:
+  uses-material-design: true
