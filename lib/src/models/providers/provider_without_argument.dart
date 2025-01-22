@@ -54,8 +54,8 @@ class Provider<T extends Object> extends InstantiableProvider {
   ///
   /// NB: the provider itself is not lazily created, only its contained value.
   ///
-  /// If this value is true the provider will be [_createValue]d only
-  /// when retrieved from descendants.
+  /// If this value is true, the provider's value will be created only
+  /// when retrieved from descendants for the first time.
   /// {@endtemplate}
   final bool _lazy;
 
@@ -91,6 +91,9 @@ class Provider<T extends Object> extends InstantiableProvider {
 
   /// Injects the value held by a provider. In case the provider is not found,
   /// it throws a [ProviderWithoutScopeError].
+  ///
+  /// NB: You should prefer [maybeGet] over [get] to retrieve a provider
+  /// which you are aware it could be not present.
   T get(BuildContext context) {
     final provider = maybeGet(context);
     if (provider == null) throw ProviderWithoutScopeError(this);
