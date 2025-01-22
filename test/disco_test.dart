@@ -95,12 +95,11 @@ void main() {
   });
 
   testWidgets('Test key change in ProviderScope (with Provider)',
-      (tester) async {    
-    final nameProvider = Provider((_) => "ABC");
+      (tester) async {
+    var count = 0;
+    final numberProvider = Provider((_) => count);
 
-    final initialKey = Key("one");
-
-    final keyNotifier = ValueNotifier<Key>(initialKey);
+    final keyNotifier = ValueNotifier<Key>(Key("initial"));
 
     await tester.pumpWidget(
       MaterialApp(
@@ -111,17 +110,18 @@ void main() {
               return ProviderScope(
                 key: key,
                 providers: [
-                  nameProvider,
+                  numberProvider,
                 ],
                 child: Builder(
                   builder: (context) {
-                    final name = nameProvider.get(context);
+                    final number = numberProvider.get(context);
                     return Column(
                       children: [
-                        Text(name),
+                        Text("number: ${number.toString()}"),
                         ElevatedButton(
                           onPressed: () {
-                            keyNotifier.value = Key("two");
+                            count = 1;
+                            keyNotifier.value = Key("changed");
                           },
                           child: const Text('change key'),
                         ),
@@ -135,24 +135,24 @@ void main() {
         ),
       ),
     );
-    Finder textFinder(String value) => find.text(value);
+    Finder textFinder(String value) => find.textContaining(value);
 
     await tester.pumpAndSettle();
-    expect(textFinder("ABC"), findsOneWidget);
+    expect(textFinder("number: 0"), findsOneWidget);
 
     final buttonFinder = find.text('change key');
     expect(buttonFinder, findsOneWidget);
     await tester.tap(buttonFinder);
     await tester.pumpAndSettle();
 
-    expect(textFinder("ABC"), findsOneWidget);
+    expect(textFinder("number: 1"), findsOneWidget);
   });
 
   testWidgets('Test key change in ProviderScope (with ArgProvider)',
       (tester) async {
-    final nameProvider = Provider.withArgument((_, String arg) => arg);
+    final numberProvider = Provider.withArgument((_, int arg) => arg);
 
-    final initialKey = Key("Miladin");
+    final initialKey = Key("initial");
 
     final keyNotifier = ValueNotifier<Key>(initialKey);
 
@@ -165,17 +165,17 @@ void main() {
               return ProviderScope(
                 key: key,
                 providers: [
-                  nameProvider(key == initialKey ? "Miladin" : "Mario"),
+                  numberProvider(key == initialKey ? 0 : 1),
                 ],
                 child: Builder(
                   builder: (context) {
-                    final name = nameProvider.get(context);
+                    final number = numberProvider.get(context);
                     return Column(
                       children: [
-                        Text(name),
+                        Text("number: ${number.toString()}"),
                         ElevatedButton(
                           onPressed: () {
-                            keyNotifier.value = Key("Mario");
+                            keyNotifier.value = Key("changed");
                           },
                           child: const Text('change key'),
                         ),
@@ -192,13 +192,13 @@ void main() {
     Finder textFinder(String value) => find.text(value);
 
     await tester.pumpAndSettle();
-    expect(textFinder("Miladin"), findsOneWidget);
+    expect(textFinder("number: 0"), findsOneWidget);
 
     final buttonFinder = find.text('change key');
     expect(buttonFinder, findsOneWidget);
     await tester.tap(buttonFinder);
     await tester.pumpAndSettle();
 
-    expect(textFinder("Mario"), findsOneWidget);
+    expect(textFinder("number: 1"), findsOneWidget);
   });
 }
