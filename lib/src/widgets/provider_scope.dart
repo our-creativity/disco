@@ -61,7 +61,7 @@ class ProviderScope extends StatefulWidget {
   /// (no associated value in [_ProviderScopeState.createdProviderValues]),
   /// the provider's value gets created.
   /// {@endtemplate}
-  static T? _getOrCreateProvider<T extends Object>(
+  static T? _getOrCreateProviderValue<T extends Object>(
     BuildContext context, {
     required Provider<T> id,
   }) {
@@ -77,7 +77,7 @@ class ProviderScope extends StatefulWidget {
   }
 
   /// {@macro _findState}
-  static _ProviderScopeState? _findStateArgProvider<T extends Object, A>(
+  static _ProviderScopeState? _findStateForArgProvider<T extends Object, A>(
     BuildContext context, {
     required ArgProvider<T, A> id,
   }) {
@@ -92,14 +92,14 @@ class ProviderScope extends StatefulWidget {
   }
 
   /// {@macro _getOrCreateProvider}
-  static T? _getOrCreateArgProvider<T extends Object, A>(
+  static T? _getOrCreateArgProviderValue<T extends Object, A>(
     BuildContext context, {
     required ArgProvider<T, A> id,
   }) {
     // If there is a ProviderValue ancestor, use it as the context
     final providerScopePortalContext = ProviderScopePortal._maybeOf(context);
     final effectiveContext = providerScopePortalContext ?? context;
-    final state = _findStateArgProvider<T, A>(effectiveContext, id: id);
+    final state = _findStateForArgProvider<T, A>(effectiveContext, id: id);
     if (state == null) return null;
     final providerAsId = state.allArgProvidersInScope[id];
     final createdProvider = state.createdProviderValues[providerAsId];
@@ -163,18 +163,18 @@ class _ProviderScopeState extends State<ProviderScope> {
         // create non lazy providers.
         if (!provider._lazy) {
           // create and store the provider
-          createdProviderValues[id] = provider._create(context);
+          createdProviderValues[id] = provider._createValue(context);
         }
       }
 
-      final argProviderInits =
+      final instantiableArgProviders =
           widget.providers!.whereType<InstantiableArgProvider>().toList();
 
       assert(
         () {
           // check if there are multiple providers of the same type
           final ids = <ArgProvider>[];
-          for (final provider in argProviderInits) {
+          for (final provider in instantiableArgProviders) {
             final id = provider._argProvider; // the instance of the provider
             if (ids.contains(id)) {
               throw MultipleProviderOfSameInstance();
@@ -186,18 +186,19 @@ class _ProviderScopeState extends State<ProviderScope> {
         '',
       );
 
-      for (final argProviderInit in argProviderInits) {
-        final id = argProviderInit._argProvider;
-        allArgProvidersInScope[id] = argProviderInit._argProvider
-            ._generateIntermediateProvider(argProviderInit._arg);
+      for (final instantiableArgProvider in instantiableArgProviders) {
+        final id = instantiableArgProvider._argProvider;
+        allArgProvidersInScope[id] = instantiableArgProvider._argProvider
+            ._generateIntermediateProvider(instantiableArgProvider._arg);
 
         // create non lazy providers.
-        if (!argProviderInit._argProvider._lazy) {
-          // the derived ID is a reference to the derived/generated provider
-          final derivedId = allArgProvidersInScope[id]!;
+        if (!instantiableArgProvider._argProvider._lazy) {
+          // the intermediate ID is a reference to the associated generated
+          // intermediate provider
+          final intermediateId = allArgProvidersInScope[id]!;
           // create and store the provider
-          createdProviderValues[derivedId] =
-              allArgProvidersInScope[id]!._create(context);
+          createdProviderValues[intermediateId] =
+              allArgProvidersInScope[id]!._createValue(context);
         }
       }
     } else if (widget.overrides != null) {
@@ -230,7 +231,8 @@ class _ProviderScopeState extends State<ProviderScope> {
         // create non lazy providers.
         if (!(override._lazy ?? override._provider._lazy)) {
           // create and store the provider
-          createdProviderValues[id] = allProvidersInScope[id]!._create(context);
+          createdProviderValues[id] =
+              allProvidersInScope[id]!._createValue(context);
         }
       }
 
@@ -262,11 +264,12 @@ class _ProviderScopeState extends State<ProviderScope> {
 
         // create non lazy providers.
         if (!(override._lazy ?? override._argProvider._lazy)) {
-          // the derived ID is a reference to the derived/generated provider
-          final derivedId = allArgProvidersInScope[id]!;
+          // the intermediate ID is a reference to the associated generated
+          // intermediate provider
+          final intermediateId = allArgProvidersInScope[id]!;
           // create and store the provider
-          createdProviderValues[derivedId] =
-              allArgProvidersInScope[id]!._create(context);
+          createdProviderValues[intermediateId] =
+              allArgProvidersInScope[id]!._createValue(context);
         }
       }
     }
@@ -276,7 +279,7 @@ class _ProviderScopeState extends State<ProviderScope> {
   void dispose() {
     // dispose all the created providers
     createdProviderValues.forEach((key, value) {
-      allProvidersInScope[key]?._safeDisposeFn(value);
+      allProvidersInScope[key]?._safeDisposeValue(value);
     });
 
     allArgProvidersInScope.clear();
@@ -297,7 +300,7 @@ class _ProviderScopeState extends State<ProviderScope> {
     // find the intermediate provider in the list
     final provider = getIntermediateProvider(id)!;
     // create and return its value
-    final value = provider._create(context);
+    final value = provider._createValue(context);
     // store the created provider value
     createdProviderValues[id] = value;
     return value;
@@ -326,7 +329,7 @@ class _ProviderScopeState extends State<ProviderScope> {
     // find the intermediate provider in the list
     final provider = getIntermediateProviderForArgProvider(id)!;
     // create and return its value
-    final value = provider._create(context);
+    final value = provider._createValue(context);
     // store the created provider value
     createdProviderValues[allArgProvidersInScope[id]!] = value;
     return value;

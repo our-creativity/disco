@@ -3,20 +3,20 @@
 part of '../../../disco.dart';
 
 /// A function that creates an object of type [T].
-typedef CreateProviderFn<T> = T Function(BuildContext context);
+typedef CreateProviderValueFn<T> = T Function(BuildContext context);
 
 /// A function that disposes an object of type [T].
-typedef DisposeProviderFn<T> = void Function(T value);
+typedef DisposeProviderValueFn<T> = void Function(T value);
 
 /// {@template provider}
 /// A Provider that manages the lifecycle of the value it provides by
-/// delegating to a pair of [_create] and [_dispose].
+/// delegating to a pair of [_createValue] and [_disposeValue].
 ///
 /// It is usually used to avoid making a StatefulWidget for something trivial,
 /// such as instantiating a BLoC.
 ///
 /// Provider is the equivalent of a State.initState combined with State.dispose.
-/// [_create] is called only once in State.initState.
+/// [_createValue] is called only once in State.initState.
 /// The `create` callback is lazily called. It is called the first time the
 /// value is read, instead of the first time Provider is inserted in the widget
 /// tree.
@@ -32,31 +32,31 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// {@macro provider}
   Provider(
     /// @macro Provider.create}
-    CreateProviderFn<T> create, {
+    CreateProviderValueFn<T> createValue, {
     /// {@macro Provider.dispose}
-    DisposeProviderFn<T>? dispose,
+    DisposeProviderValueFn<T>? disposeValue,
 
     /// {@macro Provider.lazy}
     bool lazy = true,
-  })  : _create = create,
-        _dispose = dispose,
+  })  : _createValue = createValue,
+        _disposeValue = disposeValue,
         _lazy = lazy,
         super._();
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
-    CreateProviderFnWithArg<T, A> create, {
-    DisposeProviderFn<T>? dispose,
+    CreateArgProviderValue<T, A> createValue, {
+    DisposeProviderValueFn<T>? disposeValue,
     bool lazy = true,
   }) =>
-      ArgProvider._(create, dispose: dispose, lazy: lazy);
+      ArgProvider._(createValue, disposeValue: disposeValue, lazy: lazy);
 
   /// {@template Provider.lazy}
   /// Makes the creation of the provided value lazy. Defaults to true.
   ///
   /// NB: the provider itself is not lazily created, only its contained value.
   ///
-  /// If this value is true the provider will be [_create]d only
+  /// If this value is true the provider will be [_createValue]d only
   /// when retrieved from descendants.
   /// {@endtemplate}
   final bool _lazy;
@@ -64,28 +64,28 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// {@template Provider.create}
   /// The function called to create the element.
   /// {@endtemplate}
-  final CreateProviderFn<T> _create;
+  final CreateProviderValueFn<T> _createValue;
 
   /// {@template Provider.dispose}
   /// An optional dispose function called when the [ProviderScope] that created
   /// this provider gets disposed. Its purpose is to dispose the provided
   /// value, not the provider itself.
   /// {@endtemplate}
-  final DisposeProviderFn<T>? _dispose;
+  final DisposeProviderValueFn<T>? _disposeValue;
 
   // Overrides ----------------------------------------------------------------
 
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
   ProviderOverride<T> overrideWith({
-    CreateProviderFn<T>? create,
-    DisposeProviderFn<T>? dispose,
+    CreateProviderValueFn<T>? createValue,
+    DisposeProviderValueFn<T>? disposeValue,
     bool? lazy,
   }) =>
       ProviderOverride._(
         this,
-        create: create,
-        dispose: dispose,
+        createValue: createValue,
+        disposeValue: disposeValue,
         lazy: lazy,
       );
 
@@ -102,23 +102,24 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// Injects the value held by a provider. In case the provider is not found,
   /// it returns null.
   T? maybeGet(BuildContext context) {
-    return ProviderScope._getOrCreateProvider(context, id: this);
+    return ProviderScope._getOrCreateProviderValue(context, id: this);
   }
 
   // Utils leveraged by ProviderScope -----------------------------------------
 
-  /// Function internally used by [_ProviderScopeState] that calls [_dispose].
+  /// Function internally used by [_ProviderScopeState] that calls [_disposeValue].
   ///
   /// This method is necessary to ensure that `value` is correctly casted as
   /// `T` instead of `Object` (what the dispose method of
   /// [_ProviderScopeState] otherwise assumes).
-  void _safeDisposeFn(Object value) {
-    _dispose?.call(value as T);
+  void _safeDisposeValue(Object value) {
+    _disposeValue?.call(value as T);
   }
 
   /// Returns the type of the value.
   Type get _valueType => T;
 
-  // NB: there is no _generateIntermediateProvider, as the provider itself can
+  // NB: unlike ArgProvider and the Override classes, there is no
+  //_generateIntermediateProvider, as the provider itself can
   // be leveraged as its own intermediate provider.
 }

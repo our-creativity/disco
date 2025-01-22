@@ -6,20 +6,20 @@ part of '../../../disco.dart';
 class ProviderOverride<T extends Object> extends Override {
   ProviderOverride._(
     this._provider, {
-    CreateProviderFn<T>? create,
-    DisposeProviderFn<T>? dispose,
+    CreateProviderValueFn<T>? createValue,
+    DisposeProviderValueFn<T>? disposeValue,
     bool? lazy,
-  })  : _create = create,
-        _dispose = dispose,
+  })  : _createValue = createValue,
+        _disposeValue = disposeValue,
         _lazy = lazy,
         super._();
 
   /// The reference of the provider to override.
   final Provider<T> _provider;
 
-  final CreateProviderFn<T>? _create;
+  final CreateProviderValueFn<T>? _createValue;
 
-  final DisposeProviderFn<T>? _dispose;
+  final DisposeProviderValueFn<T>? _disposeValue;
 
   final bool? _lazy;
 
@@ -28,8 +28,9 @@ class ProviderOverride<T extends Object> extends Override {
   /// Creates a [Provider].
   /// This method is used internally by [ProviderScope].
   Provider<T> _generateIntermediateProvider() => Provider<T>(
-        (context) => _create?.call(context) ?? _provider._create(context),
-        dispose: _dispose ?? _provider._dispose,
+        (context) =>
+            _createValue?.call(context) ?? _provider._createValue(context),
+        disposeValue: _disposeValue ?? _provider._disposeValue,
         lazy: _lazy ?? _provider._lazy,
       );
 }

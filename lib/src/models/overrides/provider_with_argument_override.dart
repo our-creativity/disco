@@ -7,12 +7,12 @@ class ArgProviderOverride<T extends Object, A> extends Override {
   ArgProviderOverride._(
     this._argProvider, {
     required A argument,
-    CreateProviderFnWithArg<T, A>? create,
-    DisposeProviderFn<T>? dispose,
+    CreateArgProviderValue<T, A>? createValue,
+    DisposeProviderValueFn<T>? disposeValue,
     bool? lazy,
-  })  : _create = create,
-        _argument = argument,
-        _dispose = dispose,
+  })  : _argument = argument,
+        _createValue = createValue,
+        _disposeValue = disposeValue,
         _lazy = lazy,
         super._();
 
@@ -20,11 +20,11 @@ class ArgProviderOverride<T extends Object, A> extends Override {
   final ArgProvider<T, A> _argProvider;
 
   /// @macro Provider.create}
-  final CreateProviderFnWithArg<T, A>? _create;
+  final CreateArgProviderValue<T, A>? _createValue;
 
   final A? _argument;
 
-  final DisposeProviderFn<T>? _dispose;
+  final DisposeProviderValueFn<T>? _disposeValue;
 
   final bool? _lazy;
 
@@ -34,8 +34,9 @@ class ArgProviderOverride<T extends Object, A> extends Override {
   /// This method is used internally by [ProviderScope].
   Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
         (context) =>
-            _create?.call(context, arg) ?? _argProvider._create(context, arg),
-        dispose: _dispose ?? _argProvider._dispose,
+            _createValue?.call(context, arg) ??
+            _argProvider._createValue(context, arg),
+        disposeValue: _disposeValue ?? _argProvider._disposeValue,
         lazy: _lazy ?? _argProvider._lazy,
       );
 }

@@ -3,7 +3,10 @@
 part of '../../../disco.dart';
 
 /// A function that creates an object of type [T] with an argument of type [A].
-typedef CreateProviderFnWithArg<T, A> = T Function(BuildContext context, A arg);
+typedef CreateArgProviderValue<T, A> = T Function(
+  BuildContext context,
+  A arg,
+);
 
 /// {@template ArgProvider}
 /// A [Provider] that needs to be given an initial argument before
@@ -13,35 +16,35 @@ typedef CreateProviderFnWithArg<T, A> = T Function(BuildContext context, A arg);
 class ArgProvider<T extends Object, A> {
   /// {@macro ArgProvider}
   ArgProvider._(
-    CreateProviderFnWithArg<T, A> create, {
-    DisposeProviderFn<T>? dispose,
+    CreateArgProviderValue<T, A> createValue, {
+    DisposeProviderValueFn<T>? disposeValue,
     bool lazy = true,
-  })  : _create = create,
-        _lazy = lazy,
-        _dispose = dispose;
+  })  : _createValue = createValue,
+        _disposeValue = disposeValue,
+        _lazy = lazy;
 
   /// {@macro Provider.lazy}
   final bool _lazy;
 
   /// {@macro Provider.create}
-  final CreateProviderFnWithArg<T, A> _create;
+  final CreateArgProviderValue<T, A> _createValue;
 
   /// {@macro Provider.dispose}
-  final DisposeProviderFn<T>? _dispose;
+  final DisposeProviderValueFn<T>? _disposeValue;
 
   // Overrides ----------------------------------------------------------------
 
   ArgProviderOverride<T, A> overrideWith({
     required A argument,
-    CreateProviderFnWithArg<T, A>? create,
-    DisposeProviderFn<T>? dispose,
+    CreateArgProviderValue<T, A>? createValue,
+    DisposeProviderValueFn<T>? disposeValue,
     bool? lazy,
   }) =>
       ArgProviderOverride._(
         this,
         argument: argument,
-        create: create,
-        dispose: dispose,
+        createValue: createValue,
+        disposeValue: disposeValue,
         lazy: lazy,
       );
 
@@ -60,7 +63,7 @@ class ArgProvider<T extends Object, A> {
   /// Injects the value held by a provider. In case the provider is not found,
   /// it returns null.
   T? maybeGet(BuildContext context) {
-    return ProviderScope._getOrCreateArgProvider(context, id: this);
+    return ProviderScope._getOrCreateArgProviderValue(context, id: this);
   }
 
   // Utils leveraged by ProviderScope -----------------------------------------
@@ -81,8 +84,8 @@ class ArgProvider<T extends Object, A> {
   /// Given an argument, creates a [Provider] with that argument.
   /// This method is used internally by [ProviderScope].
   Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
-        (context) => _create(context, arg),
-        dispose: _dispose,
+        (context) => _createValue(context, arg),
+        disposeValue: _disposeValue,
         lazy: _lazy,
       );
 }
