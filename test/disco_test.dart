@@ -2,14 +2,6 @@ import 'package:disco/disco.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-abstract class NameContainer {
-  const NameContainer(this.name);
-
-  final String name;
-
-  void dispose();
-}
-
 @immutable
 class NumberContainer {
   const NumberContainer(this.number);
@@ -100,5 +92,113 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(counterFinder(1), findsOneWidget);
+  });
+
+  testWidgets('Test key change in ProviderScope (with Provider)',
+      (tester) async {    
+    final nameProvider = Provider((_) => "ABC");
+
+    final initialKey = Key("one");
+
+    final keyNotifier = ValueNotifier<Key>(initialKey);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ValueListenableBuilder(
+            valueListenable: keyNotifier,
+            builder: (BuildContext context, Key key, Widget? child) {
+              return ProviderScope(
+                key: key,
+                providers: [
+                  nameProvider,
+                ],
+                child: Builder(
+                  builder: (context) {
+                    final name = nameProvider.get(context);
+                    return Column(
+                      children: [
+                        Text(name),
+                        ElevatedButton(
+                          onPressed: () {
+                            keyNotifier.value = Key("two");
+                          },
+                          child: const Text('change key'),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    Finder textFinder(String value) => find.text(value);
+
+    await tester.pumpAndSettle();
+    expect(textFinder("ABC"), findsOneWidget);
+
+    final buttonFinder = find.text('change key');
+    expect(buttonFinder, findsOneWidget);
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+
+    expect(textFinder("ABC"), findsOneWidget);
+  });
+
+  testWidgets('Test key change in ProviderScope (with ArgProvider)',
+      (tester) async {
+    final nameProvider = Provider.withArgument((_, String arg) => arg);
+
+    final initialKey = Key("Miladin");
+
+    final keyNotifier = ValueNotifier<Key>(initialKey);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ValueListenableBuilder(
+            valueListenable: keyNotifier,
+            builder: (BuildContext context, Key key, Widget? child) {
+              return ProviderScope(
+                key: key,
+                providers: [
+                  nameProvider(key == initialKey ? "Miladin" : "Mario"),
+                ],
+                child: Builder(
+                  builder: (context) {
+                    final name = nameProvider.get(context);
+                    return Column(
+                      children: [
+                        Text(name),
+                        ElevatedButton(
+                          onPressed: () {
+                            keyNotifier.value = Key("Mario");
+                          },
+                          child: const Text('change key'),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    Finder textFinder(String value) => find.text(value);
+
+    await tester.pumpAndSettle();
+    expect(textFinder("Miladin"), findsOneWidget);
+
+    final buttonFinder = find.text('change key');
+    expect(buttonFinder, findsOneWidget);
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+
+    expect(textFinder("Mario"), findsOneWidget);
   });
 }
