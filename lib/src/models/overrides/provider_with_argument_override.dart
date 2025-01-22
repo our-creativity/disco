@@ -36,7 +36,7 @@ class ArgProviderOverride<T extends Object, A> extends Override {
         (context) =>
             _createValue?.call(context, arg) ??
             _argProvider._createValue(context, arg),
-        disposeValue: _disposeValue ?? _argProvider._disposeValue,
+        dispose: _disposeValue ?? _argProvider._disposeValue,
         lazy: _lazy ?? _argProvider._lazy,
       );
 }

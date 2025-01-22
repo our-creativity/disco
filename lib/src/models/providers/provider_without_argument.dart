@@ -30,24 +30,24 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// {@macro provider}
   Provider(
     /// @macro Provider.create}
-    CreateProviderValueFn<T> createValue, {
+    CreateProviderValueFn<T> create, {
     /// {@macro Provider.dispose}
-    DisposeProviderValueFn<T>? disposeValue,
+    DisposeProviderValueFn<T>? dispose,
 
     /// {@macro Provider.lazy}
     bool lazy = true,
-  })  : _createValue = createValue,
-        _disposeValue = disposeValue,
+  })  : _createValue = create,
+        _disposeValue = dispose,
         _lazy = lazy,
         super._();
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
-    CreateArgProviderValue<T, A> createValue, {
-    DisposeProviderValueFn<T>? disposeValue,
+    CreateArgProviderValue<T, A> create, {
+    DisposeProviderValueFn<T>? dispose,
     bool lazy = true,
   }) =>
-      ArgProvider._(createValue, disposeValue: disposeValue, lazy: lazy);
+      ArgProvider._(create, disposeValue: dispose, lazy: lazy);
 
   /// {@template Provider.lazy}
   /// Makes the creation of the provided value lazy. Defaults to true.
@@ -76,14 +76,14 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
   ProviderOverride<T> overrideWith({
-    CreateProviderValueFn<T>? createValue,
-    DisposeProviderValueFn<T>? disposeValue,
+    CreateProviderValueFn<T>? create,
+    DisposeProviderValueFn<T>? dispose,
     bool? lazy,
   }) =>
       ProviderOverride._(
         this,
-        createValue: createValue,
-        disposeValue: disposeValue,
+        createValue: create,
+        disposeValue: dispose,
         lazy: lazy,
       );
 
@@ -122,6 +122,6 @@ class Provider<T extends Object> extends InstantiableProvider {
   Type get _valueType => T;
 
   // NB: unlike ArgProvider and the Override classes, there is no
-  //_generateIntermediateProvider, as the provider itself can
-  // be leveraged as its own intermediate provider.
+  // _generateIntermediateProvider, as the provider itself can
+  // be used as its own intermediate provider.
 }

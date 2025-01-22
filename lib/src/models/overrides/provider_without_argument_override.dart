@@ -30,7 +30,7 @@ class ProviderOverride<T extends Object> extends Override {
   Provider<T> _generateIntermediateProvider() => Provider<T>(
         (context) =>
             _createValue?.call(context) ?? _provider._createValue(context),
-        disposeValue: _disposeValue ?? _provider._disposeValue,
+        dispose: _disposeValue ?? _provider._disposeValue,
         lazy: _lazy ?? _provider._lazy,
       );
 }
