@@ -2,18 +2,25 @@ import 'package:disco/disco.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const _MainApp());
+  runApp(const MainApp());
 }
 
-class _MainApp extends StatelessWidget {
-  const _MainApp();
+final a = Provider((context) => 9);
+
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // todo: replace with more meaningful example
     return MaterialApp(
       home: Scaffold(
-        body:
-            ProviderScopeOverride(overrides: const [], child: const Text('hi')),
+        body: ProviderScopeOverride(
+          overrides: [
+            a.overrideWith(lazy: true),
+          ],
+          child: const Text('hi'),
+        ),
       ),
     );
   }

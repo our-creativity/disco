@@ -34,6 +34,7 @@ class ArgProvider<T extends Object, A> {
 
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
+  @visibleForTesting
   ArgProviderOverride<T, A> overrideWith({
     required A argument,
     CreateArgProviderValue<T, A>? create,
