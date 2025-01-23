@@ -36,7 +36,7 @@ class MyHomePage extends StatelessWidget {
       child: Builder(
         builder: (context) {
           // retrieve the model
-          final model = modelProvider.get(context);
+          final model = modelProvider.of(context);
           return Scaffold(
             body: Center(
               child: Column(

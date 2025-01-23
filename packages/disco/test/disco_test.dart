@@ -44,8 +44,8 @@ void main() {
               ],
               child: Builder(
                 builder: (context) {
-                  final numberProvider1 = numberContainer1Provider.get(context);
-                  final numberProvider2 = numberContainer2Provider.get(context);
+                  final numberProvider1 = numberContainer1Provider.of(context);
+                  final numberProvider2 = numberContainer2Provider.of(context);
                   return Text(
                     '''${numberProvider1.number} ${numberProvider2.number}''',
                   );
@@ -76,7 +76,7 @@ void main() {
             ],
             child: Builder(
               builder: (context) {
-                final ten = tenProvider.get(context);
+                final ten = tenProvider.of(context);
                 return Text(ten.toString());
               },
             ),
@@ -111,7 +111,7 @@ void main() {
             child: Builder(
               builder: (context) {
                 final numberContainer =
-                    numberContainerProvider.maybeGet(context);
+                    numberContainerProvider.maybeOf(context);
                 return Text(numberContainer.toString());
               },
             ),
@@ -172,9 +172,9 @@ void main() {
             ],
             child: Builder(
               builder: (context) {
-                final nameContainer = nameContainerProvider.get(context);
-                final numberContainer1 = numberContainer1Provider.get(context);
-                final numberContainer2 = numberContainer2Provider.get(context);
+                final nameContainer = nameContainerProvider.of(context);
+                final numberContainer1 = numberContainer1Provider.of(context);
+                final numberContainer2 = numberContainer2Provider.of(context);
                 return Text(
                   '''${nameContainer.name} ${numberContainer1.number} ${numberContainer2.number}''',
                 );
@@ -211,7 +211,7 @@ void main() {
             child: Builder(
               builder: (innerContext) {
                 final numberContainer =
-                    numberContainerProvider.get(innerContext);
+                    numberContainerProvider.of(innerContext);
                 return Text('${numberContainer.number}');
               },
             ),
@@ -267,7 +267,7 @@ void main() {
             child: Builder(
               builder: (innerContext) {
                 final numberContainer =
-                    numberContainerProvider.get(innerContext);
+                    numberContainerProvider.of(innerContext);
                 return Text('${numberContainer.number}');
               },
             ),
@@ -324,7 +324,7 @@ void main() {
                 ],
                 child: Builder(
                   builder: (context) {
-                    final number = numberProvider.get(context);
+                    final number = numberProvider.of(context);
                     return Column(
                       children: [
                         Text('number: $number'),
@@ -379,7 +379,7 @@ void main() {
                 ],
                 child: Builder(
                   builder: (context) {
-                    final number = numberProvider.get(context);
+                    final number = numberProvider.of(context);
                     return Column(
                       children: [
                         Text('number: $number'),
@@ -430,7 +430,7 @@ void main() {
             ],
             child: Builder(
               builder: (context) {
-                final counter = counterProvider.get(context);
+                final counter = counterProvider.of(context);
                 return Text(counter.toString());
               },
             ),
@@ -460,7 +460,7 @@ void main() {
             ],
             child: Builder(
               builder: (context) {
-                final counter = counterProvider.get(context);
+                final counter = counterProvider.of(context);
                 return Text(counter.toString());
               },
             ),
@@ -485,7 +485,7 @@ void main() {
             ],
             child: Builder(
               builder: (context) {
-                final counter = counterProvider.get(context);
+                final counter = counterProvider.of(context);
                 return Text(counter.toString());
               },
             ),

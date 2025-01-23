@@ -93,17 +93,17 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// Injects the value held by a provider. In case the provider is not found,
   /// it throws a [ProviderWithoutScopeError].
   ///
-  /// NB: You should prefer [maybeGet] over [get] to retrieve a provider
+  /// NB: You should prefer [maybeOf] over [of] to retrieve a provider
   /// which you are aware it could be not present.
-  T get(BuildContext context) {
-    final provider = maybeGet(context);
+  T of(BuildContext context) {
+    final provider = maybeOf(context);
     if (provider == null) throw ProviderWithoutScopeError(this);
     return provider;
   }
 
   /// Injects the value held by a provider. In case the provider is not found,
   /// it returns null.
-  T? maybeGet(BuildContext context) {
+  T? maybeOf(BuildContext context) {
     return ProviderScope._getOrCreateProviderValue(context, id: this);
   }
 
