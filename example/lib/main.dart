@@ -12,8 +12,6 @@ class _MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        // TODO: shouldn't ProviderScopeOverride be highlighted?
-        // (because of @visibleForTesting)
         body:
             ProviderScopeOverride(overrides: const [], child: const Text('hi')),
       ),
