@@ -1,6 +1,22 @@
 import 'package:disco/disco.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+
+abstract class NameContainer {
+  const NameContainer(this.name);
+
+  final String name;
+
+  void dispose();
+}
+
+class MockNameContainer extends Mock implements NameContainer {
+  MockNameContainer(this.name);
+
+  @override
+  final String name;
+}
 
 @immutable
 class NumberContainer {
@@ -10,6 +26,42 @@ class NumberContainer {
 }
 
 void main() {
+  testWidgets('Test multiple ProviderScope in tree', (tester) async {
+    final numberContainer1Provider = Provider((_) => const NumberContainer(1));
+    final numberContainer2Provider =
+        Provider((_) => const NumberContainer(100));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [
+              numberContainer1Provider,
+            ],
+            child: ProviderScope(
+              providers: [
+                numberContainer2Provider,
+              ],
+              child: Builder(
+                builder: (context) {
+                  final numberProvider1 = numberContainer1Provider.get(context);
+                  final numberProvider2 = numberContainer2Provider.get(context);
+                  return Text(
+                    '''${numberProvider1.number} ${numberProvider2.number}''',
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    Finder providerFinder(int value1, int value2) =>
+        find.text('$value1 $value2');
+
+    expect(providerFinder(1, 100), findsOneWidget);
+  });
+
   testWidgets('Test ProviderScope throws an error for a not found provider',
       (tester) async {
     final zeroProvider = Provider((_) => 0);
@@ -40,6 +92,109 @@ void main() {
         equals(tenProvider),
       ),
     );
+  });
+
+  testWidgets(
+      'Test ProviderScope returns null for a not found provider (maybeOf)',
+      (tester) async {
+    final numberContainerProvider = Provider((_) => const NumberContainer(0));
+    final nameContainerProvider = Provider<NameContainer>(
+      (_) => MockNameContainer('name'),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [
+              nameContainerProvider,
+            ],
+            child: Builder(
+              builder: (context) {
+                final numberContainer =
+                    numberContainerProvider.maybeGet(context);
+                return Text(numberContainer.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('null'), findsOneWidget);
+  });
+
+  testWidgets(
+      '''Test ProviderScope throws if the same provider is provided multiple times''',
+      (tester) async {
+    final numberContainerProvider = Provider((_) => const NumberContainer(1));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [
+              numberContainerProvider,
+              numberContainerProvider,
+            ],
+            child: const SizedBox(),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.takeException(),
+      const TypeMatcher<MultipleProviderOfSameInstance>(),
+    );
+  });
+
+  testWidgets('Test provider injection', (tester) async {
+    final NameContainer nameContainer = MockNameContainer('Ale');
+
+    final numberContainer1Provider = Provider(
+      (_) => const NumberContainer(1),
+      lazy: false,
+    );
+    final numberContainer2Provider = Provider(
+      (_) => const NumberContainer(100),
+      lazy: false,
+    );
+    final nameContainerProvider = Provider(
+      (_) => nameContainer,
+      dispose: (provider) => provider.dispose(),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [
+              nameContainerProvider,
+              numberContainer1Provider,
+              numberContainer2Provider,
+            ],
+            child: Builder(
+              builder: (context) {
+                final nameContainer = nameContainerProvider.get(context);
+                final numberContainer1 = numberContainer1Provider.get(context);
+                final numberContainer2 = numberContainer2Provider.get(context);
+                return Text(
+                  '''${nameContainer.name} ${numberContainer1.number} ${numberContainer2.number}''',
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    Finder providerFinder(String value1, int value2, int value3) =>
+        find.text('$value1 $value2 $value3');
+
+    expect(providerFinder('Ale', 1, 100), findsOneWidget);
+
+    // mock NameProvider dispose method
+    when(nameContainer.dispose()).thenReturn(null);
+    // Push a different widget
+    await tester.pumpWidget(Container());
+    // check dispose has been called on NameProvider
+    verify(nameContainer.dispose()).called(1);
   });
 
   testWidgets('Test ProviderScopePortal works', (tester) async {
@@ -94,6 +249,59 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(counterFinder(1), findsOneWidget);
+  });
+
+  testWidgets(
+      'Test ProviderScopePortal throws an error for a not found provider',
+      (tester) async {
+    final numberContainerProvider = Provider((_) => const NumberContainer(0));
+    final nameContainerProvider =
+        Provider<NameContainer>((_) => MockNameContainer('name'));
+
+    Future<void> showNumberDialog({required BuildContext context}) {
+      return showDialog(
+        context: context,
+        builder: (dialogContext) {
+          return ProviderScopePortal(
+            mainContext: context,
+            child: Builder(
+              builder: (innerContext) {
+                final numberContainer =
+                    numberContainerProvider.get(innerContext);
+                return Text('${numberContainer.number}');
+              },
+            ),
+          );
+        },
+      );
+    }
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [nameContainerProvider],
+            child: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    showNumberDialog(context: context);
+                  },
+                  child: const Text('show dialog'),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    final buttonFinder = find.text('show dialog');
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+    expect(
+      tester.takeException(),
+      const TypeMatcher<ProviderWithoutScopeError>(),
+    );
   });
 
   testWidgets('Test key change in ProviderScope (with Provider)',
@@ -203,4 +411,113 @@ void main() {
 
     expect(textFinder('number: 1'), findsOneWidget);
   });
+
+  testWidgets(
+      '''ProviderScopeOverride should override providers regardless of the hierarchy''',
+      (tester) async {
+    final counterProvider = Provider<int>((_) => 0);
+    await tester.pumpWidget(
+      ProviderScopeOverride(
+        overrides: [
+          counterProvider.overrideWith(
+            create: (context) => 100,
+          ),
+        ],
+        child: MaterialApp(
+          home: ProviderScope(
+            providers: [
+              counterProvider,
+            ],
+            child: Builder(
+              builder: (context) {
+                final counter = counterProvider.get(context);
+                return Text(counter.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('100'), findsOneWidget);
+  });
+
+  testWidgets(
+      '''ProviderScopeOverride should override argument providers regardless of the hierarchy''',
+      (tester) async {
+    final counterProvider = Provider.withArgument((_, int init) => init);
+    await tester.pumpWidget(
+      ProviderScopeOverride(
+        overrides: [
+          counterProvider.overrideWith(
+            argument: 8,
+            create: (_, int init) => init * 2,
+          ),
+        ],
+        child: MaterialApp(
+          home: ProviderScope(
+            providers: [
+              counterProvider(1),
+            ],
+            child: Builder(
+              builder: (context) {
+                final counter = counterProvider.get(context);
+                return Text(counter.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('16'), findsOneWidget);
+  });
+
+  testWidgets('Only one ProviderScopeOverride can be present', (tester) async {
+    final counterProvider = Provider<int>((_) => 0);
+    await tester.pumpWidget(
+      ProviderScopeOverride(
+        overrides: [
+          counterProvider.overrideWith(create: (_) => 100),
+        ],
+        child: MaterialApp(
+          home: ProviderScopeOverride(
+            overrides: [
+              counterProvider.overrideWith(create: (_) => 200),
+            ],
+            child: Builder(
+              builder: (context) {
+                final counter = counterProvider.get(context);
+                return Text(counter.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.takeException(),
+      const TypeMatcher<MultipleProviderScopeOverrideError>(),
+    );
+  });
+
+  // todo: _maybeOf is now a private member. The following test needs to be done differently
+  // testWidgets(
+  //     '''ProviderScopeOverride._maybeOf(context) throws an error if no ProviderScopeOverride is found in the widget tree''',
+  //     (tester) async {
+  //   await tester.pumpWidget(
+  //     MaterialApp(
+  //       home: Scaffold(
+  //         body: Builder(
+  //           builder: (context) {
+  //             ProviderScopeOverride._maybeOf(context);
+  //             return const SizedBox();
+  //           },
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  //   expect(
+  //     tester.takeException(),
+  //     const TypeMatcher<FlutterError>(),
+  //   );
+  // });
 }
