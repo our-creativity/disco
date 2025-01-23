@@ -62,6 +62,37 @@ void main() {
     expect(providerFinder(1, 100), findsOneWidget);
   });
 
+  testWidgets('Test Provider.of within Provider create fn', (tester) async {
+    final numberProvider = Provider((_) => 5);
+
+    final doubleNumberProvider = Provider((context) {
+      final number = numberProvider.of(context);
+      return number * 2;
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [numberProvider],
+            child: ProviderScope(
+              providers: [doubleNumberProvider],
+              child: Builder(
+                builder: (context) {
+                  final number = numberProvider.of(context);
+                  final doubleNumber = doubleNumberProvider.of(context);
+                  return Text('$number $doubleNumber');
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    Finder numberFinder(int value1, int value2) => find.text('$value1 $value2');
+    expect(numberFinder(5, 10), findsOneWidget);
+  });
+
   testWidgets('Test ProviderScope throws an error for a not found provider',
       (tester) async {
     final zeroProvider = Provider((_) => 0);
@@ -241,14 +272,14 @@ void main() {
         ),
       ),
     );
-    Finder counterFinder(int value) => find.text('$value');
+    Finder numberFinder(int value) => find.text('$value');
 
     final buttonFinder = find.text('show dialog');
     expect(buttonFinder, findsOneWidget);
     await tester.tap(buttonFinder);
     await tester.pumpAndSettle();
 
-    expect(counterFinder(1), findsOneWidget);
+    expect(numberFinder(1), findsOneWidget);
   });
 
   testWidgets(
@@ -415,23 +446,23 @@ void main() {
   testWidgets(
       '''ProviderScopeOverride should override providers regardless of the hierarchy''',
       (tester) async {
-    final counterProvider = Provider<int>((_) => 0);
+    final numberProvider = Provider<int>((_) => 0);
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          counterProvider.overrideWith(
+          numberProvider.overrideWith(
             create: (context) => 100,
           ),
         ],
         child: MaterialApp(
           home: ProviderScope(
             providers: [
-              counterProvider,
+              numberProvider,
             ],
             child: Builder(
               builder: (context) {
-                final counter = counterProvider.of(context);
-                return Text(counter.toString());
+                final number = numberProvider.of(context);
+                return Text(number.toString());
               },
             ),
           ),
@@ -444,11 +475,11 @@ void main() {
   testWidgets(
       '''ProviderScopeOverride should override argument providers regardless of the hierarchy''',
       (tester) async {
-    final counterProvider = Provider.withArgument((_, int init) => init);
+    final numberProvider = Provider.withArgument((_, int init) => init);
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          counterProvider.overrideWith(
+          numberProvider.overrideWith(
             argument: 8,
             create: (_, int init) => init * 2,
           ),
@@ -456,12 +487,12 @@ void main() {
         child: MaterialApp(
           home: ProviderScope(
             providers: [
-              counterProvider(1),
+              numberProvider(1),
             ],
             child: Builder(
               builder: (context) {
-                final counter = counterProvider.of(context);
-                return Text(counter.toString());
+                final number = numberProvider.of(context);
+                return Text(number.toString());
               },
             ),
           ),
@@ -472,21 +503,21 @@ void main() {
   });
 
   testWidgets('Only one ProviderScopeOverride can be present', (tester) async {
-    final counterProvider = Provider<int>((_) => 0);
+    final numberProvider = Provider<int>((_) => 0);
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          counterProvider.overrideWith(create: (_) => 100),
+          numberProvider.overrideWith(create: (_) => 100),
         ],
         child: MaterialApp(
           home: ProviderScopeOverride(
             overrides: [
-              counterProvider.overrideWith(create: (_) => 200),
+              numberProvider.overrideWith(create: (_) => 200),
             ],
             child: Builder(
               builder: (context) {
-                final counter = counterProvider.of(context);
-                return Text(counter.toString());
+                final number = numberProvider.of(context);
+                return Text(number.toString());
               },
             ),
           ),
