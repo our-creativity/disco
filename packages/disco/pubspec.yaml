@@ -1,0 +1,23 @@
+name: disco
+description: A Flutter library offering convenient, scoped providers for dependency injection that are independent of any specific state management solution.
+version: 0.0.1
+repository: https://github.com/our_solution/disco
+topics:
+  - dependency-injection
+  - scope
+  - provider
+
+environment:
+  sdk: ^3.6.0
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meta: ^1.11.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^7.0.0
