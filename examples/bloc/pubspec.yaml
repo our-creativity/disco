@@ -1,5 +1,5 @@
-name: solidart_example
-description: "An example of a Flutter project combining disco and solidart."
+name: bloc_example
+description: "An example of a Flutter project combining disco and bloc."
 publish_to: 'none'
 version: 0.0.1
 

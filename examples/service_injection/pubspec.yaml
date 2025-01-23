@@ -1,5 +1,5 @@
-name: solidart_example
-description: "An example of a Flutter project combining disco and solidart."
+name: service_injection_example
+description: "An example of a Flutter project leveraging disco for service injection."
 publish_to: 'none'
 version: 0.0.1
 

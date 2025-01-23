@@ -13,7 +13,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // todo: replace with more meaningful example
+    // todo: replace with a more meaningful example
     return MaterialApp(
       title: 'Disco Example',
       theme: ThemeData(
