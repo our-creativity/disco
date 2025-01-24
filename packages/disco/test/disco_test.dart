@@ -535,9 +535,6 @@ void main() {
         home: Scaffold(
           body: Builder(
             builder: (context) {
-              // NB: DiscoInternalTestingUtil is used for internal testing.
-              // Do not use it when testing your application.
-              // ignore: invalid_use_of_protected_member
               final isNull =
                   ProviderScopeOverrideState.maybeOf(context) == null;
               return Text('maybeOf returns null: $isNull');
@@ -562,9 +559,6 @@ void main() {
           home: Scaffold(
             body: Builder(
               builder: (context) {
-                // NB: DiscoInternalTestingUtil is used for internal testing.
-                // Do not use it when testing your application.
-                // ignore: invalid_use_of_protected_member
                 final isState =
                     ProviderScopeOverrideState.maybeOf(context) != null;
                 return Text(
