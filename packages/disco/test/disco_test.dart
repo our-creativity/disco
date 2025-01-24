@@ -538,11 +538,11 @@ void main() {
         home: Scaffold(
           body: Builder(
             builder: (context) {
-              // testMaybeOf should be used for internal testing. Do not use it
-              // when testing your application.
+              // NB: DiscoInternalTestingUtil is used for internal testing.
+              // Do not use it when testing your application.
               // ignore: invalid_use_of_protected_member
-              final result = ProviderScopeOverride.testMaybeOf(context);
-              return Text('_maybeOf returns null: $result');
+              final isNull = DIT.providerScopeOverrideMaybeOf(context);
+              return Text('_maybeOf returns null: $isNull');
             },
           ),
         ),
@@ -564,13 +564,11 @@ void main() {
           home: Scaffold(
             body: Builder(
               builder: (context) {
-                // testMaybeOf should be used for internal testing. Do not use
-                // it when testing your application.
+                // NB: DiscoInternalTestingUtil is used for internal testing.
+                // Do not use it when testing your application.
                 // ignore: invalid_use_of_protected_member
-                final result = ProviderScopeOverride.testMaybeOf(context);
-                return Text(
-                  '_maybeOf returns null: $result',
-                );
+                final isNull = DIT.providerScopeOverrideMaybeOf(context);
+                return Text('_maybeOf returns null: $isNull');
               },
             ),
           ),
