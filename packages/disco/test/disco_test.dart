@@ -475,13 +475,13 @@ void main() {
   testWidgets(
       '''ProviderScopeOverride should override argument providers regardless of the hierarchy''',
       (tester) async {
-    final numberProvider = Provider.withArgument<int, int>((_, init) => init);
+    final numberProvider = Provider.withArgument((_, int arg) => arg);
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
           numberProvider.overrideWith(
             argument: 8,
-            create: (_, int init) => init * 2,
+            create: (_, int arg) => arg * 2,
           ),
         ],
         child: MaterialApp(
