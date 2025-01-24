@@ -475,7 +475,7 @@ void main() {
   testWidgets(
       '''ProviderScopeOverride should override argument providers regardless of the hierarchy''',
       (tester) async {
-    final numberProvider = Provider.withArgument((_, int init) => init);
+    final numberProvider = Provider.withArgument<int, int>((_, init) => init);
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
@@ -530,25 +530,59 @@ void main() {
     );
   });
 
-  // todo: _maybeOf is now a private member. The following test needs to be done differently
-  // testWidgets(
-  //     '''ProviderScopeOverride._maybeOf(context) throws an error if no ProviderScopeOverride is found in the widget tree''',
-  //     (tester) async {
-  //   await tester.pumpWidget(
-  //     MaterialApp(
-  //       home: Scaffold(
-  //         body: Builder(
-  //           builder: (context) {
-  //             ProviderScopeOverride._maybeOf(context);
-  //             return const SizedBox();
-  //           },
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  //   expect(
-  //     tester.takeException(),
-  //     const TypeMatcher<FlutterError>(),
-  //   );
-  // });
+  testWidgets(
+      '''ProviderScopeOverride._maybeOf(context) returns null if no ProviderScopeOverride is found in the widget tree''',
+      (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              // testMaybeOf should be used for internal testing. Do not use it
+              // when testing your application.
+              // ignore: invalid_use_of_protected_member
+              final result = ProviderScopeOverride.testMaybeOf(context);
+              return Text('_maybeOf returns null: $result');
+            },
+          ),
+        ),
+      ),
+    );
+    Finder textFinder(String value) => find.text(value);
+
+    await tester.pumpAndSettle();
+    expect(textFinder('_maybeOf returns null: true'), findsOneWidget);
+  });
+
+  testWidgets(
+      '''ProviderScopeOverride._maybeOf(context) returns a _ProviderScopeOverrideState if a ProviderScopeOverride is found in the widget tree''',
+      (tester) async {
+    await tester.pumpWidget(
+      ProviderScopeOverride(
+        overrides: const [],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                // testMaybeOf should be used for internal testing. Do not use
+                // it when testing your application.
+                // ignore: invalid_use_of_protected_member
+                final result = ProviderScopeOverride.testMaybeOf(context);
+                return Text(
+                  '_maybeOf returns null: $result',
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    Finder textFinder(String value) => find.text(value);
+
+    await tester.pumpAndSettle();
+    expect(
+      textFinder('_maybeOf returns null: false'),
+      findsOneWidget,
+    );
+  });
 }

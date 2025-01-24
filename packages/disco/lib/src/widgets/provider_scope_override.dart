@@ -43,6 +43,19 @@ class ProviderScopeOverride extends StatefulWidget {
     return (provider as _InheritedProviderScopeOverride?)?.state;
   }
 
+  /// This function is used only internally to test [_maybeOf] and should not
+  /// be used outside this library.
+  ///
+  /// It returns true if ProviderScopeOverride._maybeOf(context) returns null.
+  @protected
+  static bool testMaybeOf(BuildContext context) {
+    final overrideState = ProviderScopeOverride._maybeOf(context);
+    if (overrideState == null) {
+      return true;
+    }
+    return false;
+  }
+
   @override
   State<ProviderScopeOverride> createState() => _ProviderScopeOverrideState();
 }
