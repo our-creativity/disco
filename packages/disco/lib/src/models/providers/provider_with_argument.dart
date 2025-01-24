@@ -34,10 +34,6 @@ class ArgProvider<T extends Object, A> {
 
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
-  ///
-  /// If [DiscoPreferences._overridesInheritDisposeByDefault] is true, then
-  /// all [dispose] arguments will be ignored (unless for specific overrides,
-  /// where [inheritDispose] is set to false).
   @visibleForTesting
   ArgProviderOverride<T, A> overrideWith(
     T value, {
@@ -47,11 +43,6 @@ class ArgProvider<T extends Object, A> {
       ArgProviderOverride._(
         this,
         value,
-        (inheritDispose != null && inheritDispose == true) ||
-                (inheritDispose == null &&
-                    DiscoPreferences._overridesInheritDisposeByDefault)
-            ? this._disposeValue
-            : dispose,
       );
 
   // DI methods ---------------------------------------------------------------

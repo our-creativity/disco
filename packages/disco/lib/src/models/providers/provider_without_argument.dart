@@ -75,10 +75,6 @@ class Provider<T extends Object> extends InstantiableProvider {
 
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
-  ///
-  /// If [DiscoPreferences._overridesInheritDisposeByDefault] is true, then
-  /// all [dispose] arguments will be ignored (unless for specific overrides,
-  /// where [inheritDispose] is set to false).
   @visibleForTesting
   ProviderOverride<T> overrideWith(
     T value, {
@@ -88,11 +84,6 @@ class Provider<T extends Object> extends InstantiableProvider {
       ProviderOverride._(
         this,
         value,
-        (inheritDispose != null && inheritDispose == true) ||
-                (inheritDispose == null &&
-                    DiscoPreferences._overridesInheritDisposeByDefault)
-            ? this._disposeValue
-            : dispose,
       );
 
   // DI methods ---------------------------------------------------------------
