@@ -232,8 +232,8 @@ class _ProviderScopeState extends State<ProviderScope> {
 
         allProvidersInScope[id] = override._generateIntermediateProvider();
 
-        // create non lazy providers.
-        if (!(override._lazy ?? override._provider._lazy)) {
+        // create providers (they are never lazy in the case of overrides)
+        {
           // create and store the provider
           createdProviderValues[id] =
               allProvidersInScope[id]!._createValue(context);
@@ -265,8 +265,8 @@ class _ProviderScopeState extends State<ProviderScope> {
 
         allArgProvidersInScope[id] = override._generateIntermediateProvider();
 
-        // create non lazy providers.
-        if (!(override._lazy ?? override._argProvider._lazy)) {
+        // create providers (they are never lazy in the case of overrides)
+        {
           // the intermediate ID is a reference to the associated generated
           // intermediate provider
           final intermediateId = allArgProvidersInScope[id]!;

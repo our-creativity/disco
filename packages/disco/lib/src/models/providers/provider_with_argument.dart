@@ -16,10 +16,10 @@ class ArgProvider<T extends Object, A> {
   ArgProvider._(
     CreateArgProviderValueFn<T, A> createValue, {
     DisposeProviderValueFn<T>? disposeValue,
-    bool lazy = true,
+    bool? lazy,
   })  : _createValue = createValue,
         _disposeValue = disposeValue,
-        _lazy = lazy;
+        _lazy = lazy ?? DiscoPreferences._providersLazyByDefault;
 
   /// {@macro Provider.lazy}
   final bool _lazy;
@@ -34,17 +34,24 @@ class ArgProvider<T extends Object, A> {
 
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
+  ///
+  /// If [DiscoPreferences._overridesInheritDisposeByDefault] is true, then
+  /// all [dispose] arguments will be ignored (unless for specific overrides,
+  /// where [inheritDispose] is set to false).
   @visibleForTesting
   ArgProviderOverride<T, A> overrideWith(
-    CreateProviderValueFn<T> create, {
+    T value, {
     DisposeProviderValueFn<T>? dispose,
-    bool? lazy,
+    bool? inheritDispose,
   }) =>
       ArgProviderOverride._(
         this,
-        createValue: create,
-        disposeValue: dispose,
-        lazy: lazy,
+        value,
+        (inheritDispose != null && inheritDispose == true) ||
+                (inheritDispose == null &&
+                    DiscoPreferences._overridesInheritDisposeByDefault)
+            ? this._disposeValue
+            : dispose,
       );
 
   // DI methods ---------------------------------------------------------------

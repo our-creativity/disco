@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 final modelProvider = Provider<Model>((context) => ModelImplementation());
 
 void main() {
+  DiscoPreferences.setPreferences(
+    providersLazyByDefault: true,
+  );
   runApp(const MainApp());
 }
 
