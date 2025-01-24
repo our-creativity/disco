@@ -6,12 +6,10 @@ part of '../../../disco.dart';
 class ArgProviderOverride<T extends Object, A> extends Override {
   ArgProviderOverride._(
     this._argProvider, {
-    required A argument,
-    CreateArgProviderValue<T, A>? createValue,
+    required CreateProviderValueFn<T> createValue,
     DisposeProviderValueFn<T>? disposeValue,
     bool? lazy,
-  })  : _argument = argument,
-        _createValue = createValue,
+  })  : _createValue = createValue,
         _disposeValue = disposeValue,
         _lazy = lazy,
         super._();
@@ -20,9 +18,7 @@ class ArgProviderOverride<T extends Object, A> extends Override {
   final ArgProvider<T, A> _argProvider;
 
   /// @macro Provider.create}
-  final CreateArgProviderValue<T, A>? _createValue;
-
-  final A? _argument;
+  final CreateProviderValueFn<T> _createValue;
 
   final DisposeProviderValueFn<T>? _disposeValue;
 
@@ -32,10 +28,8 @@ class ArgProviderOverride<T extends Object, A> extends Override {
 
   /// Given an argument, creates a [Provider] with that argument.
   /// This method is used internally by [ProviderScope].
-  Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
-        (context) =>
-            _createValue?.call(context, arg) ??
-            _argProvider._createValue(context, arg),
+  Provider<T> _generateIntermediateProvider() => Provider<T>(
+        _createValue,
         dispose: _disposeValue ?? _argProvider._disposeValue,
         lazy: _lazy ?? _argProvider._lazy,
       );

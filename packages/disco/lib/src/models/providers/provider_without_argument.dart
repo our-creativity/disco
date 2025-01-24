@@ -43,7 +43,7 @@ class Provider<T extends Object> extends InstantiableProvider {
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
-    CreateArgProviderValue<T, A> create, {
+    CreateArgProviderValueFn<T, A> create, {
     DisposeProviderValueFn<T>? dispose,
     bool lazy = true,
   }) =>
@@ -76,8 +76,8 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
   @visibleForTesting
-  ProviderOverride<T> overrideWith({
-    CreateProviderValueFn<T>? create,
+  ProviderOverride<T> overrideWith(
+    CreateProviderValueFn<T> create, {
     DisposeProviderValueFn<T>? dispose,
     bool? lazy,
   }) =>

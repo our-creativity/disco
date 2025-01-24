@@ -263,8 +263,7 @@ class _ProviderScopeState extends State<ProviderScope> {
       for (final override in argProviderOverrides) {
         final id = override._argProvider;
 
-        allArgProvidersInScope[id] =
-            override._generateIntermediateProvider(override._argument);
+        allArgProvidersInScope[id] = override._generateIntermediateProvider();
 
         // create non lazy providers.
         if (!(override._lazy ?? override._argProvider._lazy)) {

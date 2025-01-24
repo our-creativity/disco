@@ -1,7 +1,7 @@
 part of '../../../disco.dart';
 
 /// A function that creates an object of type [T] with an argument of type [A].
-typedef CreateArgProviderValue<T, A> = T Function(
+typedef CreateArgProviderValueFn<T, A> = T Function(
   BuildContext context,
   A arg,
 );
@@ -14,7 +14,7 @@ typedef CreateArgProviderValue<T, A> = T Function(
 class ArgProvider<T extends Object, A> {
   /// {@macro ArgProvider}
   ArgProvider._(
-    CreateArgProviderValue<T, A> createValue, {
+    CreateArgProviderValueFn<T, A> createValue, {
     DisposeProviderValueFn<T>? disposeValue,
     bool lazy = true,
   })  : _createValue = createValue,
@@ -25,7 +25,7 @@ class ArgProvider<T extends Object, A> {
   final bool _lazy;
 
   /// {@macro Provider.create}
-  final CreateArgProviderValue<T, A> _createValue;
+  final CreateArgProviderValueFn<T, A> _createValue;
 
   /// {@macro Provider.dispose}
   final DisposeProviderValueFn<T>? _disposeValue;
@@ -35,15 +35,13 @@ class ArgProvider<T extends Object, A> {
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
   @visibleForTesting
-  ArgProviderOverride<T, A> overrideWith({
-    required A argument,
-    CreateArgProviderValue<T, A>? create,
+  ArgProviderOverride<T, A> overrideWith(
+    CreateProviderValueFn<T> create, {
     DisposeProviderValueFn<T>? dispose,
     bool? lazy,
   }) =>
       ArgProviderOverride._(
         this,
-        argument: argument,
         createValue: create,
         disposeValue: dispose,
         lazy: lazy,
