@@ -1,4 +1,4 @@
-part of '../../../disco.dart';
+part of '../../disco_internal.dart';
 
 /// A function that creates an object of type [T].
 typedef CreateProviderValueFn<T> = T Function(BuildContext context);
@@ -107,12 +107,12 @@ class Provider<T extends Object> extends InstantiableProvider {
 
   // Utils leveraged by ProviderScope -----------------------------------------
 
-  /// Function internally used by [_ProviderScopeState] that calls
+  /// Function internally used by [ProviderScopeState] that calls
   /// [_disposeValue].
   ///
   /// This method is necessary to ensure that `value` is correctly casted as
   /// `T` instead of `Object` (what the dispose method of
-  /// [_ProviderScopeState] otherwise assumes).
+  /// [ProviderScopeState] otherwise assumes).
   void _safeDisposeValue(Object value) {
     _disposeValue?.call(value as T);
   }

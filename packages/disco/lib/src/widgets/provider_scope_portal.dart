@@ -1,4 +1,4 @@
-part of '../../disco.dart';
+part of '../disco_internal.dart';
 
 class _InheritedProviderScopePortal extends InheritedWidget {
   const _InheritedProviderScopePortal({

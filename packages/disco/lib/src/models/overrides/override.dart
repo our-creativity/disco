@@ -1,4 +1,4 @@
-part of '../../../disco.dart';
+part of '../../disco_internal.dart';
 
 /// Either a [ProviderOverride] or an [ArgProviderOverride].
 @immutable

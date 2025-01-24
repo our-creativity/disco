@@ -1,4 +1,6 @@
-import 'package:disco/disco.dart';
+// NB: by importing disco/src/disco_internal.dart instead of disco/disco.dart,
+// we can test components that are not exported.
+import 'package:disco/src/disco_internal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
@@ -526,7 +528,7 @@ void main() {
   });
 
   testWidgets(
-      '''ProviderScopeOverride._maybeOf(context) returns null if no ProviderScopeOverride is found in the widget tree''',
+      '''ProviderScopeOverrideState.maybeOf(context) returns null if no ProviderScopeOverride is found in the widget tree''',
       (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -536,8 +538,9 @@ void main() {
               // NB: DiscoInternalTestingUtil is used for internal testing.
               // Do not use it when testing your application.
               // ignore: invalid_use_of_protected_member
-              final isNull = DIT.providerScopeOverrideMaybeOf(context);
-              return Text('_maybeOf returns null: $isNull');
+              final isNull =
+                  ProviderScopeOverrideState.maybeOf(context) == null;
+              return Text('maybeOf returns null: $isNull');
             },
           ),
         ),
@@ -546,11 +549,11 @@ void main() {
     Finder textFinder(String value) => find.text(value);
 
     await tester.pumpAndSettle();
-    expect(textFinder('_maybeOf returns null: true'), findsOneWidget);
+    expect(textFinder('maybeOf returns null: true'), findsOneWidget);
   });
 
   testWidgets(
-      '''ProviderScopeOverride._maybeOf(context) returns a _ProviderScopeOverrideState if a ProviderScopeOverride is found in the widget tree''',
+      '''ProviderScopeOverrideState.maybeOf(context) returns a ProviderScopeOverrideState if a ProviderScopeOverride is found in the widget tree''',
       (tester) async {
     await tester.pumpWidget(
       ProviderScopeOverride(
@@ -562,8 +565,11 @@ void main() {
                 // NB: DiscoInternalTestingUtil is used for internal testing.
                 // Do not use it when testing your application.
                 // ignore: invalid_use_of_protected_member
-                final isNull = DIT.providerScopeOverrideMaybeOf(context);
-                return Text('_maybeOf returns null: $isNull');
+                final isState =
+                    ProviderScopeOverrideState.maybeOf(context) != null;
+                return Text(
+                  'maybeOf returns ProviderScopeOverrideState: $isState',
+                );
               },
             ),
           ),
@@ -574,7 +580,7 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(
-      textFinder('_maybeOf returns null: false'),
+      textFinder('maybeOf returns ProviderScopeOverrideState: true'),
       findsOneWidget,
     );
   });

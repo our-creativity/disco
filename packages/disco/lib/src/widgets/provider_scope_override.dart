@@ -1,4 +1,4 @@
-part of '../../disco.dart';
+part of '../disco_internal.dart';
 
 /// Error thrown when there are multiple ProviderScopeOverride widgets in the
 /// widget tree.
@@ -31,34 +31,22 @@ class ProviderScopeOverride extends StatefulWidget {
   /// this [ProviderScopeOverride].
   final List<Override> overrides;
 
-  /// Returns the [_ProviderScopeOverrideState] of the [ProviderScopeOverride]
-  /// widget.
-  /// Returns null if the [ProviderScopeOverride] widget is not found in the
-  /// ancestor widget tree.
-  static _ProviderScopeOverrideState? _maybeOf(BuildContext context) {
-    final provider = context
-        .getElementForInheritedWidgetOfExactType<
-            _InheritedProviderScopeOverride>()
-        ?.widget;
-    return (provider as _InheritedProviderScopeOverride?)?.state;
-  }
-
   @override
-  State<ProviderScopeOverride> createState() => _ProviderScopeOverrideState();
+  State<ProviderScopeOverride> createState() => ProviderScopeOverrideState();
 }
 
 /// The state of the [ProviderScopeOverride] widget.
-class _ProviderScopeOverrideState extends State<ProviderScopeOverride> {
-  /// The key of the [_ProviderScopeState] of the [ProviderScopeOverride].
-  final _providerScopeStateKey = GlobalKey<_ProviderScopeState>();
+class ProviderScopeOverrideState extends State<ProviderScopeOverride> {
+  /// The key of the [ProviderScopeState] of the [ProviderScopeOverride].
+  final _providerScopeStateKey = GlobalKey<ProviderScopeState>();
 
-  /// The [_ProviderScopeState] of the [ProviderScopeOverride] widget.
-  _ProviderScopeState get providerScopeState =>
+  /// The [ProviderScopeState] of the [ProviderScopeOverride] widget.
+  ProviderScopeState get providerScopeState =>
       _providerScopeStateKey.currentState!;
 
   @override
   Widget build(BuildContext context) {
-    if (ProviderScopeOverride._maybeOf(context) != null) {
+    if (ProviderScopeOverrideState.maybeOf(context) != null) {
       throw MultipleProviderScopeOverrideError();
     }
     return _InheritedProviderScopeOverride(
@@ -70,6 +58,18 @@ class _ProviderScopeOverrideState extends State<ProviderScopeOverride> {
       ),
     );
   }
+
+  /// Returns the [ProviderScopeOverrideState] of the [ProviderScopeOverride]
+  /// widget.
+  /// Returns null if the [ProviderScopeOverride] widget is not found in the
+  /// ancestor widget tree.
+  static ProviderScopeOverrideState? maybeOf(BuildContext context) {
+    final provider = context
+        .getElementForInheritedWidgetOfExactType<
+            _InheritedProviderScopeOverride>()
+        ?.widget;
+    return (provider as _InheritedProviderScopeOverride?)?.state;
+  }
 }
 
 class _InheritedProviderScopeOverride extends InheritedWidget {
@@ -79,7 +79,7 @@ class _InheritedProviderScopeOverride extends InheritedWidget {
   });
 
   /// The data to be provided
-  final _ProviderScopeOverrideState state;
+  final ProviderScopeOverrideState state;
 
   // coverage:ignore-start
   @override

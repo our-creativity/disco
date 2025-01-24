@@ -1,4 +1,4 @@
-part of '../../../disco.dart';
+part of '../../disco_internal.dart';
 
 /// Override that, if inserted into the widget tree, takes precedence over
 /// [_argProvider].

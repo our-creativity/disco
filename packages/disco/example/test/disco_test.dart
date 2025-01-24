@@ -1,4 +1,4 @@
-import 'package:disco/disco.dart';
+import 'package:disco/src/disco_internal.dart';
 import 'package:example/main.dart';
 import 'package:example/model.dart';
 import 'package:flutter/material.dart';

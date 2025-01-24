@@ -2,7 +2,7 @@
 // not displayed for all providers and argument providers.
 // ignore_for_file: strict_raw_type
 
-part of '../../disco.dart';
+part of '../disco_internal.dart';
 
 /// {@template ProviderScope}
 /// Provides the passed [providers] to descendants (i.e. what is in [child]).
@@ -35,18 +35,18 @@ class ProviderScope extends StatefulWidget {
   final List<Override>? overrides;
 
   @override
-  State<ProviderScope> createState() => _ProviderScopeState();
+  State<ProviderScope> createState() => ProviderScopeState();
 
   /// {@template _findState}
-  /// Finds the first [_ProviderScopeState] ancestor that satisfies the given
+  /// Finds the first [ProviderScopeState] ancestor that satisfies the given
   /// [id].
   /// {@endtemplate}
-  static _ProviderScopeState? _findState<T extends Object>(
+  static ProviderScopeState? _findState<T extends Object>(
     BuildContext context, {
     required Provider id,
   }) {
     // try and find the override first
-    final providerScopeOverride = ProviderScopeOverride._maybeOf(context);
+    final providerScopeOverride = ProviderScopeOverrideState.maybeOf(context);
     if (providerScopeOverride != null) {
       final state = providerScopeOverride.providerScopeState;
       if (state.isProviderInScope(id)) return state;
@@ -62,7 +62,7 @@ class ProviderScope extends StatefulWidget {
   /// returns null.
   ///
   /// In case the [id] is found in some [ProviderScope], but the find fails
-  /// (no associated value in [_ProviderScopeState.createdProviderValues]),
+  /// (no associated value in [ProviderScopeState.createdProviderValues]),
   /// the provider's value gets created.
   /// {@endtemplate}
   static T? _getOrCreateProviderValue<T extends Object>(
@@ -81,12 +81,12 @@ class ProviderScope extends StatefulWidget {
   }
 
   /// {@macro _findState}
-  static _ProviderScopeState? _findStateForArgProvider<T extends Object, A>(
+  static ProviderScopeState? _findStateForArgProvider<T extends Object, A>(
     BuildContext context, {
     required ArgProvider<T, A> id,
   }) {
     // try finding the override first
-    final providerScopeOverride = ProviderScopeOverride._maybeOf(context);
+    final providerScopeOverride = ProviderScopeOverrideState.maybeOf(context);
     if (providerScopeOverride != null) {
       final state = providerScopeOverride.providerScopeState;
       if (state.isArgProviderInScope(id)) return state;
@@ -114,7 +114,7 @@ class ProviderScope extends StatefulWidget {
 }
 
 /// The state of the [ProviderScope] widget
-class _ProviderScopeState extends State<ProviderScope> {
+class ProviderScopeState extends State<ProviderScope> {
   /// Stores all the argument providers in the current scope. The values are
   /// intermediate providers, which are used as internal IDs by
   /// [createdProviderValues].
@@ -369,7 +369,7 @@ class _ProviderScopeState extends State<ProviderScope> {
 class _InheritedProvider extends InheritedModel<Object> {
   const _InheritedProvider({required this.state, required super.child});
 
-  final _ProviderScopeState state;
+  final ProviderScopeState state;
 
   @override
   bool updateShouldNotify(covariant _InheritedProvider oldWidget) {

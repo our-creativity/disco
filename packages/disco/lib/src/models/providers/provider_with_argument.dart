@@ -1,4 +1,4 @@
-part of '../../../disco.dart';
+part of '../../disco_internal.dart';
 
 /// A function that creates an object of type [T] with an argument of type [A].
 typedef CreateArgProviderValueFn<T, A> = T Function(
