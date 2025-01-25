@@ -440,7 +440,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          numberProvider.overrideWith(100),
+          numberProvider.overrideWithValue(100),
         ],
         child: MaterialApp(
           home: ProviderScope(
@@ -467,7 +467,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          numberProvider.overrideWith(8 * 2),
+          numberProvider.overrideWithValue(8 * 2),
         ],
         child: MaterialApp(
           home: ProviderScope(
@@ -492,12 +492,12 @@ void main() {
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          numberProvider.overrideWith(100),
+          numberProvider.overrideWithValue(100),
         ],
         child: MaterialApp(
           home: ProviderScopeOverride(
             overrides: [
-              numberProvider.overrideWith(200),
+              numberProvider.overrideWithValue(200),
             ],
             child: Builder(
               builder: (context) {

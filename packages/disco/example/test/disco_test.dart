@@ -43,7 +43,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          modelProvider.overrideWith(MockModel()),
+          modelProvider.overrideWithValue(MockModel()),
         ],
         child: const MainApp(),
       ),

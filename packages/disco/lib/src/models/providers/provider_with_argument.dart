@@ -35,15 +35,8 @@ class ArgProvider<T extends Object, A> {
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
   @visibleForTesting
-  ArgProviderOverride<T, A> overrideWith(
-    T value, {
-    DisposeProviderValueFn<T>? dispose,
-    bool? inheritDispose,
-  }) =>
-      ArgProviderOverride._(
-        this,
-        value,
-      );
+  ArgProviderOverride<T, A> overrideWithValue(T value) =>
+      ArgProviderOverride._(this, value);
 
   // DI methods ---------------------------------------------------------------
 

@@ -76,15 +76,8 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
   @visibleForTesting
-  ProviderOverride<T> overrideWith(
-    T value, {
-    DisposeProviderValueFn<T>? dispose,
-    bool? inheritDispose,
-  }) =>
-      ProviderOverride._(
-        this,
-        value,
-      );
+  ProviderOverride<T> overrideWithValue(T value) =>
+      ProviderOverride._(this, value);
 
   // DI methods ---------------------------------------------------------------
 
