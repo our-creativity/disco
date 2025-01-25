@@ -5,4 +5,7 @@ environment:
 workspace:
   - packages/disco
   - packages/disco/example
+  - examples/auto_route
+  - examples/bloc
+  - examples/service_injection
   - examples/solidart
