@@ -1,3 +1,7 @@
+## 0.0.2
+
+- Fix imports, simplify file names and correct repository URL.
+
 ## 0.0.1
 
 - Initial version. The providers were moved from the package solidart.
