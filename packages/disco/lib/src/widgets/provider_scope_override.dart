@@ -37,6 +37,19 @@ class ProviderScopeOverride extends StatefulWidget {
 
 /// The state of the [ProviderScopeOverride] widget.
 class ProviderScopeOverrideState extends State<ProviderScopeOverride> {
+  /// Returns the [ProviderScopeOverrideState] of the [ProviderScopeOverride]
+  /// widget.
+  /// Returns null if the [ProviderScopeOverride] widget is not found in the
+  /// ancestor widget tree.
+  @visibleForTesting
+  static ProviderScopeOverrideState? maybeOf(BuildContext context) {
+    final provider = context
+        .getElementForInheritedWidgetOfExactType<
+            _InheritedProviderScopeOverride>()
+        ?.widget;
+    return (provider as _InheritedProviderScopeOverride?)?.state;
+  }
+
   /// The key of the [ProviderScopeState] of the [ProviderScopeOverride].
   final _providerScopeStateKey = GlobalKey<ProviderScopeState>();
 
@@ -57,18 +70,6 @@ class ProviderScopeOverrideState extends State<ProviderScopeOverride> {
         child: widget.child,
       ),
     );
-  }
-
-  /// Returns the [ProviderScopeOverrideState] of the [ProviderScopeOverride]
-  /// widget.
-  /// Returns null if the [ProviderScopeOverride] widget is not found in the
-  /// ancestor widget tree.
-  static ProviderScopeOverrideState? maybeOf(BuildContext context) {
-    final provider = context
-        .getElementForInheritedWidgetOfExactType<
-            _InheritedProviderScopeOverride>()
-        ?.widget;
-    return (provider as _InheritedProviderScopeOverride?)?.state;
   }
 }
 
