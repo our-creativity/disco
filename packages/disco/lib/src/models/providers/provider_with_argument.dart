@@ -14,12 +14,12 @@ typedef CreateArgProviderValueFn<T, A> = T Function(
 class ArgProvider<T extends Object, A> {
   /// {@macro ArgProvider}
   ArgProvider._(
-    CreateArgProviderValueFn<T, A> createValue, {
-    DisposeProviderValueFn<T>? disposeValue,
+    CreateArgProviderValueFn<T, A> create, {
+    DisposeProviderValueFn<T>? dispose,
     bool? lazy,
-  })  : _createValue = createValue,
-        _disposeValue = disposeValue,
-        _lazy = lazy ?? DiscoPreferences.lazy;
+  })  : _createValue = create,
+        _disposeValue = dispose,
+        _lazy = lazy ?? DiscoConfig.lazy;
 
   /// {@macro Provider.lazy}
   final bool _lazy;
@@ -30,21 +30,20 @@ class ArgProvider<T extends Object, A> {
   /// {@macro Provider.dispose}
   final DisposeProviderValueFn<T>? _disposeValue;
 
-  // Overrides ----------------------------------------------------------------
+  // ---
+  // Overrides
+  // ---
 
-  /// It creates an override of this provider to be passed to
-  /// [ProviderScopeOverride].
+  /// {@macro Provider.overrideWithValue}
   @visibleForTesting
   ArgProviderOverride<T, A> overrideWithValue(T value) =>
       ArgProviderOverride._(this, value);
 
-  // DI methods ---------------------------------------------------------------
+  // ---
+  // DI methods
+  // ---
 
-  /// Injects the value held by a provider. In case the provider is not found,
-  /// it throws a [ProviderWithoutScopeError].
-  ///
-  /// NB: You should prefer [maybeOf] over [of] to retrieve a provider
-  /// which you are aware it could be not present.
+  /// {@macro Provider.of}
   T of(BuildContext context) {
     final provider = maybeOf(context);
     if (provider == null) {
@@ -53,13 +52,14 @@ class ArgProvider<T extends Object, A> {
     return provider;
   }
 
-  /// Injects the value held by a provider. In case the provider is not found,
-  /// it returns null.
+  /// {@macro Provider.maybeOf}
   T? maybeOf(BuildContext context) {
     return ProviderScope._getOrCreateArgProviderValue(context, id: this);
   }
 
-  // Utils leveraged by ProviderScope -----------------------------------------
+  // ---
+  // Utils leveraged by ProviderScope
+  // ---
 
   /// It creates an [InstantiableArgProvider] with the passed argument.
   /// This ensures that an [ArgProvider] inserted into the widget tree always

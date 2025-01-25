@@ -38,7 +38,7 @@ class Provider<T extends Object> extends InstantiableProvider {
     bool? lazy,
   })  : _createValue = create,
         _disposeValue = dispose,
-        _lazy = lazy ?? DiscoPreferences.lazy,
+        _lazy = lazy ?? DiscoConfig.lazy,
         super._();
 
   /// {@macro arg-provider}
@@ -47,16 +47,9 @@ class Provider<T extends Object> extends InstantiableProvider {
     DisposeProviderValueFn<T>? dispose,
     bool lazy = true,
   }) =>
-      ArgProvider._(create, disposeValue: dispose, lazy: lazy);
+      ArgProvider._(create, dispose: dispose, lazy: lazy);
 
-  /// {@template Provider.lazy}
-  /// Makes the creation of the provided value lazy. Defaults to true.
-  ///
-  /// NB: the provider itself is not lazily created, only its contained value.
-  ///
-  /// If this value is true, the provider's value will be created only
-  /// when retrieved from descendants for the first time.
-  /// {@endtemplate}
+  /// {@macro Provider.lazy}
   final bool _lazy;
 
   /// {@template Provider.create}
@@ -67,33 +60,39 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// {@template Provider.dispose}
   /// An optional dispose function called when the [ProviderScope] that created
   /// this provider gets disposed. Its purpose is to dispose the provided
-  /// value, not the provider itself.
+  /// value.
   /// {@endtemplate}
   final DisposeProviderValueFn<T>? _disposeValue;
 
   // Overrides ----------------------------------------------------------------
 
+  /// {@template Provider.overrideWithValue}
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
+  /// {@endtemplate}
   @visibleForTesting
   ProviderOverride<T> overrideWithValue(T value) =>
       ProviderOverride._(this, value);
 
   // DI methods ---------------------------------------------------------------
 
+  /// {@template Provider.of}
   /// Injects the value held by a provider. In case the provider is not found,
   /// it throws a [ProviderWithoutScopeError].
   ///
   /// NB: You should prefer [maybeOf] over [of] to retrieve a provider
   /// which you are aware it could be not present.
+  /// {@endtemplate}
   T of(BuildContext context) {
     final provider = maybeOf(context);
     if (provider == null) throw ProviderWithoutScopeError(this);
     return provider;
   }
 
+  /// {@template Provider.maybeOf}
   /// Injects the value held by a provider. In case the provider is not found,
   /// it returns null.
+  /// {@endtemplate}
   T? maybeOf(BuildContext context) {
     return ProviderScope._getOrCreateProviderValue(context, id: this);
   }
@@ -112,8 +111,4 @@ class Provider<T extends Object> extends InstantiableProvider {
 
   /// Returns the type of the value.
   Type get _valueType => T;
-
-  // NB: unlike ArgProvider and the Override classes, there is no
-  // _generateIntermediateProvider, as the provider itself can
-  // be used as its own intermediate provider.
 }
