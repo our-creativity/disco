@@ -16,19 +16,22 @@ class MyApp extends StatelessWidget {
     return ProviderScope(
       providers: [themeProvider],
       child: Builder(
-        builder: (context) => BlocBuilder(
-          // NB: When injecting the cubit, the context has to be a descendant
-          // of ProviderScope (and not what MyApp.build provides).
-          bloc: themeProvider.of(context),
-          builder: (context, bool isDarkMode) {
-            return MaterialApp(
-              theme: isDarkMode
-                  ? ThemeData.dark().copyWith(primaryColor: Colors.blueGrey)
-                  : ThemeData.light().copyWith(primaryColor: Colors.lightBlue),
-              home: const ThemeSwitcherPage(),
-            );
-          },
-        ),
+        builder: (context) {
+          return BlocBuilder(
+            // NB: When injecting the cubit, the context has to be a descendant
+            // of ProviderScope (and not what MyApp.build provides).
+            bloc: themeProvider.of(context),
+            builder: (context, bool isDarkMode) {
+              return MaterialApp(
+                theme: isDarkMode
+                    ? ThemeData.dark().copyWith(primaryColor: Colors.blueGrey)
+                    : ThemeData.light()
+                        .copyWith(primaryColor: Colors.lightBlue),
+                home: const ThemeSwitcherPage(),
+              );
+            },
+          );
+        },
       ),
     );
   }
