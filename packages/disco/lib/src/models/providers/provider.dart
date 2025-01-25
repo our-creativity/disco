@@ -49,7 +49,14 @@ class Provider<T extends Object> extends InstantiableProvider {
   }) =>
       ArgProvider._(create, dispose: dispose, lazy: lazy);
 
-  /// {@macro Provider.lazy}
+  /// {@template Provider.lazy}
+  /// Makes the creation of the provided value lazy. defaults to true.
+  ///
+  /// > The provider itself is not lazily created, only its contained value.
+  ///
+  /// if this value is true, the provider's value will be created only when
+  /// retrieved from descendants for the first time.
+  /// {@endtemplate}
   final bool _lazy;
 
   /// {@template Provider.create}

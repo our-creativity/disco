@@ -114,6 +114,7 @@ class ProviderScope extends StatefulWidget {
 }
 
 /// The state of the [ProviderScope] widget
+@protected
 class ProviderScopeState extends State<ProviderScope> {
   /// Stores all the argument providers in the current scope. The values are
   /// intermediate providers, which are used as internal IDs by
