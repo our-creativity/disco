@@ -1,0 +1,21 @@
+name: solidart_example
+description: "An example of a Flutter project combining disco and solidart."
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ^3.6.0
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^7.0.0
+
+flutter:
+  uses-material-design: true

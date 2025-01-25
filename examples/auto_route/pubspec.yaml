@@ -1,0 +1,22 @@
+name: auto_route_example
+description: "An example of a Flutter project combining disco and auto_route."
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ^3.6.0
+
+resolution: workspace
+
+dependencies:
+  auto_route: ^9.3.0+1
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^7.0.0
+
+flutter:
+  uses-material-design: true
