@@ -1,35 +1,44 @@
 # Disco
 
-A modern, convenient and safe way to do scoped DI in Flutter.
+<img src="https://raw.githubusercontent.com/our-creativity/disco/main/assets/disco.jpeg" height="400">
 
-The documentation is currently a work in progress.
+---
+
+A modern, convenient, simple and safe way to do scoped dependency injection in Flutter.
+
+For learning how to use [Disco](https://github.com/our-creativity/disco), see its documentation: >>> https://disco.mariuti.com <<<
 
 ## Features
 
-- Scoped DI
+- Scoped dependency injection
 - Service locator
 - Testable
 - Independent of state management solutions
-  - This library focuses on DI, so that state management solutions can
-  focus on the reactivity.
+  - This library focuses on DI, so that state management solutions can focus on the reactivity.
 
 ## Usage
 
-### Argument type
-
-Write the argument type right next to the parameter instead of with generics.
-
-DO:
+### Creating a provider
 
 ```dart
-final numberProvider = Provider.withArgument((context, int arg) => arg * 2);
+final modelProvider = Provider((context) => Model());
 ```
 
-AVOID:
+### Providing a provider
 
 ```dart
-final numberProvider = Provider.withArgument<int, int>((context, arg) => arg * 2);
+ProviderScope(
+  providers: [modelProvider],
+  child: MyWidget(),
+)
 ```
+
+### Retrieving a provider
+```dart
+final model = modelProvider.of(context);
+```
+
+You can retrieve a provider from any widget in the subtree of the `ProviderScope` where the provider has been provided.
 
 ### Examples
 
@@ -48,29 +57,19 @@ concepts of the library).
 
 #### Compatible solutions
 
-Compatible state management solutions are those whose signals/observables can
-be created locally and passed as arguments/props, such as
-[`solidart`](https://pub.dev/packages/flutter_solidart) (NB: its providers up to
+Compatible state management solutions are those whose signals/observables can be created locally and passed as arguments, such as
+- [`solidart`](https://pub.dev/packages/flutter_solidart) (NB: its providers up to
 version `2.0.0-dev.2` will be replaced with the ones present in `disco`),
-[`bloc`](https://pub.dev/packages/flutter_bloc) (NB: the usage of `BlocProvider`
-should be replaced with the providers present in this library), and many more.
+- `ValueNotifier`/`ChangeNotifier` (from Flutter)
+- [`bloc`](https://pub.dev/packages/flutter_bloc) (NB: the usage of `BlocProvider` should be replaced with the providers present in this library).
 
 Our repository includes one example with `solidart` and one with `bloc`.
 
 #### Incompatible solutions
 
-State management solution entirely leveraging global state, such as
-[`riverpod`](https://pub.dev/packages/riverpod), are not compatible with this
-library. Also those solutions constrained by typical type-base providers
-(i.e. `Provider<SomeType>`), such as
-[`provider`](https://pub.dev/packages/provider), are not compatible, since
-both of them handle everything (including the reactivity) through dependency
-injection instead of creating instances of signals/observables that can be
-managed manually.
+State management solution entirely leveraging global state, such as [`riverpod`](https://pub.dev/packages/riverpod), are not compatible with this library.
 
 ### Contributions
 
 The purpose of this package is to simplify dependency injection for everyone.
-PRs are welcome, especially for documentation and more examples. Another goal of
-this library is to be simple. PRs introducing new features
-or breaking changes will have to be explained in detail.
+PRs are welcome, especially for documentation and more examples. Another goal of this library is to be simple. PRs introducing new features or breaking changes will have to be explained in detail.
