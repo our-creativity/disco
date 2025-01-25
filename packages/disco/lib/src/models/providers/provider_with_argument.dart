@@ -19,7 +19,7 @@ class ArgProvider<T extends Object, A> {
     bool? lazy,
   })  : _createValue = createValue,
         _disposeValue = disposeValue,
-        _lazy = lazy ?? DiscoPreferences._providersLazyByDefault;
+        _lazy = lazy ?? DiscoPreferences.lazy;
 
   /// {@macro Provider.lazy}
   final bool _lazy;

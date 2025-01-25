@@ -38,7 +38,7 @@ class Provider<T extends Object> extends InstantiableProvider {
     bool? lazy,
   })  : _createValue = create,
         _disposeValue = dispose,
-        _lazy = lazy ?? DiscoPreferences._providersLazyByDefault,
+        _lazy = lazy ?? DiscoPreferences.lazy,
         super._();
 
   /// {@macro arg-provider}

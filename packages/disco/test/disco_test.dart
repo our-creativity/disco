@@ -39,20 +39,16 @@ void main() {
           body: ProviderScope(
             providers: [
               numberContainer1Provider,
+              numberContainer2Provider,
             ],
-            child: ProviderScope(
-              providers: [
-                numberContainer2Provider,
-              ],
-              child: Builder(
-                builder: (context) {
-                  final numberProvider1 = numberContainer1Provider.of(context);
-                  final numberProvider2 = numberContainer2Provider.of(context);
-                  return Text(
-                    '''${numberProvider1.number} ${numberProvider2.number}''',
-                  );
-                },
-              ),
+            child: Builder(
+              builder: (context) {
+                final numberProvider1 = numberContainer1Provider.of(context);
+                final numberProvider2 = numberContainer2Provider.of(context);
+                return Text(
+                  '''${numberProvider1.number} ${numberProvider2.number}''',
+                );
+              },
             ),
           ),
         ),
@@ -104,9 +100,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [
-              zeroProvider,
-            ],
+            providers: [zeroProvider],
             child: Builder(
               builder: (context) {
                 final ten = tenProvider.of(context);
@@ -138,9 +132,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [
-              nameContainerProvider,
-            ],
+            providers: [nameContainerProvider],
             child: Builder(
               builder: (context) {
                 final numberContainer =
@@ -257,9 +249,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [
-              numberContainerProvider,
-            ],
+            providers: [numberContainerProvider],
             child: Builder(
               builder: (context) {
                 return ElevatedButton(
@@ -352,9 +342,7 @@ void main() {
             builder: (BuildContext context, Key key, Widget? child) {
               return ProviderScope(
                 key: key,
-                providers: [
-                  numberProvider,
-                ],
+                providers: [numberProvider],
                 child: Builder(
                   builder: (context) {
                     final number = numberProvider.of(context);

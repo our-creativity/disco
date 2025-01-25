@@ -1,16 +1,11 @@
 part of '../disco_internal.dart';
 
-/// ## Disco preferences
+/// The global preferences for the Disco package.
 abstract final class DiscoPreferences {
-  DiscoPreferences._();
-
+  /// {@template lazy}
   /// Whether or not providers compute their value lazily, unless overridden.
-  /// By default, this setting is set to true.
-  static bool _providersLazyByDefault = true;
-
-  /// The default behavior of this package can be overridden.
-  /// This static method should be called in main before starting the app.
-  static void makeProvidersNonLazyByDefault() {
-    DiscoPreferences._providersLazyByDefault = false;
-  }
+  ///
+  /// Defaults to `true`.
+  /// {@endtemplate}
+  static bool lazy = true;
 }

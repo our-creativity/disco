@@ -22,13 +22,13 @@ Write the argument type right next to the parameter instead of with generics.
 DO:
 
 ```dart
-final numberProvider = Provider.withArgument((_, int arg) => arg * 2);
+final numberProvider = Provider.withArgument((context, int arg) => arg * 2);
 ```
 
 AVOID:
 
 ```dart
-final numberProvider = Provider.withArgument<int, int>((_, arg) => arg * 2);
+final numberProvider = Provider.withArgument<int, int>((context, arg) => arg * 2);
 ```
 
 ### Examples

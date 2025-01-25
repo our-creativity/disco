@@ -1,11 +1,34 @@
 import 'package:disco/disco.dart';
-import 'package:example/model.dart';
 import 'package:flutter/material.dart';
 
+/// ---
+/// Model
+/// ---
+abstract class Model extends ChangeNotifier {
+  void incrementCounter();
+
+  int get counter;
+}
+
+class ModelImplementation extends Model {
+  int _counter = 0;
+
+  @override
+  int get counter => _counter;
+
+  @override
+  void incrementCounter() {
+    _counter++;
+    notifyListeners();
+  }
+}
+
+/// ---
+/// Provider
+/// ---
 final modelProvider = Provider<Model>((context) => ModelImplementation());
 
 void main() {
-  DiscoPreferences.makeProvidersNonLazyByDefault();
   runApp(const MainApp());
 }
 
@@ -14,7 +37,6 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // todo: replace with a more meaningful example
     return MaterialApp(
       title: 'Disco Example',
       theme: ThemeData(
@@ -30,6 +52,7 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Provide the modelProvider to descendants
     return ProviderScope(
       providers: [modelProvider],
       // This builder gives a descendant context, only descendants can access
@@ -46,6 +69,7 @@ class MyHomePage extends StatelessWidget {
                   const Text(
                     'You have pushed the button this many times:',
                   ),
+                  // Rebuilds this widget when the model changes
                   ListenableBuilder(
                     listenable: model,
                     builder: (context, child) {
@@ -56,6 +80,7 @@ class MyHomePage extends StatelessWidget {
               ),
             ),
             floatingActionButton: FloatingActionButton(
+              // increment the counter when the button is pressed
               onPressed: model.incrementCounter,
               child: const Icon(Icons.add),
             ),
