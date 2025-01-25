@@ -9,7 +9,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // todo: create an example with auto_route
+    // TODO(nank1ro): create an example with auto_route
     return const MaterialApp(
       home: Scaffold(
         body: Center(

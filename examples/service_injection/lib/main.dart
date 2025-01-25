@@ -9,7 +9,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // todo: create an example of service injection with disco
+    // TODO(nank1ro): create an example of service injection with disco
     return const MaterialApp(
       home: Scaffold(
         body: Center(

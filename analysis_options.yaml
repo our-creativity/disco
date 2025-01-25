@@ -22,6 +22,7 @@ linter:
     # hash code, which is not desired (it will no longer be possible to differentiate
     # between them). Therefore, no const constructors should be allowed.
     prefer_const_constructors_in_immutables: false
+    package_names: false
 
 # analyzer:
 #   exclude:
