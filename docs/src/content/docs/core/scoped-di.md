@@ -1,6 +1,6 @@
 ---
 title: Scoped DI
-description: How to provide values and how to inject them using scopes
+description: How to use Disco providers and understanding scoping.
 ---
 
 Providers have to be provided before they can be injected.

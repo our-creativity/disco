@@ -1,6 +1,6 @@
 ---
 title: Modals
-description: How to access providers inside modals
+description: How to access providers inside modals.
 ---
 
 A modal spawns a new widget tree, making injecting providers not possible out of the box.

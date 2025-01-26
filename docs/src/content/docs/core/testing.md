@@ -1,6 +1,6 @@
 ---
 title: Testing
-description: How to use overrides for testing
+description: How to use overrides for testing.
 ---
 
 Testing is done with overrides. You will need to place a `ProviderScopeOverride` (preferability as the root widget) and then specify the `overrides`, which is a list containing the providers followed by `.overrideWithValue(T value)`.

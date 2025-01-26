@@ -4,9 +4,9 @@
 
 ---
 
-A modern, convenient, simple and safe way to do scoped dependency injection in Flutter.
+A modern, convenient, simple and safe way to do scoped dependency injection in Flutter, bringing a new concept of providers.
 
-For learning how to use [Disco](https://github.com/our-creativity/disco), see its documentation: >>> https://disco.mariuti.com <<<
+To learn how to use [Disco](https://github.com/our-creativity/disco), see its full documentation: >>> https://disco.mariuti.com <<<
 
 ## Features
 

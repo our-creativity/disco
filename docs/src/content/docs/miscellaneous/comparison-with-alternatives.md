@@ -1,6 +1,6 @@
 ---
 title: Comparison with alternatives
-description: Challenges and limitations found in other approaches
+description: Challenges and limitations found in other approaches.
 ---
 
 Disco was developed to overcome the challenges and limitations of the Flutter ecosystem in the context of dependency injection. Let's understand them together.

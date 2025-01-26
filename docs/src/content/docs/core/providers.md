@@ -1,6 +1,6 @@
 ---
 title: Providers
-description: How to create and use providers
+description: How to create Disco providers.
 ---
 
 A provider is a tool that helps manage and inject dependencies in an application, making it easier to share data or services across different parts of the app.

@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: A glimpse into Discos pros and cons
+description: A glimpse into the pros and cons of Disco.
 ---
 
 Disco is a library introducing a new concept of providers that operate differently from those already present in the Flutter ecosystem. It was developed to overcome the challenges and limitations in the context of dependency injection.

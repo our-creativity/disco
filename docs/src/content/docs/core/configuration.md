@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: How to set up application-wide configuration
+description: How to set up the application-wide configuration for Disco.
 ---
 
 Disco aims to be minimally opinionated. To customize the default configuration, set the desired preferences using `DiscoConfig` before calling `runApp`. For example:
