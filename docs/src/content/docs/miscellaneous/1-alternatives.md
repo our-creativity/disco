@@ -1,5 +1,5 @@
 ---
-title: Comparison
+title: Alternatives
 description: Challenges and limitations found in previous approaches
 ---
 
@@ -38,6 +38,8 @@ Disco is inspired by the approaches mentioned above, particularly:
   
 - **Safety from Riverpod**  
   - Providers are injected via their instance, acting as an identifier, rather than by type.
+
+Disco also emphasizes:
 
 - **Injecting observables/signals directly**  
   - Allows for injecting the observables/signals themselves, enabling loose coupling with third-party state management solutions.

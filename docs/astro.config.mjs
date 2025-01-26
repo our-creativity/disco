@@ -24,8 +24,8 @@ export default defineConfig({
           autogenerate: { directory: 'concepts' },
         },
         {
-          label: 'Alternatives',
-          autogenerate: { directory: 'alternatives' },
+          label: 'Miscellaneous',
+          autogenerate: { directory: 'miscellaneous' },
         },
       ],
     }),

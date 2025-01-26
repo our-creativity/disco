@@ -5,7 +5,7 @@ description: The reason why this library was developed
 
 Disco is a library introducing a new concept of providers that operate differently from those already present in the Flutter ecosystem. It was developed to overcome the challenges and limitations in the context of dependency injection.
 
-To get straight to the point, pros and cons are summarized below; a brief comparison with other DI practices follows in the next page.
+To get straight to the point, pros and cons are summarized below.
 
 ### Pros
 
