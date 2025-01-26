@@ -20,8 +20,8 @@ export default defineConfig({
           autogenerate: { directory: 'introduction' },
         },
         {
-          label: 'Concepts',
-          autogenerate: { directory: 'concepts' },
+          label: 'Core',
+          autogenerate: { directory: 'core' },
         },
         {
           label: 'Miscellaneous',

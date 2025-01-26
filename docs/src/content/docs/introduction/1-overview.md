@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: The reason why this library was developed
+description: A glimpse into Discos pros and cons
 ---
 
 Disco is a library introducing a new concept of providers that operate differently from those already present in the Flutter ecosystem. It was developed to overcome the challenges and limitations in the context of dependency injection.
@@ -31,10 +31,10 @@ The pros of Disco are:
 
 ### Cons
 
-The main con of Disco is:
+The cons of this library are:
 
-- Providers might need to be lifted up or down in the widget tree.
-- Modals spawn new widget trees.
+- Providers might need to be lifted up or down in the widget tree, as requirements change.
+- Modals spawn new widget trees, causing disconnection with the providers in the main tree.
   - A special widget must be used to restore access to the providers in the main widget tree.
 - It is not fully compile-time safe.
   - The injection of a provider that cannot be find in any scope results in a runtime error.
@@ -47,4 +47,4 @@ In Disco's defense regarding the last point:
 
 ## General takeaway
 
-Every solution has trade-offs. You can limit the impact of these trade-offs by running unit, widget and end-to-end tests, and by doing code reviews, which are all crucial practices.
+As the authors of Disco, we believe this to be the most effective strategy for DI in Flutter. However, every solution has trade-offs. You can limit the impact of these trade-offs by running unit, widget and end-to-end tests, and by doing code reviews, which are all crucial practices.

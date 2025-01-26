@@ -44,7 +44,8 @@ final doubleNumberProvider = Provider.withArgument((context) {
 Providers need to be provided before they can be injected in the widget tree. Sometimes, they need an initial argument so that they can be instantiated correctly. This is possible with `Provider.withArgument`.
 
 ```dart
-final numberPlusArgProvider = Provider.withArgument((context, int arg) {
+// NB: we renamed the `context` to `_` because it is unused.
+final numberPlusArgProvider = Provider.withArgument((_, int arg) {
   return 5 + arg;
 });
 ```
@@ -52,8 +53,9 @@ final numberPlusArgProvider = Provider.withArgument((context, int arg) {
 An example where this might make more sense would be an application with multi-account support, where the database is loaded per user, and the filepath of the database contains the user ID:
 
 ```dart
+// NB: we renamed the `context` to `_` because it is unused.
 class MyDatabase {
-  static provider = Provider((context, String userId) => MyDatabase.fromId(id));
+  static provider = Provider((_, String userId) => MyDatabase.fromId(id));
 }
 ```
 
@@ -69,3 +71,15 @@ final doubleNumberPlusArgProvider = Provider.withArgument((context, int arg) {
   return number * 2 + arg;
 });
 ```
+
+## Dispose and lazy parameters
+
+When defining a provider, we need to pass the positional `create` argument, which is a function used to generate the value contained by the provider.
+
+There are also two optional named parameters that can be specified.
+
+| Parameter | Default | Description |
+| -------------- | ------- | ----------- |
+| `dispose`      | null    | The function to call when the scope containing the provider gets disposed. It is used to dispose correctly the value held by the provider. |
+| `lazy`         | `DiscoConfig.lazy`, which defaults to true | The values of the providers provided in a scope are created lazily.|
+

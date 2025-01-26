@@ -1,17 +1,15 @@
 ---
-title: DI and Scopes
-description: How to provide values and how to inject them
+title: Scoped DI
+description: How to provide values and how to inject them using scopes
 ---
 
 Providers have to be provided before they can be injected.
 
-Let us recall the two providers of the previous page for this section. 
+Let us consider two providers of the previous page for this section.
 
 ```dart
-// NB: we renamed the `context` to `_` because it is unused.
 final numberProvider = Provider((_) => 5);
 
-// NB: in this provider the `context` is used
 final doubleNumberPlusArgProvider = Provider.withArgument((context, int arg) {
   final number = numberProvider.of(context);
   return number * 2 + arg;
@@ -31,7 +29,7 @@ ProviderScope(
 )
 ```
 
-In case the provider takes an argument we need to specify it when providing it.
+In case the provider takes an argument, we need to specify it when providing it.
 
 ```dart
 ProviderScope(
@@ -42,7 +40,7 @@ ProviderScope(
 
 ### How to inject
 
-Injection is the act of retrieving a dependency. It is done with the methods `of(context)` and `maybeOf(context)`, the latter one being safer because if the provider is not found in any scopes it returns null instead of throwing. If you are unsure about which one to use, we recommend you use `of(context)` (and maybe set up an error monitoring solution to detect invalid injection).
+Injecting is the act of retrieving a dependency. It is done with the methods `of(context)` and `maybeOf(context)`, the latter one being safer because it returns null instead of throwing if the provider is not found in any scopes. If you are unsure about which one to use, for simplicity you should probably stick to `of(context)` (and maybe set up an error monitoring solution to automatically detect invalid injections).
 
 We inject the two providers above by using the `numberProvider.of(context)` and `doubleNumberPlusArgProvider.of(context)`.
 
@@ -93,7 +91,7 @@ ProviderScope(
 )
 ```
 
-Placing the ProviderScope containing `doubleNumberPlusArgProvider` above the one containing `numberProvider` would also not work.
+Placing the ProviderScope containing `doubleNumberPlusArgProvider` above the one containing `numberProvider` would also not work. It needs to be like in the full example above.
 
 ### Argument
 
@@ -105,4 +103,4 @@ class MyDatabase {
 }
 ```
 
-This `MyDatabase.provider` should be provided in a subtree (of the widget tree) belonging to the currently logged user. If you provide it too high up in the widget tree (before the account switching logic) it will not be possible to change database, because the `ProviderScope` where `MyDatabase.provider` is provided is never disposed. In practice, this particular error is unlikely due to the `userId` being first available in the account switching logic. However, this kind of scenario needs to be considered.
+The `MyDatabase.provider` should be provided in a subtree (of the widget tree) belonging to the currently logged user. If you provide it too high up in the widget tree (above the currently logged user logic) it will not be possible to change database, because the `ProviderScope` where `MyDatabase.provider` is provided is never disposed. In practice, this particular error is unlikely due to the `userId` being first available in the currently logged user logic. However, this kind of scenario needs to be considered.

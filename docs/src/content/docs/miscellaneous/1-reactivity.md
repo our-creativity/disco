@@ -3,7 +3,7 @@ title: Reactivity
 description: How to handle reactivity in combination with this library
 ---
 
-This library does not feature reactivity. You can use a state management library of you choice, as long as it does not use global state. An example with Solidart:
+This library does not feature reactivity. You can use a state management library of you choice, as long as it does not use global state. Below follows an example with [Solidart](https://pub.dev/packages/flutter_solidart)'s signals (`Signal` and `Compute`) and `SignalBuilder` widget:
 
 ```dart
 // the context is not used, so let's just write `_`
