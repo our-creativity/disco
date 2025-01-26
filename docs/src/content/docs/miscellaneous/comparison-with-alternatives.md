@@ -1,6 +1,6 @@
 ---
 title: Comparison with alternatives
-description: Challenges and limitations found in previous approaches
+description: Challenges and limitations found in other approaches
 ---
 
 Disco was developed to overcome the challenges and limitations of the Flutter ecosystem in the context of dependency injection. Let's understand them together.
@@ -37,7 +37,7 @@ Disco is inspired by the approaches mentioned above, particularly:
 - **Scoping from Provider**  
   - It fosters synergy with the widget tree.
   
-- **Safety from Riverpod**  
+- **Increased Safety from Riverpod**  
   - Providers are injected via their instance, acting as an identifier, rather than by type.
 
 Disco also emphasizes:

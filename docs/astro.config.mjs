@@ -17,15 +17,26 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Introduction',
-          autogenerate: { directory: 'introduction' },
+          items: [
+            'introduction/overview',
+          ],
         },
         {
           label: 'Core',
-          autogenerate: { directory: 'core' },
+          items: [
+            'core/providers',
+            'core/scoped-di',
+            'core/modals',
+            'core/testing',
+            'core/configuration',
+          ],
         },
         {
           label: 'Miscellaneous',
-          autogenerate: { directory: 'miscellaneous' },
+          items: [
+            'miscellaneous/reactivity',
+            'miscellaneous/comparison-with-alternatives', 
+          ],
         },
       ],
     }),
