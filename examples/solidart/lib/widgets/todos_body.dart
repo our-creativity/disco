@@ -26,8 +26,8 @@ class _TodosBodyState extends State<TodosBody> {
 
   @override
   Widget build(BuildContext context) {
-    // retrieve the [TodosController], you're safe to `get` a Signal or Provider
-    // in both the `initState` and `build` methods.
+    // retrieve the [TodosController], you're safe to retrieve Provider in both
+    // the `initState` and `build` methods.
     final todosController = todosControllerProvider.of(context);
 
     return ProviderScope(
