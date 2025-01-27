@@ -1,9 +1,9 @@
 import 'package:auto_route_example/controllers/books/model.dart';
 import 'package:disco/disco.dart';
 
-final booksControllerProvider = Provider((context) => BooksBloc());
+final booksControllerProvider = Provider((context) => BooksController());
 
-class BooksBloc {
+class BooksController {
   final _books = List.generate(
     10,
     (index) => Book(
