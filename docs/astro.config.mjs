@@ -44,6 +44,9 @@ export default defineConfig({
           label: 'Examples',
           items: [
             'examples/basic',
+            'examples/solidart',
+            'examples/bloc',
+            'examples/auto-route',
           ],
         },
       ],

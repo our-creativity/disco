@@ -1,0 +1,112 @@
+---
+title: Bloc example
+description: An example showcasing how to provide a light/dark theme Cubit with Disco.
+---
+
+Bloc is one of the most widely used libraries in the Flutter ecosystem, which is why we've included an example to demonstrate its integration.
+
+Our example demonstrates how to provide a light/dark theme Cubit using Disco.
+
+```dart title="bloc_example/cubit/theme_cubit.dart"
+/// ThemeCubit manages the light/dark theme state
+class ThemeCubit extends Cubit<bool> {
+  ThemeCubit() : super(false); // false means light, true means dark theme
+
+  void toggleTheme() => emit(!state);
+}
+```
+
+```dart title="bloc_example/di/providers.dart"
+import 'package:bloc_example/cubit/theme_cubit.dart';
+
+final themeProvider = Provider((context) => ThemeCubit());
+```
+
+```dart title="bloc_example/ui/widgets/themed_button.dart"
+import 'package:bloc_example/di/providers.dart';
+
+class ThemedButton extends StatelessWidget {
+  const ThemedButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeCubit = themeProvider.of(context);
+    return BlocBuilder(
+      bloc: themeCubit,
+      builder: (context, bool isDarkMode) {
+        return ElevatedButton(
+          onPressed: themeCubit.toggleTheme,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isDarkMode ? Colors.grey[800] : Colors.lightBlue,
+            foregroundColor: isDarkMode ? Colors.white : Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Text(
+            isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+```dart title="bloc_example/ui/screens/theme_switcher_page.dart"
+import 'package:bloc_example/ui/widgets/themed_button.dart';
+
+class ThemeSwitcherPage extends StatelessWidget {
+  const ThemeSwitcherPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Cubit Theme Example')),
+      body: const Center(
+        child: ThemedButton(),
+      ),
+    );
+  }
+}
+```
+
+```dart title="bloc_example/main.dart"
+import 'package:bloc_example/di/providers.dart';
+import 'package:bloc_example/ui/screens/theme_switcher_page.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      providers: [themeProvider],
+      child: Builder(
+        builder: (context) {
+          return BlocBuilder(
+            // NB: When injecting the cubit, the context has to be a descendant
+            // of ProviderScope (and not what MyApp.build provides).
+            bloc: themeProvider.of(context),
+            builder: (context, bool isDarkMode) {
+              return MaterialApp(
+                theme: isDarkMode
+                    ? ThemeData.dark().copyWith(primaryColor: Colors.blueGrey)
+                    : ThemeData.light()
+                        .copyWith(primaryColor: Colors.lightBlue),
+                home: const ThemeSwitcherPage(),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+```
