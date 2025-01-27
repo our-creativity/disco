@@ -11,7 +11,7 @@ A provider is a tool that helps manage and inject dependencies in an application
 
 Declare a new provider either as a global `final` variable or a `final` static field.
 
-**NB:** while the providers are declared globally, they **do not function globally**. They are just used as IDs when registered in a scope.
+**NB:** while providers can be declared globally, they **do not function globally**. They are just used as **identifiers** when registered in a scope.
 
 Example with a global `final` variable.
 
@@ -24,7 +24,7 @@ If there is only a provider per class, you can also create a `final` static fiel
 
 ```dart
 class MyDatabase {
-  static provider = Provider((context) => MyDatabase());
+  static final provider = Provider((context) => MyDatabase());
 }
 ```
 
@@ -33,7 +33,7 @@ class MyDatabase {
 Providers can leverage the context to inject other providers. The context will be relative to the scope in which they are provided.
 
 ```dart
-final doubleNumberProvider = Provider.withArgument((context) {
+final doubleNumberProvider = Provider((context) {
   final number = numberProvider.of(context);
   return number * 2;
 });
@@ -44,8 +44,7 @@ final doubleNumberProvider = Provider.withArgument((context) {
 Providers need to be provided before they can be injected in the widget tree. Sometimes, they need an initial argument so that they can be instantiated correctly. This is possible with `Provider.withArgument`.
 
 ```dart
-// NB: we renamed the `context` to `_` because it is unused.
-final numberPlusArgProvider = Provider.withArgument((_, int arg) {
+final numberPlusArgProvider = Provider.withArgument((context, int arg) {
   return 5 + arg;
 });
 ```
@@ -53,9 +52,8 @@ final numberPlusArgProvider = Provider.withArgument((_, int arg) {
 An example where this might make more sense would be an application with multi-account support, where the database is loaded per user, and the filepath of the database contains the user ID:
 
 ```dart
-// NB: we renamed the `context` to `_` because it is unused.
 class MyDatabase {
-  static provider = Provider((_, String userId) => MyDatabase.fromId(id));
+  static final provider = Provider.withArgument((context, String userId) => MyDatabase.fromId(id));
 }
 ```
 

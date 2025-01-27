@@ -10,7 +10,7 @@ This library offers `ProviderScopePortal`, which gives access to all the provide
 Note that you have to pass it the context of the main tree for it to work. Also, a `BuildContext` that is a descendant of `ProviderScopePortal` needs to be used. This is why in the following example we created a `Builder` and used its argument `innerContext` to inject the provider.
 
 ```dart
-final numberContainerProvider = Provider((_) => 1);
+final numberProvider = Provider((context) => 1);
 
 Future<void> showNumberDialog({required BuildContext context}) {
   return showDialog(
@@ -20,9 +20,9 @@ Future<void> showNumberDialog({required BuildContext context}) {
         mainContext: context,
         child: Builder(
           builder: (innerContext) {
-            final numberContainer =
-                numberContainerProvider.of(innerContext);
-            return Text('$numberContainer');
+            final number =
+                numberProvider.of(innerContext);
+            return Text('$number');
           },
         ),
       );
@@ -34,7 +34,7 @@ runApp(
   MaterialApp(
     home: Scaffold(
       body: ProviderScope(
-        providers: [numberContainerProvider],
+        providers: [numberProvider],
         child: Builder(
           builder: (context) {
             return ElevatedButton(

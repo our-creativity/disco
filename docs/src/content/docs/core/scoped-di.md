@@ -8,7 +8,7 @@ Providers have to be provided before they can be injected.
 Let us consider two providers of the previous page for this section.
 
 ```dart
-final numberProvider = Provider((_) => 5);
+final numberProvider = Provider((context) => 5);
 
 final doubleNumberPlusArgProvider = Provider.withArgument((context, int arg) {
   final number = numberProvider.of(context);
@@ -16,11 +16,11 @@ final doubleNumberPlusArgProvider = Provider.withArgument((context, int arg) {
 });
 ```
 
-### How to provide
+### How to scope
 
-"Providing a provider" is a bit of a play on words. In this context, providing means that the provider must be specified within a `ProviderScope` before it can be injected.
+Scoping means that the provider must be specified within a `ProviderScope` before it can be injected.
 
-In case the provider does not take an argument, we provide it the following way:
+In case the provider does not take an argument, we scope it the following way:
 
 ```dart
 ProviderScope(
@@ -74,7 +74,7 @@ The solution is "5 20".
 
 ## Scoping correctly
 
-Some providers might have a dependency on other providers or an an argument. It is important that the following considerations are made.
+Some providers might have a dependency on other providers or as an argument. It is important that the following considerations are made.
 
 ### Context
 
@@ -91,7 +91,7 @@ ProviderScope(
 )
 ```
 
-Placing the ProviderScope containing `doubleNumberPlusArgProvider` above the one containing `numberProvider` would also not work. It needs to be like in the full example above.
+Placing the `ProviderScope` containing `doubleNumberPlusArgProvider` above the one containing `numberProvider` would also not work. It needs to be like in the full example above.
 
 ### Argument
 
@@ -99,7 +99,7 @@ Let's recall the example from the previous page.
 
 ```dart
 class MyDatabase {
-  static provider = Provider((context, String userId) => MyDatabase.fromId(id));
+  static final provider = Provider((context, String userId) => MyDatabase.fromId(id));
 }
 ```
 

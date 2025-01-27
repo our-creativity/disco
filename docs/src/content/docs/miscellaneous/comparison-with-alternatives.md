@@ -13,19 +13,19 @@ The `provider` package, widely used in the Flutter community, injects values int
   - Solutions like wrapper types or IDs add verbosity or are error-prone (e.g., string-based IDs can cause issues during refactoring).  
 - **Lack of compile-time safety**:  
   - It's hard to verify if a provider exists for a given type without inspecting the codebase.  
-  - Removing a provider doesn’t always trigger a static error, risking invalid injections (runtime errors) or, even worse, injections of the wrong provider (of the same type) higher up the tree.  
+  - Removing a provider doesn't always trigger a static error, risking invalid injections (runtime errors) or, even worse, injections of the wrong provider (of the same type) higher up the tree.  
   - Debugging errors is challenging due to limited information in stack traces.
 
 ### Global State Management Approaches
 
-Due to the limitations mentioned earlier, the Flutter ecosystem saw the emergence of multiple global state management packages. These packages address issues like compile-time safety and shadowing, while also separating business logic from UI. They are usually very advances (e.g., they can also function as service locators).
+Due to the limitations mentioned earlier, the Flutter ecosystem saw the emergence of multiple global state management packages. These packages address issues like compile-time safety and shadowing, while also separating business logic from UI. They are usually very advanced (e.g., they can also function as service locators).
 
 However, they introduce new challenges:
 
 - **Circular dependencies**  
-- **Local-state-like logic** that doesn’t behave exactly like real local state  
+- **Local-state-like logic** that doesn't behave exactly like real local state  
   - This complicates logic, especially for beginners.
-  - Sometimes it feels like you’re fighting against the framework.
+  - Sometimes it feels like you're fighting against the framework.
 - **Code generation** in some packages  
   - It should not be necessary.
   - Creates a high learning curve for new developers.

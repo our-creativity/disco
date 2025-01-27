@@ -16,10 +16,8 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Introduction',
-          items: [
-            'introduction/overview',
-          ],
+          label: 'Overview',
+          link: '',
         },
         {
           label: 'Core',
@@ -35,7 +33,7 @@ export default defineConfig({
           label: 'Miscellaneous',
           items: [
             'miscellaneous/reactivity',
-            'miscellaneous/comparison-with-alternatives', 
+            'miscellaneous/comparison-with-alternatives',
           ],
         },
       ],

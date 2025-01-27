@@ -3,17 +3,14 @@ title: Reactivity
 description: How to handle reactivity in combination with this library.
 ---
 
-This library does not feature reactivity. You can use a state management library of you choice, as long as it does not use global state. Below follows an example with [Solidart](https://pub.dev/packages/flutter_solidart)'s signals (`Signal` and `Compute`) and `SignalBuilder` widget:
+This library does not feature reactivity. You can use a state management library of you choice, as long as it does not use global state. Below follows an example with [Solidart](https://pub.dev/packages/flutter_solidart)'s signals (`Signal` and `Computed`) and `SignalBuilder` widget:
 
 ```dart
-// the context is not used, so let's just write `_`
-final counterProvider = Provider(
-  (_) => Signal(0),
-);
+final counterProvider = Provider((context) => Signal(0));
 
-// reacts to changes of counterProvider
-final doubleCounterProvider = Provider(
-  (context) => Computed(() => counterProvider.of(context).value * 2),
+// automatically reacts to changes of counterProvider
+final doubleCounterProvider = Provider((context) {
+ return Computed(() => counterProvider.of(context).value * 2)
 );
 
 runApp(
