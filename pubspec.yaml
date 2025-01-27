@@ -7,5 +7,4 @@ workspace:
   - packages/disco/example
   - examples/auto_route
   - examples/bloc
-  - examples/service_injection
   - examples/solidart
