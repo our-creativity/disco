@@ -1,5 +1,5 @@
 import 'package:auto_route/annotations.dart';
-import 'package:auto_route_example/blocs/books/bloc.dart';
+import 'package:auto_route_example/controllers/books/controller.dart';
 import 'package:flutter/material.dart';
 
 @RoutePage()
@@ -13,7 +13,7 @@ class BookPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final booksBloc = booksBlocProvider.of(context);
+    final booksBloc = booksControllerProvider.of(context);
     final book = booksBloc.book(bookId);
     return Scaffold(
       appBar: AppBar(title: Text(book.name)),

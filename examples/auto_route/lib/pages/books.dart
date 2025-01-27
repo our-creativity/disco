@@ -1,5 +1,5 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:auto_route_example/blocs/books/bloc.dart';
+import 'package:auto_route_example/controllers/books/controller.dart';
 import 'package:auto_route_example/router.dart';
 import 'package:disco/disco.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +10,7 @@ class BooksWrapperPage extends StatelessWidget implements AutoRouteWrapper {
   @override
   Widget wrappedRoute(BuildContext context) {
     return ProviderScope(
-      providers: [booksBlocProvider],
+      providers: [booksControllerProvider],
       child: this,
     );
   }
@@ -27,7 +27,7 @@ class BooksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final booksBloc = booksBlocProvider.of(context);
+    final booksBloc = booksControllerProvider.of(context);
     final books = booksBloc.books;
 
     return Scaffold(
