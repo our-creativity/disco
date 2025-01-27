@@ -22,8 +22,9 @@ Due to the limitations mentioned earlier, the Flutter ecosystem saw the emergenc
 
 However, they introduce new challenges:
 
+- Be able to access everything from everywhere, which can lead to spaghetti code.
 - **Circular dependencies**  
-- **Local-state-like logic** that doesn't behave exactly like real local state  
+- **Local-state-like logic** that doesn't behave exactly like real local state
   - This complicates logic, especially for beginners.
   - Sometimes it feels like you're fighting against the framework.
 - **Code generation** in some packages  
