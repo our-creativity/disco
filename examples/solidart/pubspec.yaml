@@ -9,6 +9,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  disco:
+    path: ../../packages/disco
   flutter:
     sdk: flutter
   flutter_solidart: ^2.0.0-dev.2

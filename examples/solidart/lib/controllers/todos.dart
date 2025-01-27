@@ -1,9 +1,10 @@
+import 'package:disco/disco.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_solidart/flutter_solidart.dart';
+import 'package:flutter_solidart/flutter_solidart.dart' hide Provider;
 import 'package:solidart_example/domain/todo.dart';
 
 final todosControllerProvider = Provider<TodosController>(
-  create: () => TodosController(initialTodos: Todo.sample),
+  (context) => TodosController(initialTodos: Todo.sample),
   dispose: (controller) => controller.dispose(),
 );
 
