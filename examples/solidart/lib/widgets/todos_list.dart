@@ -37,7 +37,7 @@ class _TodoListState extends State<TodoList> {
   Widget build(BuildContext context) {
     return SignalBuilder(
       builder: (context, child) {
-        // rebuilds this BuildContext every time the activeFilter value changes
+        // rebuilds every time the activeFilter value changes
         final activeFilter = todosFilterProvider.of(context).value;
         // react to the correct list of todos list
         final todos = mapFilterToTodosList(activeFilter).value;
