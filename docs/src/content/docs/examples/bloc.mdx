@@ -11,6 +11,8 @@ Bloc is one of the most widely used libraries in the Flutter ecosystem, which is
 
 Our example demonstrates how to provide a light/dark theme Cubit using Disco.
 
+## File structure
+
 Let's look at the file structure:
 
 <FileTree>
@@ -28,6 +30,8 @@ Let's look at the file structure:
 
 </FileTree>
 
+## ThemeCubit
+
 ```dart title="bloc_example/cubit/theme_cubit.dart"
 /// ThemeCubit manages the light/dark theme state
 class ThemeCubit extends Cubit<bool> {
@@ -37,11 +41,15 @@ class ThemeCubit extends Cubit<bool> {
 }
 ```
 
+## Providers
+
 ```dart title="bloc_example/di/providers.dart"
 import 'package:bloc_example/cubit/theme_cubit.dart';
 
 final themeProvider = Provider((context) => ThemeCubit());
 ```
+
+## ThemedButton
 
 ```dart title="bloc_example/ui/widgets/themed_button.dart"
 import 'package:bloc_example/di/providers.dart';
@@ -76,6 +84,8 @@ class ThemedButton extends StatelessWidget {
 }
 ```
 
+## ThemeSwitcherPage
+
 ```dart title="bloc_example/ui/screens/theme_switcher_page.dart"
 import 'package:bloc_example/ui/widgets/themed_button.dart';
 
@@ -93,6 +103,8 @@ class ThemeSwitcherPage extends StatelessWidget {
   }
 }
 ```
+
+## App
 
 ```dart title="bloc_example/main.dart"
 import 'package:bloc_example/di/providers.dart';

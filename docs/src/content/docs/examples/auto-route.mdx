@@ -12,6 +12,8 @@ This AutoRoute example shows how to share a provider between multiple pages with
 This can be considered as a more advanced example and can be used when you want to share a provider between multiple pages without scoping it for the entire app.
 > Sometimes placing a provider above the `MaterialApp` is needed and perfectly fine, but placing everything above `MaterialApp` can lead to a messy codebase, because maintainers can access every provider from every place, causing spaghetti code.
 
+## File structure
+
 Let's look at the file structure:
 
 <FileTree>
@@ -30,6 +32,8 @@ Let's look at the file structure:
 
 </FileTree>
 
+## Models
+
 Let's start with the model:
 
 ```dart title=controllers/books/model.dart
@@ -45,6 +49,8 @@ class Book {
   final String description;
 }
 ```
+
+## BooksController
 
 Then let's create the controller:
 
@@ -75,6 +81,8 @@ class BooksController {
   }
 }
 ```
+
+## Router
 
 Let's go to the router.
 
@@ -107,6 +115,8 @@ class AppRouter extends RootStackRouter {
 }
 ```
 
+## BooksWrapperPage
+
 The `BooksWrapperRoute` is where the provider is placed. The provider is shared between `BooksRoute` and `BookRoute` because the routes are children of `BooksWrapperRoute`.
 
 ```dart title=pages/books.dart
@@ -129,6 +139,7 @@ class BooksWrapperPage extends StatelessWidget implements AutoRouteWrapper {
   }
 }
 ```
+## BooksPage
 
 Let's see the `BooksPage`:
 
@@ -169,6 +180,8 @@ class BooksPage extends StatelessWidget {
   }
 }
 ```
+
+## BookPage
 
 And finally let's see the `BookPage`:
 
