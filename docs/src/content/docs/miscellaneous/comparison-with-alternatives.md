@@ -7,7 +7,7 @@ Disco was developed to overcome the challenges and limitations of the Flutter ec
 
 ### Provider Package  
 
-The `provider` package, widely used by the Flutter community, injects values into the widget tree based on their type (e.g., `context.get<SomeClass>()`). However, it has notable drawbacks:  
+The `provider` package, widely used by the Flutter community, injects values into the widget tree based on their type (e.g., `context.get<SomeClass>()`). However, it has notable drawbacks:
 
 - **Shadowing**: Providers with the same type are shadowed by the nearest one.  
   - Solutions like wrapper types or IDs add verbosity or are error-prone (e.g., string-based IDs can cause issues during refactoring).  
