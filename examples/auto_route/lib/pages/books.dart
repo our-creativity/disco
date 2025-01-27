@@ -27,8 +27,8 @@ class BooksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final booksBloc = booksControllerProvider.of(context);
-    final books = booksBloc.books;
+    final booksController = booksControllerProvider.of(context);
+    final books = booksController.books;
 
     return Scaffold(
       appBar: AppBar(
