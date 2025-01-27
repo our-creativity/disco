@@ -20,6 +20,10 @@ export default defineConfig({
           link: '',
         },
         {
+          label: 'Installing',
+          link: 'installing',
+        },
+        {
           label: 'Core',
           items: [
             'core/providers',
