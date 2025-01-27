@@ -32,7 +32,7 @@ However, they introduce new challenges:
 
 ## Inspirations and Key Features
 
-Disco is inspired by the approaches mentioned above, particularly:
+While analyzing the drawbacks of the approaches above, we also drew inspiration from their strengths. Disco combines the best of them, particularly:
 
 - **Scoping from Provider**  
   - It fosters synergy with the widget tree.
