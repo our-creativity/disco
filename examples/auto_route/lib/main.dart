@@ -1,20 +1,20 @@
+import 'package:auto_route_example/router.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MainApp());
 }
 
+final _appRouter = AppRouter();
+
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO(nank1ro): create an example with auto_route
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MaterialApp.router(
+      routerConfig: _appRouter.config(
+        includePrefixMatches: true,
       ),
     );
   }
