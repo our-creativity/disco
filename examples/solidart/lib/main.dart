@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:solidart_example/pages/todos.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const MyApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO(nank1ro): create an example with signals
     return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+      title: 'Todos Example',
+      home: TodosPage(),
     );
   }
 }
