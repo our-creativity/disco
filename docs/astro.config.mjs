@@ -36,6 +36,12 @@ export default defineConfig({
             'miscellaneous/comparison-with-alternatives',
           ],
         },
+        {
+          label: 'Examples',
+          items: [
+            'examples/basic',
+          ],
+        },
       ],
     }),
   ],

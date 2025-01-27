@@ -1,0 +1,174 @@
+---
+title: Basic example
+description: A basic examples showing the basic usage of Disco.
+---
+
+This example shows the basic usage of Disco.
+In particular, it shows how to create a provider, how to scope it, how to use it in a widget and finally how to test it.
+```dart
+import 'package:disco/disco.dart';
+import 'package:flutter/material.dart';
+
+/// ---
+/// Model
+/// ---
+abstract class Model extends ChangeNotifier {
+  void incrementCounter();
+
+  int get counter;
+}
+
+class ModelImplementation extends Model {
+  int _counter = 0;
+
+  @override
+  int get counter => _counter;
+
+  @override
+  void incrementCounter() {
+    _counter++;
+    notifyListeners();
+  }
+}
+
+/// ---
+/// Provider
+/// ---
+final modelProvider = Provider<Model>((context) => ModelImplementation());
+
+void main() {
+  runApp(const MainApp());
+}
+
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Disco Example',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Provide the modelProvider to descendants
+    return ProviderScope(
+      providers: [modelProvider],
+      // This builder gives a descendant context, only descendants can access
+      // this scope
+      child: Builder(
+        builder: (context) {
+          // retrieve the model
+          final model = modelProvider.of(context);
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  const Text(
+                    'You have pushed the button this many times:',
+                  ),
+                  // Rebuilds this widget when the model changes
+                  ListenableBuilder(
+                    listenable: model,
+                    builder: (context, child) {
+                      return Text(model.counter.toString());
+                    },
+                  ),
+                ],
+              ),
+            ),
+            floatingActionButton: FloatingActionButton(
+              // increment the counter when the button is pressed
+              onPressed: model.incrementCounter,
+              child: const Icon(Icons.add),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+```
+
+## Testing
+
+```dart
+import 'package:disco/src/disco_internal.dart';
+import 'package:example/main.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+class MockModel extends Model {
+  int _counter = 5;
+
+  @override
+  int get counter => _counter;
+
+  @override
+  void incrementCounter() {
+    _counter += 2;
+    notifyListeners();
+  }
+}
+
+void main() {
+  testWidgets(
+    'Counter increments when FAB is pressed',
+    (WidgetTester tester) async {
+      // Build the app and trigger a frame.
+      await tester.pumpWidget(const MainApp());
+
+      // Verify that the initial counter value is 0.
+      expect(
+        find.text('You have pushed the button this many times:'),
+        findsOneWidget,
+      );
+      expect(find.text('0'), findsOneWidget);
+
+      // Tap the floating action button to increment the counter.
+      await tester.tap(find.byType(FloatingActionButton));
+      // Rebuild the widget after the state has changed.
+      await tester.pump();
+
+      // Verify that the counter has incremented to 1.
+      expect(find.text('1'), findsOneWidget);
+    },
+  );
+  testWidgets('Counter displays mocked value', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScopeOverride(
+        overrides: [
+          modelProvider.overrideWithValue(MockModel()),
+        ],
+        child: const MainApp(),
+      ),
+    );
+
+    // Verify that the initial counter value is the mocked value (5).
+    expect(
+      find.text('You have pushed the button this many times:'),
+      findsOneWidget,
+    );
+    expect(find.text('5'), findsOneWidget);
+
+    // Tap the floating action button to increment the counter.
+    await tester.tap(find.byType(FloatingActionButton));
+    // Rebuild the widget after the state has changed.
+    await tester.pump();
+
+    // Verify that the counter has incremented to 7.
+    expect(find.text('7'), findsOneWidget);
+  });
+}
+```
+
