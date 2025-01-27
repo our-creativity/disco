@@ -3,6 +3,7 @@ title: Bloc example
 description: An example showcasing how to provide a light/dark theme Cubit with Disco.
 ---
 import { Aside } from '@astrojs/starlight/components';
+import { FileTree } from '@astrojs/starlight/components';
 
 <Aside>
 You can check the full source code of this example [here](https://github.com/our-creativity/disco/tree/main/examples/bloc)
@@ -11,6 +12,23 @@ You can check the full source code of this example [here](https://github.com/our
 Bloc is one of the most widely used libraries in the Flutter ecosystem, which is why we've included an example to demonstrate its integration.
 
 Our example demonstrates how to provide a light/dark theme Cubit using Disco.
+
+Let's look at the file structure:
+
+<FileTree>
+
+- cubit
+  - theme_cubit.dart
+- di
+  - providers.dart
+- ui
+  - screens
+    - theme_switcher_page.dart
+  - widgets
+    - themed_button.dart
+- main.dart
+
+</FileTree>
 
 ```dart title="bloc_example/cubit/theme_cubit.dart"
 /// ThemeCubit manages the light/dark theme state
