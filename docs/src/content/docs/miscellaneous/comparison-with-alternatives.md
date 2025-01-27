@@ -22,11 +22,13 @@ Due to the limitations mentioned earlier, the Flutter ecosystem saw the emergenc
 
 However, they introduce new challenges:
 
-- Be able to access everything from everywhere, which can lead to spaghetti code.
-- **Circular dependencies**  
+- **Unrestricted access**
+  - Being able to access everything from everywhere can lead to spaghetti code.
+- **Circular dependencies**
 - **Local-state-like logic** that doesn't behave exactly like real local state
-  - This complicates logic, especially for beginners.
-  - Sometimes it feels like you're fighting against the framework.
+  - This complicates the logic, especially for beginners.
+  - Some solution require objects of special classes to manage the global state.
+    - Passing these objects around (instead of passing `BuildContext` instances around) creates inconsistencies and can feel like working against the framework.
 - **Code generation** in some packages  
   - It should not be necessary.
   - Creates a high learning curve for new developers.
