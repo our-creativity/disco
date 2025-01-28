@@ -12,6 +12,13 @@ This AutoRoute example shows how to share a provider between multiple pages with
 This can be considered as a more advanced example and can be used when you want to share a provider between multiple pages without scoping it for the entire app.
 > Sometimes placing a provider above the `MaterialApp` is needed and perfectly fine, but placing everything above `MaterialApp` can lead to a messy codebase, because maintainers can access every provider from every place, causing spaghetti code.
 
+This the `auto_route` version used in this example:
+
+```yaml {2}
+dependencies:
+  auto_route: ^9.3.0+1
+```
+
 ## File structure
 
 Let's look at the file structure:
