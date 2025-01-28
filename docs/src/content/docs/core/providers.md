@@ -3,9 +3,6 @@ title: Providers
 description: How to create Disco providers.
 ---
 
-import ThemeImage from '../../../components/ThemeImage.astro';
-import { Aside } from '@astrojs/starlight/components';
-
 A provider is a tool that helps manage and inject dependencies in an application, making it easier to share data or services across different parts of the app.
 
 **NB:** When we use the term "provider", it can refer to either the `Provider` class of this library or the value it contains, depending on the context.
@@ -83,45 +80,3 @@ There are also two optional named parameters that can be specified.
 | -------------- | ------- | ----------- |
 | `dispose`      | null    | The function to call when the scope containing the provider gets disposed. It is used to dispose correctly the value held by the provider. |
 | `lazy`         | `DiscoConfig.lazy`, which defaults to true | The values of the providers provided in a scope are created lazily.|
-
-
-## Graphical representation
-
-If the provider scope needs to be accessed by a widget which is not a child of the scope, the injection will throw an exception. This is because the provider scope is not accessible to the widget.
-Check the graph below to understand the issue.
-
-<ThemeImage src="/provider-scope-exception.svg" darkSrc="/provider-scope-exception_dark.svg" alt="Graphical representation of provider scope exception"/>
-
-If you lift the provider scope up to the parent of the widget, the injection will work as expected.
-
-<ThemeImage src="/provider-scope.svg" darkSrc="/provider-scope_dark.svg" alt="Graphical representation of provider scope"/>
-
-### How providers are found
-
-Check the following graph to understand how providers are retrieved.
-
-<ThemeImage src="/provider-scope-behavior.svg" darkSrc="/provider-scope-behavior_dark.svg" alt="Graphical representation of provider scope providers retrieval behavior"/>
-
-Basically, when the user searches for a provider, the first thing that is checked is if a `ProviderScopeOverride` exists.
-
-If it does, the overriden providers maps are checked to see if the provider is there.
-
-If is there, the overriden value is returned.
-
-Otherwise, the search continues for the first `ProviderScope` ancestor.
-
-If a `ProviderScope` ancestor is found, the provider is searched in the providers map.
-
-If the provider is found, the value is returned.
-
-If the provider is not found, the search continues for the next `ProviderScope` ancestor, until the root of the widget tree is reached.
-
-If the provider is not found, a `ProviderWithoutScopeError` is thrown.
-
-<Aside type="tip">
-  The error can be avoided by using `provider.maybeOf(context)`, which returns `null` if the provider is not found.
-</Aside>
-
-<Aside>
-The lookup of a provider is __O(1)__ because it just involves a map lookup, in addition the tree is traversed using [getElementForInheritedWidgetOfExactType](https://api.flutter.dev/flutter/widgets/BuildContext/getElementForInheritedWidgetOfExactType.html) which is O(1) because it jumps from one InheritedWidget of type `T` to another, skipping the widgets in between.
-</Aside>

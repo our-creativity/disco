@@ -3,9 +3,13 @@ title: Scoped DI
 description: How to use Disco providers and understanding scoping.
 ---
 
-Providers have to be provided before they can be injected.
+import ThemeImage from '../../../components/ThemeImage.astro';
+import { Aside } from '@astrojs/starlight/components';
 
-Let us consider two providers of the previous page for this section.
+In this library, scoped dependency injection (DI) refers to injecting providers
+that are confined to a specific scope.
+
+To make things clearer in this section, let’s take a look at two of the providers from the previous page.
 
 ```dart
 final numberProvider = Provider((context) => 5);
@@ -104,3 +108,14 @@ class MyDatabase {
 ```
 
 The `MyDatabase.provider` should be provided in a subtree (of the widget tree) belonging to the currently logged user. If you provide it too high up in the widget tree (above the currently logged user logic) it will not be possible to change database, because the `ProviderScope` where `MyDatabase.provider` is provided is never disposed. In practice, this particular error is unlikely due to the `userId` being first available in the currently logged user logic. However, this kind of scenario needs to be considered.
+
+## Graphical representation
+
+When you inject a provider, you need to ensure that one of the ancestors of the widget — where the injection takes place — is a `ProviderScope` providing that provider. If this is not the case, an error will be thrown at runtime.
+Refer to the graph below to understand the problem.
+
+<ThemeImage src="/provider-scope-exception.svg" darkSrc="/provider-scope-exception_dark.svg" alt="Graphical representation of provider scope exception"/>
+
+If you lift the provider scope up to the parent of the widget, the injection will work as expected.
+
+<ThemeImage src="/provider-scope.svg" darkSrc="/provider-scope_dark.svg" alt="Graphical representation of provider scope"/>

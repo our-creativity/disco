@@ -56,7 +56,7 @@ runApp(
 
 When you show a modal, it is spawned in a new widget tree.
 Only `Navigator` is the same ancestor, but other widgets are not accessible.
-This means the `ProviderScope` created in the main tree are not accessible in the modal, check the graph below to understand the issue.
+This means the `ProviderScope` created in the main tree are not accessible in the modal, check the graph below to understand the problem.
 
 <ThemeImage src="/provider-scope-portal-exception.svg" darkSrc="/provider-scope-portal-exception_dark.svg" alt="Graphical representation of provider scope portal exception"/>
 

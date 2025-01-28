@@ -30,6 +30,7 @@ export default defineConfig({
             'core/scoped-di',
             'core/modals',
             'core/testing',
+            'core/graphical-summary',
             'core/configuration',
           ],
         },
