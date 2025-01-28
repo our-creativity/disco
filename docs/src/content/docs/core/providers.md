@@ -10,6 +10,7 @@ A provider is a tool that helps manage and inject dependencies in an application
 ## Graphical representation
 
 ![Provider scope](/provider-scope.svg)
+![Provider scope exception](/provider-scope-exception.svg)
 
 ## Providers
 
