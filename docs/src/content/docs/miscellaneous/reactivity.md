@@ -1,9 +1,9 @@
 ---
 title: Reactivity
-description: How to handle reactivity in combination with this library.
+description: How to handle reactivity in combination with Disco.
 ---
 
-This library does not feature reactivity. You can use a state management library of you choice, as long as it does not use global state. Below follows an example with [Solidart](https://pub.dev/packages/flutter_solidart)'s signals (`Signal` and `Computed`) and `SignalBuilder` widget:
+Disco does not feature reactivity. You can use a state management library of you choice, as long as it does not use global state. Below follows an example with [Solidart](https://pub.dev/packages/flutter_solidart)'s signals (`Signal` and `Computed`) and `SignalBuilder` widget:
 
 ```dart
 final counterProvider = Provider((context) => Signal(0));

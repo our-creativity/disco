@@ -5,13 +5,23 @@ description: How to use overrides for testing.
 
 import { Aside } from '@astrojs/starlight/components';
 
-Testing is done with overrides. You will need to place a `ProviderScopeOverride` (preferably as the root widget) and then specify the `overrides`, which is a list containing the providers followed by `.overrideWithValue(T value)`.
+Testing is done with overrides. You need to place a `ProviderScopeOverride` and then specify the `overrides` argument with a list containing the providers followed by `.overrideWithValue(T value)`.
 
 <Aside>
-  You can **only use one** `ProviderScopeOverride` per test.
+  The overrides always take precedence over the providers provided with `ProviderScope`, even if the `ProviderScopeOverride` is placed above in the widget tree.
 </Aside>
 
-The text displayed in the following example will be "100".
+<Aside>
+  You can **only use one** `ProviderScopeOverride` per test. Make sure to override all the necessary providers within it.
+</Aside>
+
+<Aside type="tip">
+  Preferably, place the `ProviderScopeOverride` as the root widget your tests.
+</Aside>
+
+### Examples
+
+The text displayed in the following example is "100" because overrides take precedence.
 
 ```dart
 testWidgets(
@@ -42,7 +52,7 @@ testWidgets(
 });
 ```
 
-Testing is possible also with providers that take an argument, and it is done same exact way. The text displayed in the following example will be "16".
+Testing is possible also with providers that take an argument, and it is done same exact way.
 
 ```dart
 testWidgets(
