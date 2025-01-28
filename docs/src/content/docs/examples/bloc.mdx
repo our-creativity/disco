@@ -32,7 +32,11 @@ Let's look at the file structure:
 
 ## ThemeCubit
 
+Let's get started by writing a class that extends `Cubit<bool>`.
+
 ```dart title="bloc_example/cubit/theme_cubit.dart"
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 /// ThemeCubit manages the light/dark theme state
 class ThemeCubit extends Cubit<bool> {
   ThemeCubit() : super(false); // false means light, true means dark theme
@@ -43,16 +47,23 @@ class ThemeCubit extends Cubit<bool> {
 
 ## Providers
 
+In a separate file, we define the providers.
+
 ```dart title="bloc_example/di/providers.dart"
 import 'package:bloc_example/cubit/theme_cubit.dart';
+import 'package:disco/disco.dart';
 
 final themeProvider = Provider((context) => ThemeCubit());
 ```
 
 ## ThemedButton
 
+We also define a button where we inject the `themeProvider`. We want it to display different texts based on the current value.
+
 ```dart title="bloc_example/ui/widgets/themed_button.dart"
 import 'package:bloc_example/di/providers.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ThemedButton extends StatelessWidget {
   const ThemedButton({super.key});
@@ -86,8 +97,11 @@ class ThemedButton extends StatelessWidget {
 
 ## ThemeSwitcherPage
 
+We define the page for our example. It contains a `ThemedButton`.
+
 ```dart title="bloc_example/ui/screens/theme_switcher_page.dart"
 import 'package:bloc_example/ui/widgets/themed_button.dart';
+import 'package:flutter/material.dart';
 
 class ThemeSwitcherPage extends StatelessWidget {
   const ThemeSwitcherPage({super.key});
@@ -106,9 +120,14 @@ class ThemeSwitcherPage extends StatelessWidget {
 
 ## App
 
+Let's finish the example by adding the following code in our `main.dart`.
+
 ```dart title="bloc_example/main.dart"
 import 'package:bloc_example/di/providers.dart';
 import 'package:bloc_example/ui/screens/theme_switcher_page.dart';
+import 'package:disco/disco.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 void main() {
   runApp(const MyApp());
