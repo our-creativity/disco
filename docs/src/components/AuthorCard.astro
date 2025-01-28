@@ -1,0 +1,34 @@
+---
+const { imageSrc, name } = Astro.props;
+---
+
+<div class="author-card">
+  <img src={imageSrc} alt={`Image of ${name}`} class="author-image" />
+  <h3 class="author-name">{name}</h3>
+</div>
+
+<style>
+  .author-card {
+    display: flex;
+    align-items: center; /* Aligns items vertically */
+    margin: 1rem 0;
+  }
+  
+  .author-image {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    margin-right: 1rem;
+    object-fit: cover; /* Ensures the image covers the area without distortion */
+  }
+  
+  .author-name {
+    font-size: 1.25rem;
+    color: var(--text-color);
+    margin: 0 !important; /* Removes all default margins */
+    padding: 0 !important; /* Removes default padding */
+    line-height: 50px; /* Match line-height to the image height for vertical centering */
+    display: flex; /* Use flexbox for better alignment */
+    align-items: center; /* Center align text vertically */
+  }
+</style>

@@ -20,6 +20,10 @@ export default defineConfig({
           link: '',
         },
         {
+          label: 'Authors',
+          link: 'authors',
+        },
+        {
           label: 'Installing',
           link: 'installing',
         },
@@ -49,6 +53,7 @@ export default defineConfig({
             'examples/auto-route',
           ],
         },
+
       ],
     }),
   ],

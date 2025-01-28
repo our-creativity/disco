@@ -1,0 +1,50 @@
+---
+title: Authors
+description: The authors of Disco.
+---
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import AuthorCard from '../../components/AuthorCard.astro';
+
+<CardGrid>
+  <AuthorCard 
+    imageSrc="/ale.png" 
+    name="Alexandru Mariuti" 
+  />
+  <AuthorCard 
+    imageSrc="/manuel.jpg" 
+    name="Manuel Plavsic" 
+  />
+</CardGrid>
+
+## Alexandru Mariuti
+
+Open source enthusiast, passionate about Flutter, and a strong believer in the power of community.
+
+Maintainer of:
+- [solidart](https://pub.dev/packages/solidart) (Dart/Flutter state management inspired by [SolidJS](https://www.solidjs.com/))
+- [flutter_solidart](https://pub.dev/packages/flutter_solidart) (Flutter state management inspired by [SolidJS](https://www.solidjs.com/))
+- [shadcn_ui (flutter port)](https://pub.dev/packages/shadcn_ui) (Design system inspired by [ui.shadcn.com](https://ui.shadcn.com/))
+- [awesome_flutter_extensions](https://pub.dev/packages/awesome_flutter_extensions) (Useful flutter extensions)
+- [disable_web_context_menu](https://pub.dev/packages/disable_web_context_menu) (Disable context menu in web)
+- [disco](https://pub.dev/packages/disco) (Dependency injection library for Flutter)
+- [prompt_parser](https://pypi.org/project/prompt-parser/) (Python library for parsing LLM prompts)
+
+## Manuel Plavsic
+
+I'm passionate about full-stack development, cloud, and cryptography.
+I relish questioning established practices and challenge them to discover better solutions.
+I enjoy staying up-to-date and diving deeper into Rust and Dart, which are my favorite languages.
+I value friendly environments where collaboration thrives and a bit of humor keeps things enjoyable.
+
+Maintainer of:
+- [disco](https://pub.dev/packages/disco) (Dependency injection library for Flutter)
+
+## History about disco
+
+I, Alexandru Mariuti, started creating what became Disco in `flutter_solidart` with the `Solid` widget a long time ago (Feb 28, 2023 with [this PR](https://github.com/nank1ro/solidart/commit/9368fec399560e725493c3204d9cf51df218e805)).
+The `Solid` widget is very similar to `ProviderScope` here on Disco.
+
+Manuel helped me to improve the `Solid` widget in many PRs and one day we decided to extract the `Solid` widget into a separate package called `disco`.
+We refactored the `Solid` widget, removing the strong dependency on `flutter_solidart`.
+
+Manuel is the one who came up with the name `disco` and also the one who made providers more compile-safe without having to type `context.get<Model>()` everywhere (which is more error prone than `modelProvider.of(context)` because you have to specity `<Model>` every time).
