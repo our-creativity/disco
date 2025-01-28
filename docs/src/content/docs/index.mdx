@@ -48,6 +48,6 @@ In Disco's defense regarding the last point:
 - Disco providers also have a `maybeOf(context)` method, which can help if the presence of a provider cannot be guaranteed.
 - The throwable includes precise information in its stack trace to deduce the missing provider: filepath, line and column. An error reporting tool will help spot both the invalid injections and their respective providers.
 
-## General takeaway
+## Keep in Mind: Trade-offs
 
-As the <a href="/authors">authors of Disco</a>, we believe this to be the most effective strategy for DI in Flutter. However, every solution has trade-offs. You can limit the impact of these trade-offs by running unit, widget and end-to-end tests, and by doing code reviews, which are all crucial practices.
+As the <a href="/authors">authors of Disco</a>, we believe this to be the most effective strategy for DI in Flutter. However, every solution has trade-offs. You can limit the impact of these trade-offs by running tests, doing code reviews, and following other crucial practices.
