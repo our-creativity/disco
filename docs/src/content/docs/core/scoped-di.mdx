@@ -84,13 +84,14 @@ runApp(
 
 The solution is "5 20".
 
-## Scoping correctly
+## Scoping correctly with context
 
-Some providers might have a dependency on other providers or as an argument. It is important that the following considerations are made.
+Some providers might have a dependency on other providers. It is important that the other providers are provided in `ProviderScope`s that are ancestors to the `ProviderScope` providing the dependent provider.
 
-### Context
+### Wrong Example
 
-Note that the scope containing `doubleNumberPlusArgProvider` needs to be a descendant of the one containing `numberProvider`. This is because `doubleNumberPlusArgProvider` uses the context to find the value of `numberProvider`. The following will thus **not** work:
+The scope containing `doubleNumberPlusArgProvider` needs to be a descendant of the one containing `numberProvider`.
+This is because `doubleNumberPlusArgProvider` uses the context to find the value of `numberProvider`. The following will thus **not** work:
 
 ```dart
 // bad example
