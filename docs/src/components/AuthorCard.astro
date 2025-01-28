@@ -1,10 +1,25 @@
 ---
-const { imageSrc, name } = Astro.props;
+const { imageSrc, name, twitterUrl, githubUrl } = Astro.props;
+import { Icon } from '@astrojs/starlight/components';
 ---
 
 <div class="author-card">
   <img src={imageSrc} alt={`Image of ${name}`} class="author-image" />
-  <h3 class="author-name">{name}</h3>
+  <div class="author-info">
+    <h3 class="author-name">{name}</h3>
+    <div class="social-links">
+    {githubUrl && (
+      <a href={githubUrl} target="_blank" rel="noopener noreferrer">
+        <Icon name="github" />
+      </a>
+    )}
+    {twitterUrl && (
+      <a href={twitterUrl} target="_blank" rel="noopener noreferrer">
+      <Icon name="x.com" />
+      </a>
+    )}
+    </div>
+  </div>
 </div>
 
 <style>
@@ -22,13 +37,23 @@ const { imageSrc, name } = Astro.props;
     object-fit: cover; /* Ensures the image covers the area without distortion */
   }
   
+  .author-info {
+    margin: 0 !important; /* Removes all default margins */
+    display: flex;
+    flex-direction: column; /* Stack name and link vertically */
+  }
+
+ .social-links {
+    display: flex; /* Align icons in a row */
+    gap: 8px;
+  }
+
   .author-name {
     font-size: 1.25rem;
     color: var(--text-color);
     margin: 0 !important; /* Removes all default margins */
-    padding: 0 !important; /* Removes default padding */
+    padding: 0; /* Removes default padding */
     line-height: 50px; /* Match line-height to the image height for vertical centering */
-    display: flex; /* Use flexbox for better alignment */
-    align-items: center; /* Center align text vertically */
   }
+
 </style>
