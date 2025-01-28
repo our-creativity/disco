@@ -28,7 +28,7 @@ However, they introduce new challenges:
 - **Local-state-like logic** that doesn't behave exactly like real local state
   - This complicates the logic, especially for beginners.
   - Some solution require objects of special classes to manage the global state.
-    - Passing these objects around (instead of passing `BuildContext` instances around) creates inconsistencies and can feel like working against the framework.
+    - Passing these objects around creates inconsistencies and can feel like working against the framework.
 - **Code generation** in some packages  
   - It should not be necessary.
   - Creates a high learning curve for new developers.

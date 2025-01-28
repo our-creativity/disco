@@ -47,7 +47,7 @@ ProviderScope(
 Injecting is the act of retrieving a dependency. It is done with the methods `of(context)` and `maybeOf(context)`, the latter one being safer because it returns null instead of throwing if the provider is not found in any scopes.
 
 <Aside type="tip">
-  If you are unsure about which one to use, for simplicity you should probably stick to `of(context)` (and maybe set up an error monitoring solution to automatically detect invalid injections).
+  If you are unsure about which one to use, for simplicity you should probably stick to `of(context)`.
 </Aside>
 
 We inject the two providers above by using the `numberProvider.of(context)` and `doubleNumberPlusArgProvider.of(context)`.
@@ -104,18 +104,6 @@ ProviderScope(
 ```
 
 Placing the `ProviderScope` containing `doubleNumberPlusArgProvider` above the one containing `numberProvider` would also not work. It needs to be like in the full example above.
-
-### Argument
-
-Let's recall the example from the previous page.
-
-```dart
-class MyDatabase {
-  static final provider = Provider((context, String userId) => MyDatabase.fromId(id));
-}
-```
-
-The `MyDatabase.provider` should be provided in a subtree (of the widget tree) belonging to the currently logged user. If you provide it too high up in the widget tree (above the currently logged user logic) it will not be possible to change database, because the `ProviderScope` where `MyDatabase.provider` is provided is never disposed. In practice, this particular error is unlikely due to the `userId` being first available in the currently logged user logic. However, this kind of scenario needs to be considered.
 
 ## Graphical representation
 

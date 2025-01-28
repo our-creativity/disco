@@ -46,7 +46,7 @@ In Disco's defense regarding the last point:
 
 - Total compile-time safety is not possible with an approach leveraging scoped DI, which is a pattern ubiquitously used in Flutter and third-party libraries (think about how many times you have already read `MediaQuery.of(context)`, `GoRouter.of(context)`, ...).
 - Disco providers also have a `maybeOf(context)` method, which can help if the presence of a provider cannot be guaranteed.
-- The throwable includes precise information in its stack trace to deduce the missing provider: filepath, line and column. An error reporting tool will help spot both the invalid injections and their respective providers.
+- The throwable includes precise information in its stack trace to deduce the missing provider: filepath, line and column.
 
 ## Keep in Mind: Trade-offs
 
