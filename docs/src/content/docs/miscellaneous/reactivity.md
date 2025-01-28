@@ -3,7 +3,11 @@ title: Reactivity
 description: How to handle reactivity in combination with Disco.
 ---
 
-Disco does not feature reactivity. You can use a state management library of you choice, as long as it does not use global state. Below follows an example with [Solidart](https://pub.dev/packages/flutter_solidart)'s signals (`Signal` and `Computed`) and `SignalBuilder` widget:
+Disco does not feature reactivity. You can use a state management library of you choice, as long as it does not use global state.
+
+### Example
+
+Below follows an example with [Solidart](https://pub.dev/packages/flutter_solidart)'s signals (`Signal` and `Computed`) and `SignalBuilder` widget:
 
 ```dart
 final counterProvider = Provider((context) => Signal(0));
@@ -46,4 +50,6 @@ runApp(
 
 Every time the +1 button is clicked, the `counter` is incremented by one, and the `doubleCounter` by two.
 
-Note that our repository includes a full example with Bloc, one with ChangeNotifier and one with Solidart.
+### More examples
+
+Our repository also includes a full example with Bloc, one with ChangeNotifier and one with Solidart.
