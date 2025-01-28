@@ -7,6 +7,10 @@ A provider is a tool that helps manage and inject dependencies in an application
 
 **NB:** When we use the term "provider", it can refer to either the `Provider` class of this library or the value it contains, depending on the context.
 
+## Graphical representation
+
+![Provider scope](/provider-scope.svg)
+
 ## Providers
 
 Declare a new provider either as a global `final` variable or a `final` static field.
