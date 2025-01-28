@@ -59,6 +59,53 @@ void main() {
 
     expect(providerFinder(1, 100), findsOneWidget);
   });
+  testWidgets('Test Provider.withArgument', (tester) async {
+    final doubleCountProvider =
+        Provider.withArgument((context, int arg) => arg * 2);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [doubleCountProvider(3)],
+            child: Builder(
+              builder: (context) {
+                final doubleCount = doubleCountProvider.of(context);
+                return Text(doubleCount.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('6'), findsOneWidget);
+  });
+
+  testWidgets('Test Provider.withArgument not lazy', (tester) async {
+    var fired = false;
+
+    final doubleCountProvider = Provider.withArgument(
+      (context, int arg) {
+        fired = true;
+        return arg * 2;
+      },
+      lazy: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [doubleCountProvider(3)],
+            child: const Text('hello'),
+          ),
+        ),
+      ),
+    );
+
+    expect(fired, true);
+  });
 
   testWidgets('Test Provider.of within Provider create fn', (tester) async {
     final numberProvider = Provider((_) => 5);
@@ -118,6 +165,59 @@ void main() {
         'Matching the wrong ID should result in a ProviderError.',
         equals(tenProvider),
       ),
+    );
+  });
+
+  testWidgets(
+      '''Test ProviderScope throws ArgProviderWithoutScopeError for a not found ArgProvider''',
+      (tester) async {
+    final numberProvider = Provider.withArgument((context, int arg) => arg);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              final ten = numberProvider.of(context);
+              return Text(ten.toString());
+            },
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.takeException(),
+      const TypeMatcher<ArgProviderWithoutScopeError>().having(
+        (error) => error.argProvider,
+        'Matching the wrong ID should result in a ProviderError.',
+        equals(numberProvider),
+      ),
+    );
+  });
+
+  testWidgets(
+      '''Test ProviderScope throws MultipleProviderOfSameInstance for multiple instances of ArgProvider''',
+      (tester) async {
+    final numberProvider = Provider.withArgument((context, int arg) => arg);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [numberProvider(1), numberProvider(2)],
+            child: Builder(
+              builder: (context) {
+                final ten = numberProvider.of(context);
+                return Text(ten.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.takeException(),
+      const TypeMatcher<MultipleProviderOfSameInstance>(),
     );
   });
 
@@ -564,6 +664,54 @@ void main() {
     expect(
       textFinder('maybeOf returns ProviderScopeOverrideState: true'),
       findsOneWidget,
+    );
+  });
+  testWidgets(
+      '''ProviderScopeOverride must throw a MultipleProviderOverrideOfSameProviderInstance for duplicated providers''',
+      (tester) async {
+    final numberProvider = Provider<int>((context) => 0);
+    await tester.pumpWidget(
+      ProviderScopeOverride(
+        overrides: [
+          numberProvider.overrideWithValue(1),
+          numberProvider.overrideWithValue(2),
+        ],
+        child: const Text('hello'),
+      ),
+    );
+
+    expect(
+      tester.takeException(),
+      const TypeMatcher<MultipleProviderOverrideOfSameProviderInstance>(),
+    );
+  });
+
+  testWidgets(
+      '''Test ProviderScopeOverride throws MultipleProviderOfSameInstance for multiple instances of ArgProvider''',
+      (tester) async {
+    final numberProvider = Provider.withArgument((context, int arg) => arg);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWithValue(1),
+              numberProvider.overrideWithValue(2),
+            ],
+            child: Builder(
+              builder: (context) {
+                final ten = numberProvider.of(context);
+                return Text(ten.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.takeException(),
+      const TypeMatcher<MultipleProviderOfSameInstance>(),
     );
   });
 }
