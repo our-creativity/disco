@@ -46,13 +46,13 @@ Contributor of:
 
 ## Disco’s Journey
 
-Inspired by SolidaJS, I — Alexandru — created a state-management library called solidart, also featuring providers and a `Solid` widget, the equivalent of this library's `ProviderScope`.
+Inspired by SolidJS, I — Alexandru — created a state-management library called solidart, also featuring providers and a `Solid` widget, the equivalent of this library's `ProviderScope`.
 
 Manuel played a key role in improving the `Solid` widget and simplifying the providers through numerous PRs. One day, he proposed a radical idea: introducing a `ProviderContext` class that would act like a `Context` in SolidJS or in React. Essentially, `ProviderContext` would serve as the identifier for a scoped `Provider` object, making it safer than relying solely on the type of the provided value (e.g., `context.get<Model>()`).  
 
 Shortly after, I realized we could simplify things further by using the providers themselves as identifiers. This approach aligned better with the Flutter ecosystem, where defining providers directly is more intuitive.
 
-During the refactoring process, we adhered to a simple principle: there should only be one way to do something. At one point, we noticed that the provider implementation no longer depended on the rest of Solidart. This led us to extract it into a separate package, which we named Disco (where the "di" stands for dependency injection and the "sco" for scope).
+During the refactoring process, we adhered to a simple principle: there should only be one way to do something. At one point, we noticed that the provider implementation no longer depended on the rest of solidart. This led us to extract it into a separate package, which we named Disco (where the "di" stands for dependency injection and the "sco" for scope).
 
 We continued refining the library through successive iterations. For instance, we noticed we could make the API feel more natural to Flutter by renaming `modelProvider.get(context)` to `modelProvider.of(context)`.
 
