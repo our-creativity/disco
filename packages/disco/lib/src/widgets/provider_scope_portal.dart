@@ -8,12 +8,12 @@ class _InheritedProviderScopePortal extends InheritedWidget {
 
   final BuildContext mainContext;
 
-  // coverage:ignore-start
+// coverage:ignore-start
   @override
   bool updateShouldNotify(covariant InheritedWidget oldWidget) {
     return false;
   }
-  // coverage:ignore-end
+// coverage:ignore-end
 }
 
 /// {@template ProviderScopePortal}
