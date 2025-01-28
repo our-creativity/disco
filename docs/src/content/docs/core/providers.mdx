@@ -9,11 +9,6 @@ A provider is a tool that helps manage and inject dependencies in an application
 
 **NB:** When we use the term "provider", it can refer to either the `Provider` class of this library or the value it contains, depending on the context.
 
-## Graphical representation
-
-<ThemeImage src="/provider-scope.svg" darkSrc="/provider-scope_dark.svg" alt="Graphical representation of provider scope"/>
-<ThemeImage src="/provider-scope-exception.svg" darkSrc="/provider-scope-exception_dark.svg" alt="Graphical representation of provider scope exception"/>
-
 ## Providers
 
 Declare a new provider either as a global `final` variable or a `final` static field.
@@ -87,4 +82,16 @@ There are also two optional named parameters that can be specified.
 | -------------- | ------- | ----------- |
 | `dispose`      | null    | The function to call when the scope containing the provider gets disposed. It is used to dispose correctly the value held by the provider. |
 | `lazy`         | `DiscoConfig.lazy`, which defaults to true | The values of the providers provided in a scope are created lazily.|
+
+
+## Graphical representation
+
+If the provider scope needs to be accessed by a widget which is not a child of the scope, the injection will throw an exception. This is because the provider scope is not accessible to the widget.
+Check the graph below to understand the issue.
+
+<ThemeImage src="/provider-scope-exception.svg" darkSrc="/provider-scope-exception_dark.svg" alt="Graphical representation of provider scope exception"/>
+
+If you lift the provider scope up to the parent of the widget, the injection will work as expected.
+
+<ThemeImage src="/provider-scope.svg" darkSrc="/provider-scope_dark.svg" alt="Graphical representation of provider scope"/>
 

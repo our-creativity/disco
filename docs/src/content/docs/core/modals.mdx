@@ -2,6 +2,7 @@
 title: Modals
 description: How to access providers inside modals.
 ---
+import ThemeImage from '../../../components/ThemeImage.astro';
 
 A modal spawns a new widget tree, making injecting providers not possible out of the box.
 
@@ -50,3 +51,17 @@ runApp(
   ),
 );
 ```
+
+## Graphical representation
+
+When you show a modal, it is spawned in a new widget tree.
+Only `Navigator` is the same ancestor, but other widgets are not accessible.
+This means the `ProviderScope` created in the main tree are not accessible in the modal, check the graph below to understand the issue.
+
+<ThemeImage src="/provider-scope-portal-exception.svg" darkSrc="/provider-scope-portal-exception_dark.svg" alt="Graphical representation of provider scope portal exception"/>
+
+---
+
+We provide `ProviderScopePortal` which takes the `mainContext` as parameter and uses it internally to access the providers created in the main tree.
+
+<ThemeImage src="/provider-scope-portal.svg" darkSrc="/provider-scope-portal_dark.svg" alt="Graphical representation of provider scope portal"/>
