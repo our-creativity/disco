@@ -4,6 +4,7 @@ description: How to create Disco providers.
 ---
 
 import ThemeImage from '../../../components/ThemeImage.astro';
+import { Aside } from '@astrojs/starlight/components';
 
 A provider is a tool that helps manage and inject dependencies in an application, making it easier to share data or services across different parts of the app.
 
@@ -95,3 +96,28 @@ If you lift the provider scope up to the parent of the widget, the injection wil
 
 <ThemeImage src="/provider-scope.svg" darkSrc="/provider-scope_dark.svg" alt="Graphical representation of provider scope"/>
 
+### How providers are found
+
+Check the following graph to understand how providers are retrieved.
+
+<ThemeImage src="/provider-scope-behavior.svg" darkSrc="/provider-scope-behavior_dark.svg" alt="Graphical representation of provider scope providers retrieval behavior"/>
+
+Basically, when the user searches for a provider, the first thing that is checked is if a `ProviderScopeOverride` exists.
+
+If it does, the overriden providers maps are checked to see if the provider is there.
+
+If is there, the overriden value is returned.
+
+Otherwise, the search continues for the first `ProviderScope` ancestor.
+
+If a `ProviderScope` ancestor is found, the provider is searched in the providers map.
+
+If the provider is found, the value is returned.
+
+If the provider is not found, the search continues for the next `ProviderScope` ancestor, until the root of the widget tree is reached.
+
+If the provider is not found, a `ProviderWithoutScopeError` is thrown.
+
+<Aside>
+  The error can be avoided by using `provider.maybeOf(context)`, which returns `null` if the provider is not found.
+</Aside>
