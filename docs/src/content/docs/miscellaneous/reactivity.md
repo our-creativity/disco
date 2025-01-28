@@ -12,10 +12,10 @@ Below follows an example with [Solidart](https://pub.dev/packages/flutter_solida
 ```dart
 final counterProvider = Provider((context) => Signal(0));
 
-// automatically reacts to changes of counterProvider
+// The internal Computed reacts to changes of counterProvider's inner Signal.
 final doubleCounterProvider = Provider((context) {
  return Computed(() => counterProvider.of(context).value * 2)
-);
+});
 
 runApp(
   MaterialApp(
