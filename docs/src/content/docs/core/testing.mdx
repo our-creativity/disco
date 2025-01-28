@@ -3,9 +3,13 @@ title: Testing
 description: How to use overrides for testing.
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 Testing is done with overrides. You will need to place a `ProviderScopeOverride` (preferably as the root widget) and then specify the `overrides`, which is a list containing the providers followed by `.overrideWithValue(T value)`.
 
-Note that you can **only** use one `ProviderScopeOverride` per test.
+<Aside>
+  You can **only use one** `ProviderScopeOverride` per test.
+</Aside>
 
 The text displayed in the following example will be "100".
 

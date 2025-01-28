@@ -10,27 +10,28 @@ Refer to the following graph to understand how the providers are retrieved.
 
 <ThemeImage src="/provider-scope-behavior.svg" darkSrc="/provider-scope-behavior_dark.svg" alt="Graphical representation of provider scope providers retrieval behavior"/>
 
-Basically, when the user searches for a provider, the first thing that is checked is if a `ProviderScopeOverride` exists.
+### Steps
 
-If it does, the overriden providers maps are checked to see if the provider is there.
+1. When a provider is injected, the first thing that is checked is if a `ProviderScopeOverride` exists.
 
-If is there, the overriden value is returned.
+2. If it does, its internal map of overridden providers is checked to see if the provider is there.
 
-Otherwise, the search continues for the first `ProviderScope` ancestor.
+3. If is there, the overridden value is returned.
 
-If a `ProviderScope` ancestor is found, the provider is searched in the providers map.
+4. Otherwise, the search continues for the first `ProviderScope` ancestor.
 
-If the provider is found, the value is returned.
+5. If a `ProviderScope` ancestor is found, the provider is searched in the providers map.
 
-If the provider is not found, the search continues for the next `ProviderScope` ancestor, until the root of the widget tree is reached.
+6. If the provider is found, its value is returned. It the value was not computed yet (i.e. it is the first time a lazy provider is accessed), it will get created before it is returned.
 
-If the provider is not found, a `ProviderWithoutScopeError` is thrown.
+7. If the provider is not found, the search proceeds to the next `ProviderScope` ancestor, continuing recursively up the widget tree until the root is reached.
+
+8. If the provider is not found, a `ProviderWithoutScopeError` is thrown.
 
 <Aside type="tip">
   The error can be avoided by using `provider.maybeOf(context)`, which returns `null` if the provider is not found.
 </Aside>
 
 <Aside>
-The lookup of a provider is __O(1)__ because it just involves a map lookup, in addition the tree is traversed using [getElementForInheritedWidgetOfExactType](https://api.flutter.dev/flutter/widgets/BuildContext/getElementForInheritedWidgetOfExactType.html) which is O(1) because it jumps from one InheritedWidget of type `T` to another, skipping the widgets in between.
+The lookup of a provider is __O(1)__ because it just involves a map lookup, in addition the tree is traversed using [getElementForInheritedWidgetOfExactType](https://api.flutter.dev/flutter/widgets/BuildContext/getElementForInheritedWidgetOfExactType.html), which is O(1) because it jumps from one InheritedWidget of type `T` to another, skipping the widgets in between.
 </Aside>
-

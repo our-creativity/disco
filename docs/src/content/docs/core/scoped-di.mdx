@@ -44,9 +44,17 @@ ProviderScope(
 
 ### How to inject
 
-Injecting is the act of retrieving a dependency. It is done with the methods `of(context)` and `maybeOf(context)`, the latter one being safer because it returns null instead of throwing if the provider is not found in any scopes. If you are unsure about which one to use, for simplicity you should probably stick to `of(context)` (and maybe set up an error monitoring solution to automatically detect invalid injections).
+Injecting is the act of retrieving a dependency. It is done with the methods `of(context)` and `maybeOf(context)`, the latter one being safer because it returns null instead of throwing if the provider is not found in any scopes.
+
+<Aside type="tip">
+  If you are unsure about which one to use, for simplicity you should probably stick to `of(context)` (and maybe set up an error monitoring solution to automatically detect invalid injections).
+</Aside>
 
 We inject the two providers above by using the `numberProvider.of(context)` and `doubleNumberPlusArgProvider.of(context)`.
+
+<Aside>
+  Users transitioning from Provider or Riverpod should note an important distinction: this library does not include reactivity. Therefore, it does not provide equivalents to `context.watch`/`context.listen` or `ref.watch`/`ref.listen`. The only way to trigger a rebuild is by changing the key of the `ProviderScope`, which we do not recommended by us. Instead, we advise injecting observables/signals directly and using their corresponding widgets or helpers to react to changes.
+</Aside>
 
 ### Full example
 
