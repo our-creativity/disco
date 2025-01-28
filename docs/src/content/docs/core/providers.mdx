@@ -3,14 +3,16 @@ title: Providers
 description: How to create Disco providers.
 ---
 
+import ThemeImage from '../../../components/ThemeImage.astro';
+
 A provider is a tool that helps manage and inject dependencies in an application, making it easier to share data or services across different parts of the app.
 
 **NB:** When we use the term "provider", it can refer to either the `Provider` class of this library or the value it contains, depending on the context.
 
 ## Graphical representation
 
-![Provider scope](/provider-scope.svg)
-![Provider scope exception](/provider-scope-exception.svg)
+<ThemeImage src="/provider-scope.svg" darkSrc="/provider-scope_dark.svg" alt="Graphical representation of provider scope"/>
+<ThemeImage src="/provider-scope-exception.svg" darkSrc="/provider-scope-exception_dark.svg" alt="Graphical representation of provider scope exception"/>
 
 ## Providers
 
