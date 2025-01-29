@@ -7,7 +7,7 @@
 
 # Disco
 
-<img src="https://raw.githubusercontent.com/our-creativity/disco/main/assets/disco.jpeg" height="400">
+<img src="https://raw.githubusercontent.com/our-creativity/disco/main/assets/disco.png" height="400">
 
 ---
 
