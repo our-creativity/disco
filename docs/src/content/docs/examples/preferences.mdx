@@ -1,28 +1,39 @@
+---
+title: Shared prefences example
+description: An example showing how to provide async objects with Disco.
+---
+
+import { LinkCard, FileTree, Aside } from '@astrojs/starlight/components';
+
+<LinkCard title="Source code" description="Click here to view the full source code of this example" href="https://github.com/our-creativity/disco/tree/main/examples/solidart" />
+
+SharedPreferences is a package that allows you to store key-value pairs on the device.
+This example shows how to provide a `SharedPreferences` object, after initialization, to the whole app using Disco.
+After the initialization, the preferences can be retrieved and updated synchronously.
+
+## Dependency
+
+This is the `shared_preferences` version used in this example:
+
+```yaml {2}
+dependencies:
+  shared_preferences: ^2.4.0
+```
+
+## Code
+
+```dart title=main.dart
 import 'package:disco/disco.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-final sharedPreferencesProvider = Provider.withArgument(
-  (context, SharedPreferences prefs) => prefs,
-);
 
 void main() {
   runApp(const InitializationPage());
 }
 
-// Example without loading/error handling
-// Future<void> main2() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   final prefs = await SharedPreferences.getInstance();
-//   runApp(
-//     ProviderScope(
-//       providers: [
-//         sharedPreferencesProvider(prefs),
-//       ],
-//       child: MyApp(),
-//     ),
-//   );
-// }
+final sharedPreferencesProvider = Provider.withArgument(
+  (context, SharedPreferences prefs) => prefs,
+);
 
 class InitializationPage extends StatefulWidget {
   const InitializationPage({super.key});
@@ -101,3 +112,24 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+```
+
+The above code handles the loading and error states of the initialization process correctly and it's the preferred way for handling async initialization in Flutter.
+
+If you know the initialization cannot fail, or it takes just a fraction of a second and you don't want to show the loading state, you can simplify the code as follows:
+```dart
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  runApp(
+    ProviderScope(
+      providers: [
+        sharedPreferencesProvider(prefs),
+      ],
+      child: MyApp(),
+    ),
+  );
+}
+```
+
+

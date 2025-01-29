@@ -507,7 +507,7 @@ class ArgProviderWithoutScopeError extends Error {
 
   @override
   String toString() {
-    return 'Seems like that you forgot to provide the provider of type'
+    return 'Seems like that you forgot to provide the provider of type '
         '${argProvider._valueType} and argument type '
         '${argProvider._argumentType} to a ProviderScope.';
   }

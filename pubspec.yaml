@@ -8,3 +8,4 @@ workspace:
   - examples/auto_route
   - examples/bloc
   - examples/solidart
+  - examples/preferences
