@@ -1,3 +1,7 @@
+## 1.0.0+1
+
+- **CHORE**: Update README.md
+
 ## 1.0.0
 
 - Added comprehensive documentation (see [Disco homepage](https://disco.mariuti.com)) with numerous examples.
