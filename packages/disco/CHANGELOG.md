@@ -1,3 +1,7 @@
+## 1.0.0
+
+- Stable release.
+
 ## 0.0.2
 
 - Fix imports, simplify file names and correct repository URL.
