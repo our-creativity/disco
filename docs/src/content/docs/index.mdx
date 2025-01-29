@@ -3,35 +3,32 @@ title: Disco
 description: Official documentation for Disco, a modern and simple library for scoped dependency injection in Flutter.
 ---
 
-<img src="disco.png" alt="disco image" width="500"/>
-
 Disco is a library introducing a new concept of providers that operate differently from those already present in the Flutter ecosystem. It was developed to overcome the challenges and limitations in the context of dependency injection.
 
-## Usage
+## Usage example
 
-### Creating a provider
+1. Create a provider
 
-```dart
-final modelProvider = Provider((context) => Model());
-```
+    ```dart
+    final modelProvider = Provider((context) => Model());
+    ```
 
-### Providing a provider
+2. Scope/provide the provider
 
-```dart
-ProviderScope(
-  providers: [modelProvider],
-  child: MyWidget(),
-)
-```
+    ```dart
+    ProviderScope(
+      providers: [modelProvider],
+      child: MyWidget(),
+    )
+    ```
 
-### Retrieving a provider
-```dart
-final model = modelProvider.of(context);
-```
+3. Inject the provider (within the above `ProviderScope`'s subtree)
 
-You can retrieve a provider from any widget in the subtree of the `ProviderScope` where the provider has been provided.
+    ```dart
+    final model = modelProvider.of(context);
+    ```
 
-To get straight to the point, pros and cons are summarized below.
+## Trade-offs
 
 ### Pros
 
@@ -72,6 +69,6 @@ In Disco's defense regarding the last point:
 - Disco providers also have a `maybeOf(context)` method, which can help if the presence of a provider cannot be guaranteed.
 - The throwable includes precise information in its stack trace to deduce the missing provider: filepath, line and column.
 
-## Keep in mind: trade-offs
+### Keep in mind
 
 As the <a href="/authors">authors of Disco</a>, we believe this to be the most effective strategy for DI in Flutter. However, every solution has trade-offs. You can limit the impact of these trade-offs by running tests, doing code reviews, and following other crucial practices.

@@ -7,8 +7,6 @@
 
 # Disco
 
-<img src="https://raw.githubusercontent.com/our-creativity/disco/main/assets/disco.png" height="400">
-
 ---
 
 A modern, convenient, simple and safe way to do scoped dependency injection in Flutter.
