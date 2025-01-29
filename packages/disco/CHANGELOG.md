@@ -1,6 +1,6 @@
 ## 1.0.0
 
-- Stable release.
+- Added comprehensive documentation (see [Disco homepage](https://disco.mariuti.com)) with numerous examples.
 
 ## 0.0.2
 
