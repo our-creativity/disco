@@ -1,9 +1,6 @@
 import 'package:disco/disco.dart';
 import 'package:flutter/material.dart';
 
-/// ---
-/// Model
-/// ---
 abstract class Model extends ChangeNotifier {
   void incrementCounter();
 
@@ -23,9 +20,6 @@ class ModelImplementation extends Model {
   }
 }
 
-/// ---
-/// Provider
-/// ---
 final modelProvider = Provider<Model>((context) => ModelImplementation());
 
 void main() {
