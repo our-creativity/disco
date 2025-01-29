@@ -533,8 +533,7 @@ void main() {
     expect(textFinder('number: 1'), findsOneWidget);
   });
 
-  testWidgets(
-      '''ProviderScopeOverride should override providers regardless of the hierarchy''',
+  testWidgets('''ProviderScopeOverride should override providers''',
       (tester) async {
     final numberProvider = Provider<int>((_) => 0);
     await tester.pumpWidget(
@@ -560,14 +559,13 @@ void main() {
     expect(find.text('100'), findsOneWidget);
   });
 
-  testWidgets(
-      '''ProviderScopeOverride should override argument providers regardless of the hierarchy''',
+  testWidgets('''ProviderScopeOverride should override argument providers''',
       (tester) async {
     final numberProvider = Provider.withArgument((_, int arg) => arg);
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          numberProvider.overrideWithValue(8 * 2),
+          numberProvider.overrideWithValue(16),
         ],
         child: MaterialApp(
           home: ProviderScope(

@@ -1,0 +1,118 @@
+---
+title: Scoped DI
+description: How to use Disco providers and understanding scoping.
+---
+
+import ThemeImage from '../../../components/ThemeImage.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+In this library, scoped dependency injection (DI) refers to injecting providers
+that are confined to a specific scope.
+
+To make things clearer in this section, let’s take a look at two of the providers from the previous page.
+
+```dart
+final numberProvider = Provider((context) => 5);
+
+final doubleNumberPlusArgProvider = Provider.withArgument((context, int arg) {
+  final number = numberProvider.of(context);
+  return number * 2 + arg;
+});
+```
+
+### How to scope
+
+Scoping means that the provider must be specified within a `ProviderScope` before it can be injected.
+
+In case the provider does not take an argument, we scope it the following way:
+
+```dart
+ProviderScope(
+  providers: [numberProvider]
+  child: // ...
+)
+```
+
+In case the provider takes an argument, we need to specify it when providing it.
+
+```dart
+ProviderScope(
+  providers: [doubleNumberPlusArgProvider(10)]
+  child: // ...
+)
+```
+
+### How to inject
+
+Injecting is the act of retrieving a dependency. It is done with the methods `of(context)` and `maybeOf(context)`, the latter one being safer because it returns null instead of throwing if the provider is not found in any scopes.
+
+In full example below, we are going to inject the two providers above with `numberProvider.of(context)` and `doubleNumberPlusArgProvider.of(context)`.
+
+<Aside type="tip">
+  If you are unsure about which one to use, for simplicity you should probably stick to `of(context)`.
+</Aside>
+
+<Aside>
+  Users transitioning from Provider or Riverpod should note an important distinction: this library does not include reactivity. Therefore, it does not provide equivalents to `context.watch`/`context.listen` or `ref.watch`/`ref.listen`. The only way to trigger a rebuild is by changing the key of the `ProviderScope`, which is not recommended by us (the next section explains this in detail). Instead, we advise injecting observables/signals directly and using their corresponding widgets or helpers to react to changes.
+</Aside>
+
+### Full example
+
+Try and guess what the displayed text will be before reading the solution.
+
+```dart
+runApp(
+  MaterialApp(
+    home: Scaffold(
+      body: ProviderScope(
+        providers: [numberProvider],
+        child: ProviderScope(
+          providers: [doubleNumberPlusArgProvider(10)],
+          child: Builder(
+            builder: (context) {
+              final number = numberProvider.of(context);
+              final doubleNumberPlusArg = doubleNumberPlusArgProvider.of(context);
+              return Text('$number $doubleNumberPlusArg');
+            },
+          ),
+        ),
+      ),
+    ),
+  ),
+);
+```
+
+The solution is "5 20".
+
+## Scoping correctly with context
+
+Some providers might have a dependency on other providers. It is important that the other providers are provided in `ProviderScope`s that are ancestors to the `ProviderScope` providing the dependent provider.
+
+### Wrong example
+
+The scope containing `doubleNumberPlusArgProvider` needs to be a descendant of the one containing `numberProvider`.
+This is because `doubleNumberPlusArgProvider` uses the context to find the value of `numberProvider`. The following will thus **not** work:
+
+```dart
+// bad example
+ProviderScope(
+  providers: [
+    numberProvider,
+    doubleNumberPlusArgProvider(10),
+  ],
+  child: // ...
+)
+```
+
+Placing the `ProviderScope` containing `doubleNumberPlusArgProvider` above the one containing `numberProvider` would also not work. It needs to be like in the full example above.
+
+## Graphical representation
+
+When you inject a provider, you need to ensure that one of the ancestors of the widget — where the injection takes place — is a `ProviderScope` providing that provider. If this is not the case, an error will be thrown at runtime.
+Refer to the graph below to understand the problem.
+
+<ThemeImage src="/provider-scope-exception.svg" darkSrc="/provider-scope-exception_dark.svg" alt="Graphical representation of provider scope exception"/>
+
+If you lift the provider scope up to the parent of the widget, the injection will work as expected.
+
+<ThemeImage src="/provider-scope.svg" darkSrc="/provider-scope_dark.svg" alt="Graphical representation of provider scope"/>

@@ -1,6 +1,0 @@
-include: package:very_good_analysis/analysis_options.yaml
-
-linter:
-  rules:
-    # since this is just an example, there is no need for ubiquitous documentation.
-    public_member_api_docs: false

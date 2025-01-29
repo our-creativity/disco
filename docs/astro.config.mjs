@@ -16,8 +16,45 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Guides',
-          autogenerate: { directory: 'guides' },
+          label: 'Overview',
+          link: '',
+        },
+        {
+          label: 'Installing',
+          link: 'installing',
+        },
+        {
+          label: 'Core',
+          items: [
+            'core/providers',
+            'core/scoped-di',
+            'core/immutability',
+            'core/modals',
+            'core/testing',
+            'core/provider-retrieval-process',
+            'core/configuration',
+          ],
+        },
+        {
+          label: 'Miscellaneous',
+          items: [
+            'miscellaneous/reactivity',
+            'miscellaneous/comparison-with-alternatives',
+          ],
+        },
+        {
+          label: 'Examples',
+          items: [
+            'examples/basic',
+            'examples/solidart',
+            'examples/preferences',
+            'examples/bloc',
+            'examples/auto-route',
+          ],
+        },
+        {
+          label: 'Authors',
+          link: 'authors',
         },
       ],
     }),

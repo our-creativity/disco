@@ -1,0 +1,140 @@
+---
+title: Shared preferences example
+description: An example showing how to provide async objects with Disco.
+---
+
+import { LinkCard, FileTree, Aside } from '@astrojs/starlight/components';
+
+<LinkCard title="Source code" description="Click here to view the full source code of this example" href="https://github.com/our-creativity/disco/tree/main/examples/solidart" />
+
+SharedPreferences is a package that allows you to store key-value pairs on the device.
+This example shows how to provide a `SharedPreferences` object, after initialization, to the whole app using Disco.
+After the initialization, the preferences can be retrieved and updated synchronously.
+
+You can take inspiration to provide other asynchronous objects.
+
+## Dependency
+
+This is the `shared_preferences` version used in the following example:
+
+```yaml {2}
+dependencies:
+  shared_preferences: ^2.4.0
+```
+
+## Example
+
+The code below handles the loading and error states of the initialization process correctly and it's the preferred way for handling async initialization in Flutter.
+
+```dart title=main.dart
+import 'package:disco/disco.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  runApp(const InitializationPage());
+}
+
+final sharedPreferencesProvider = Provider.withArgument(
+  (context, SharedPreferences prefs) => prefs,
+);
+
+class InitializationPage extends StatefulWidget {
+  const InitializationPage({super.key});
+
+  @override
+  State<InitializationPage> createState() => _InitializationPageState();
+}
+
+class _InitializationPageState extends State<InitializationPage> {
+  late final initialization = Future(() async {
+    // Artificial delay to simulate loading
+    await Future.delayed(Duration(seconds: 3));
+    // Initialize shared preferences
+    final prefs = await SharedPreferences.getInstance();
+    return (preferences: prefs);
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: initialization,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Directionality(
+            textDirection: TextDirection.ltr,
+            child: Center(
+              child: Text('Error: ${snapshot.error}'),
+            ),
+          );
+        }
+        final data = snapshot.data!;
+        return ProviderScope(
+          providers: [
+            sharedPreferencesProvider(data.preferences),
+          ],
+          child: MyApp(),
+        );
+      },
+    );
+  }
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    final sharedPreferences = sharedPreferencesProvider.of(context);
+    final counter = sharedPreferences.getInt('counter') ?? 0;
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: Scaffold(
+        body: Center(
+          child: Text("The counter is $counter"),
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              sharedPreferences.setInt('counter', counter + 1);
+            });
+          },
+          child: const Icon(Icons.add),
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Alternative example (without error handling)
+
+If you know the initialization cannot fail, or it takes just a fraction of a second and you don't want to show the loading state, you can simplify the code as follows:
+
+```dart
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  runApp(
+    ProviderScope(
+      providers: [
+        sharedPreferencesProvider(prefs),
+      ],
+      child: MyApp(),
+    ),
+  );
+}
+```
+
+

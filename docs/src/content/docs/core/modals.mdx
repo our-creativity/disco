@@ -1,0 +1,78 @@
+---
+title: Modals
+description: How to access providers inside modals.
+---
+import ThemeImage from '../../../components/ThemeImage.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+A modal spawns a new widget tree, making injecting providers not possible out of the box.
+
+This library offers `ProviderScopePortal`, which gives access to all the providers that were created in the main widget tree.
+
+<Aside>
+  The `ProviderScopePortal` needs to be given a `BuildContext` belonging to the main tree.
+</Aside>
+
+<Aside>
+  When injecting a provider in the newly spawned subtree, a `BuildContext` that is a descendant of `ProviderScopePortal` needs to be used.
+</Aside>
+
+### Example
+
+In the following example, we created a `Builder` and used its argument `innerContext` to inject the provider.
+
+```dart
+final numberProvider = Provider((context) => 1);
+
+Future<void> showNumberDialog({required BuildContext context}) {
+  return showDialog(
+    context: context,
+    builder: (dialogContext) {
+      return ProviderScopePortal(
+        mainContext: context,
+        child: Builder(
+          builder: (innerContext) {
+            final number =
+                numberProvider.of(innerContext);
+            return Text('$number');
+          },
+        ),
+      );
+    },
+  );
+}
+
+runApp(
+  MaterialApp(
+    home: Scaffold(
+      body: ProviderScope(
+        providers: [numberProvider],
+        child: Builder(
+          builder: (context) {
+            return ElevatedButton(
+              onPressed: () {
+                showNumberDialog(context: context);
+              },
+              child: const Text('show dialog'),
+            );
+          },
+        ),
+      ),
+    ),
+  ),
+);
+```
+
+## Graphical representation
+
+When you show a modal, it is spawned in a new widget tree.
+Only `Navigator` is the same ancestor, but other widgets are not accessible.
+This means the `ProviderScope` created in the main tree are not accessible in the modal, check the graph below to understand the problem.
+
+<ThemeImage src="/provider-scope-portal-exception.svg" darkSrc="/provider-scope-portal-exception_dark.svg" alt="Graphical representation of provider scope portal exception"/>
+
+---
+
+We provide `ProviderScopePortal`, which requires the `mainContext` parameter to access the providers created in the main tree.
+
+<ThemeImage src="/provider-scope-portal.svg" darkSrc="/provider-scope-portal_dark.svg" alt="Graphical representation of provider scope portal"/>

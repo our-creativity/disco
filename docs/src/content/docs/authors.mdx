@@ -1,0 +1,59 @@
+---
+title: Authors
+description: The authors of Disco.
+---
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import AuthorCard from '../../components/AuthorCard.astro';
+
+<CardGrid>
+  <AuthorCard 
+    imageSrc="/ale.png" 
+    name="Alexandru Mariuti" 
+    githubUrl="https://github.com/nank1ro"
+    twitterUrl="https://x.com/nank1ro"
+  />
+  <AuthorCard 
+    imageSrc="/manuel.jpg" 
+    name="Manuel Plavsic" 
+    githubUrl="https://github.com/manuel-plavsic"
+    twitterUrl="https://x.com/ManuelPlavsic"
+  />
+</CardGrid>
+
+## Alexandru Mariuti
+
+I am an open source enthusiast, passionate about Dart and Flutter, and a strong believer in the power of community.
+
+Maintainer of:
+- [solidart](https://pub.dev/packages/solidart) and [flutter_solidart](https://pub.dev/packages/flutter_solidart) (Dart/Flutter state management library inspired by [SolidJS](https://www.solidjs.com/))
+- [shadcn_ui (flutter port)](https://pub.dev/packages/shadcn_ui) (Design system inspired by [ui.shadcn.com](https://ui.shadcn.com/))
+- [awesome_flutter_extensions](https://pub.dev/packages/awesome_flutter_extensions) (Useful Flutter extensions)
+- [disable_web_context_menu](https://pub.dev/packages/disable_web_context_menu) (Disable native web context menu)
+- [disco](https://pub.dev/packages/disco) (Dependency injection library for Flutter)
+- [prompt_parser](https://pypi.org/project/prompt-parser/) (Python library for parsing LLM prompts)
+
+## Manuel Plavsic
+
+I am a software engineer passionate about full-stack development, cloud, and cryptography who enjoys challenging established practices to discover better solutions.
+I like friendly environments where people work well together and a bit of humor keeps things fun.
+
+Maintainer of:
+- [disco](https://pub.dev/packages/disco) (Dependency injection library for Flutter)
+- [nidula](https://pub.dev/packages/nidula) (A Dart library for Rust-like Option/Result types)
+
+Contributor of:
+- [solidart](https://pub.dev/packages/solidart) and [flutter_solidart](https://pub.dev/packages/flutter_solidart) (Dart/Flutter state management inspired by [SolidJS](https://www.solidjs.com/))
+
+## Disco's journey
+
+Inspired by SolidJS, I — Alexandru — created a state-management library called solidart, also featuring providers and a `Solid` widget, the equivalent of this library's `ProviderScope`.
+
+Manuel played a key role in improving the `Solid` widget and simplifying the providers through numerous PRs. One day, he proposed a radical idea: introducing a `ProviderContext` class that would act like a `Context` in SolidJS or in React. Essentially, `ProviderContext` would serve as the identifier for a scoped `Provider` object, making it safer than relying solely on the type of the provided value (e.g., `context.get<Model>()`).  
+
+Shortly after, I realized we could simplify things further by using the providers themselves as identifiers. This approach aligned better with the Flutter ecosystem, where defining providers directly is more intuitive.
+
+During the refactoring process, we adhered to a simple principle: there should only be one way to do something. At one point, we noticed that the provider implementation no longer depended on the rest of solidart. This led us to extract it into a separate package, which we named Disco (where the "di" stands for dependency injection and the "sco" for scope).
+
+We continued refining the library through successive iterations. For instance, we noticed we could make the API feel more natural to Flutter by renaming `modelProvider.get(context)` to `modelProvider.of(context)`.
+
+It has been a wonderful journey, and we hope many will enjoy using this open-source library.

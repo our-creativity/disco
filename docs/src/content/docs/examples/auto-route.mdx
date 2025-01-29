@@ -1,0 +1,222 @@
+---
+title: AutoRoute example
+description: An example showing how to share a provider between multiple pages without scoping the entire app.
+---
+import { FileTree, LinkCard } from '@astrojs/starlight/components';
+
+<LinkCard title="Source code" description="Click here to view the full source code of this example" href="https://github.com/our-creativity/disco/tree/main/examples/auto_route" />
+
+This AutoRoute example shows how to share a provider between multiple pages without scoping it for the entire app.
+
+This can be considered as a more advanced example and can be used when you want to share a provider between multiple pages without scoping it for the entire app.
+> Sometimes placing a provider above the `MaterialApp` is needed and perfectly fine, but placing everything above `MaterialApp` can lead to a messy codebase, because maintainers can access every provider from every place, causing spaghetti code.
+
+## Dependency
+
+This is the `auto_route` version used in this example:
+
+```yaml {2}
+dependencies:
+  auto_route: ^9.3.0+1
+```
+
+## File structure
+
+Let's look at the file structure:
+
+<FileTree>
+
+- controllers
+  - books
+    - controller.dart
+    - model.dart
+- pages
+  - book.dart
+  - books.dart
+  - home.dart
+- main.dart
+- router.dart
+- router.gr.dart
+
+</FileTree>
+
+## Models
+
+Let's start with the model:
+
+```dart title=controllers/books/model.dart
+class Book {
+  const Book({
+    required this.id,
+    required this.name,
+    required this.description,
+  });
+
+  final int id;
+  final String name;
+  final String description;
+}
+```
+
+## BooksController
+
+Then let's create the controller:
+
+```dart title=controllers/books/controller.dart
+import 'package:auto_route_example/controllers/books/model.dart';
+import 'package:disco/disco.dart';
+
+final booksControllerProvider = Provider((context) => BooksController());
+
+class BooksController {
+  final _books = List.generate(
+    10,
+    (index) => Book(
+      id: index,
+      name: 'Book $index',
+      description: 'Description for book $index',
+    ),
+  );
+
+  /// Returns a list of all books.
+  List<Book> get books {
+    return _books;
+  }
+
+  /// Returns a book by its [id].
+  Book book(int id) {
+    return _books.firstWhere((book) => book.id == id);
+  }
+}
+```
+
+## Router
+
+Let's go to the router.
+
+```dart title=router.dart
+import 'package:auto_route/auto_route.dart';
+// Some imports are omitted for better readability
+
+part 'router.gr.dart';
+
+@AutoRouterConfig()
+class AppRouter extends RootStackRouter {
+  @override
+  List<AutoRoute> get routes => [
+    AutoRoute(
+      path: '/',
+      page: HomeRoute.page,
+    ),
+    AutoRoute(
+      path: '/books',
+      // This is the wrapper route where the provider is placed and available to its children
+      page: BooksWrapperRoute.page,
+      children: [
+        // This is the initial page for the path /books where the list of books is displayed
+        AutoRoute(path: '', page: BooksRoute.page, initial: true),
+        // This is the page where the book details are displayed
+        AutoRoute(path: ':bookId', page: BookRoute.page),
+      ],
+    ),
+  ];
+}
+```
+
+## BooksWrapperPage
+
+The `BooksWrapperRoute` is where the provider is placed. The provider is shared between `BooksRoute` and `BookRoute` because the routes are children of `BooksWrapperRoute`.
+
+```dart title=pages/books.dart
+@RoutePage()
+class BooksWrapperPage extends StatelessWidget implements AutoRouteWrapper {
+  const BooksWrapperPage({super.key});
+
+  @override
+  Widget wrappedRoute(BuildContext context) {
+    // Provide the books controller to descendants
+    return ProviderScope(
+      providers: [booksControllerProvider],
+      child: this,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const AutoRouter();
+  }
+}
+```
+## BooksPage
+
+Let's see the `BooksPage`:
+
+```dart title=pages/books.dart
+// Imports are omitted for better readability
+
+@RoutePage()
+class BooksPage extends StatelessWidget {
+  const BooksPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // retrieve the books controller
+    final booksController = booksControllerProvider.of(context);
+    // get all the books
+    final books = booksController.books;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Books'),
+        leading: BackButton(
+          onPressed: () => const HomeRoute().navigate(context),
+        ),
+      ),
+      body: ListView.separated(
+        itemCount: books.length,
+        itemBuilder: (context, index) {
+          final book = books[index];
+          return ListTile(
+            title: Text(book.name),
+            // Navigate to the book page when the list tile is tapped
+            onTap: () => BookRoute(bookId: book.id).navigate(context),
+          );
+        },
+        separatorBuilder: (context, index) => const SizedBox(height: 8),
+      ),
+    );
+  }
+}
+```
+
+## BookPage
+
+And finally let's see the `BookPage`:
+
+```dart title=pages/book.dart
+// Imports are omitted for better readability
+
+@RoutePage()
+class BookPage extends StatelessWidget {
+  const BookPage({
+    super.key,
+    @PathParam() required this.bookId,
+  });
+
+  final int bookId;
+
+  @override
+  Widget build(BuildContext context) {
+    // retrieve the books controller
+    final booksController = booksControllerProvider.of(context);
+    // get the book by its id
+    final book = booksController.book(bookId);
+    return Scaffold(
+      appBar: AppBar(title: Text(book.name)),
+      body: Center(
+        child: Text(book.description),
+      ),
+    );
+  }
+}
+```

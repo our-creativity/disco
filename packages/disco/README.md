@@ -1,3 +1,10 @@
+[![License: MIT](https://img.shields.io/badge/license-MIT-purple.svg)](https://opensource.org/licenses/MIT)
+[![Coverage](https://codecov.io/gh/our-creativity/disco/graph/badge.svg?token=Z19R32RJ22)](https://codecov.io/gh/our-creativity/disco)
+[![GitHub issues](https://img.shields.io/github/issues/our-creativity/disco)](https://github.com/our-creativity/disco/issues/)
+[![GitHub pull-requests](https://img.shields.io/github/issues-pr/our-creativity/disco.svg)](https://gitHub.com/our-creativity/disco/pull/)
+[![pub.dev Version (including pre-releases)](https://img.shields.io/pub/v/disco?include_prereleases)](https://pub.dev/packages/disco)
+[![GitHub stars](https://img.shields.io/github/stars/our-creativity/disco)](https://gitHub.com/our-creativity/disco/stargazers/)
+
 # Disco
 
 <img src="https://raw.githubusercontent.com/our-creativity/disco/main/assets/disco.jpeg" height="400">
@@ -42,8 +49,13 @@ You can retrieve a provider from any widget in the subtree of the `ProviderScope
 
 ### Examples
 
-There are multiple examples on the repository (the `examples` folder and the
-single `example` inside the disco package).
+There are multiple examples on the repository:
+
+- [basic](https://disco.mariuti.com/examples/basic/) A basic example showing the basic usage of Disco.
+- [solidart](https://disco.mariuti.com/examples/solidart/) An example showcasing the power of the `ProviderScope` widgets combined with solidart reactivity.
+- [bloc](https://disco.mariuti.com/examples/bloc/) An example showcasing how to provide a light/dark theme Cubit with Disco.
+- [auto_route](https://disco.mariuti.com/examples/auto-route/) An example showing how to share a provider between multiple pages without scoping the entire app.
+- [preferences](https://disco.mariuti.com/examples/preferences/) An example showing how to provide async objects with Disco.
 
 ## Additional information
 

@@ -1,0 +1,172 @@
+---
+title: Bloc example
+description: An example showcasing how to provide a light/dark theme Cubit with Disco.
+---
+import { FileTree, LinkCard } from '@astrojs/starlight/components';
+
+<LinkCard title="Source code" description="Click here to view the full source code of this example" href="https://github.com/our-creativity/disco/tree/main/examples/bloc" />
+
+Bloc is one of the most widely used libraries in the Flutter ecosystem, which is why we've included an example to demonstrate its integration.
+
+Our example demonstrates how to provide a light/dark theme Cubit using Disco.
+
+## Dependency
+
+This is the `flutter_bloc` version used in this example:
+
+```yaml {2}
+dependencies:
+  flutter_bloc: ^9.0.0
+```
+
+## File structure
+
+Let's look at the file structure:
+
+<FileTree>
+
+- cubit
+  - theme_cubit.dart
+- di
+  - providers.dart
+- ui
+  - screens
+    - theme_switcher_page.dart
+  - widgets
+    - themed_button.dart
+- main.dart
+
+</FileTree>
+
+## ThemeCubit
+
+Let's get started by writing a class that extends `Cubit<bool>`.
+
+```dart title="cubit/theme_cubit.dart"
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+/// ThemeCubit manages the light/dark theme state
+class ThemeCubit extends Cubit<bool> {
+  ThemeCubit() : super(false); // false means light, true means dark theme
+
+  void toggleTheme() => emit(!state);
+}
+```
+
+## Providers
+
+In a separate file, we define the providers.
+
+```dart title="di/providers.dart"
+import 'package:bloc_example/cubit/theme_cubit.dart';
+import 'package:disco/disco.dart';
+
+final themeProvider = Provider((context) => ThemeCubit());
+```
+
+## ThemedButton
+
+We also define a button where we inject the `themeProvider`. We want it to display different texts based on the current value.
+
+```dart title="ui/widgets/themed_button.dart"
+import 'package:bloc_example/di/providers.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+class ThemedButton extends StatelessWidget {
+  const ThemedButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeCubit = themeProvider.of(context);
+    return BlocBuilder(
+      bloc: themeCubit,
+      builder: (context, bool isDarkMode) {
+        return ElevatedButton(
+          onPressed: themeCubit.toggleTheme,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isDarkMode ? Colors.grey[800] : Colors.lightBlue,
+            foregroundColor: isDarkMode ? Colors.white : Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Text(
+            isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+## ThemeSwitcherPage
+
+We define the page for our example. It contains a `ThemedButton`.
+
+```dart title="ui/screens/theme_switcher_page.dart"
+import 'package:bloc_example/ui/widgets/themed_button.dart';
+import 'package:flutter/material.dart';
+
+class ThemeSwitcherPage extends StatelessWidget {
+  const ThemeSwitcherPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Cubit Theme Example')),
+      body: const Center(
+        child: ThemedButton(),
+      ),
+    );
+  }
+}
+```
+
+## App
+
+Let's finish the example by adding the following code in our `main.dart`.
+
+```dart title="main.dart"
+import 'package:bloc_example/di/providers.dart';
+import 'package:bloc_example/ui/screens/theme_switcher_page.dart';
+import 'package:disco/disco.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      providers: [themeProvider],
+      child: Builder(
+        builder: (context) {
+          return BlocBuilder(
+            // NB: When injecting the cubit, the context has to be a descendant
+            // of ProviderScope (and not what MyApp.build provides).
+            bloc: themeProvider.of(context),
+            builder: (context, bool isDarkMode) {
+              return MaterialApp(
+                theme: isDarkMode
+                    ? ThemeData.dark().copyWith(primaryColor: Colors.blueGrey)
+                    : ThemeData.light()
+                        .copyWith(primaryColor: Colors.lightBlue),
+                home: const ThemeSwitcherPage(),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+```

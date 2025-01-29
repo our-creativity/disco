@@ -49,8 +49,13 @@ You can retrieve a provider from any widget in the subtree of the `ProviderScope
 
 ### Examples
 
-There are multiple examples on the repository (the `examples` folder and the
-single `example` inside the disco package).
+There are multiple examples on the repository:
+
+- [basic](https://disco.mariuti.com/examples/basic/) A basic example showing the basic usage of Disco.
+- [solidart](https://disco.mariuti.com/examples/solidart/) An example showcasing the power of the `ProviderScope` widgets combined with solidart reactivity.
+- [bloc](https://disco.mariuti.com/examples/bloc/) An example showcasing how to provide a light/dark theme Cubit with Disco.
+- [auto_route](https://disco.mariuti.com/examples/auto-route/) An example showing how to share a provider between multiple pages without scoping the entire app.
+- [preferences](https://disco.mariuti.com/examples/preferences/) An example showing how to provide async objects with Disco.
 
 ## Additional information
 

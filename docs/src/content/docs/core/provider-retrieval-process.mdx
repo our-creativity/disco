@@ -1,0 +1,37 @@
+---
+title: Provider retrieval process
+description: Illustrative overview for how the providers are retrieved.
+---
+
+import ThemeImage from '../../../components/ThemeImage.astro';
+import { Aside } from '@astrojs/starlight/components';
+
+Refer to the following graph to understand how the providers are retrieved.
+
+<ThemeImage src="/provider-scope-behavior.svg" darkSrc="/provider-scope-behavior_dark.svg" alt="Graphical representation of provider scope providers retrieval behavior"/>
+
+### Steps
+
+1. When a provider is injected, the first thing that is checked is if a `ProviderScopeOverride` exists.
+
+2. If it does, its internal map of overridden providers is checked to see if the provider is there.
+
+3. If is there, the overridden value is returned.
+
+4. Otherwise, the search continues for the first `ProviderScope` ancestor.
+
+5. If a `ProviderScope` ancestor is found, the provider is searched in its internal map of providers.
+
+6. If the provider is found, its value is returned. It the value was not computed yet (i.e. it is the first time a lazy provider is accessed), it will get created right before it is returned.
+
+7. If the provider is not found, the search proceeds to the next `ProviderScope` ancestor, continuing recursively up the widget tree until the root is reached.
+
+8. If the provider is not found, a `ProviderWithoutScopeError` is thrown.
+
+<Aside type="tip">
+  The error can be avoided by using `provider.maybeOf(context)`, which returns `null` if the provider is not found.
+</Aside>
+
+<Aside>
+The lookup of a provider is __O(1)__ because it just involves a map lookup, in addition the tree is traversed using [getElementForInheritedWidgetOfExactType](https://api.flutter.dev/flutter/widgets/BuildContext/getElementForInheritedWidgetOfExactType.html), which is O(1) because it jumps from one InheritedWidget of type `T` to another, skipping the widgets in between.
+</Aside>

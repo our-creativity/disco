@@ -16,7 +16,7 @@ class TodosPage extends StatelessWidget {
           title: const Text('Todos'),
         ),
         body: const Padding(
-          padding: EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(8),
           child: TodosBody(),
         ),
       ),

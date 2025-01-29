@@ -1,0 +1,84 @@
+---
+title: Testing
+description: How to use overrides for testing.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Testing is done with overrides. You need to place a `ProviderScopeOverride` and then specify the `overrides` argument with a list containing the providers followed by `.overrideWithValue(T value)`.
+
+<Aside>
+  The overrides always take precedence over the providers provided with `ProviderScope`, even if the `ProviderScopeOverride` is placed above in the widget tree.
+</Aside>
+
+<Aside>
+  You can **only use one** `ProviderScopeOverride` per test. Make sure to override all the necessary providers within it.
+</Aside>
+
+<Aside type="tip">
+  Preferably, place the `ProviderScopeOverride` as the root widget your tests.
+</Aside>
+
+### Examples
+
+The text displayed in the following example is "100" because overrides always take precedence.
+
+```dart
+testWidgets(
+    '''ProviderScopeOverride should override providers''',
+    (tester) async {
+  final numberProvider = Provider<int>((context) => 0);
+  await tester.pumpWidget(
+    ProviderScopeOverride(
+      overrides: [
+        numberProvider.overrideWithValue(100),
+      ],
+      child: MaterialApp(
+        home: ProviderScope(
+          providers: [
+            numberProvider,
+          ],
+          child: Builder(
+            builder: (context) {
+              final number = numberProvider.of(context);
+              return Text(number.toString());
+            },
+          ),
+        ),
+      ),
+    ),
+  );
+  expect(find.text('100'), findsOneWidget);
+});
+```
+
+Testing is possible also with providers that take an argument, and it is done the same exact way.
+
+```dart
+testWidgets(
+    '''ProviderScopeOverride should override argument providers''',
+    (tester) async {
+  final numberProvider = Provider.withArgument((context, int arg) => arg * 2);
+  await tester.pumpWidget(
+    ProviderScopeOverride(
+      overrides: [
+        numberProvider.overrideWithValue(8),
+      ],
+      child: MaterialApp(
+        home: ProviderScope(
+          providers: [
+            numberProvider(1),
+          ],
+          child: Builder(
+            builder: (context) {
+              final number = numberProvider.of(context);
+              return Text(number.toString());
+            },
+          ),
+        ),
+      ),
+    ),
+  );
+  expect(find.text('8'), findsOneWidget);
+});
+```

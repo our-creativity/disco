@@ -1,36 +1,53 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash
-hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
-  actions:
-    - text: Example Guide
-      link: /guides/example/
-      icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
+title: Disco
+description: Official documentation for Disco, a modern and simple library for scoped dependency injection in Flutter.
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+<img src="disco.jpeg" alt="disco image" width="500" style="border: 1px solid grey;"/>
 
-## Next steps
+Disco is a library introducing a new concept of providers that operate differently from those already present in the Flutter ecosystem. It was developed to overcome the challenges and limitations in the context of dependency injection.
 
-<CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
-</CardGrid>
+To get straight to the point, pros and cons are summarized below.
+
+### Pros
+
+The pros of Disco are:
+
+- The providers are scoped.
+  - The widget tree is fully leveraged.
+    - This keeps the architecture simple.
+- No global state is possible.
+  - Circular dependencies are impossible.
+- Multiple providers of the same type are possible.
+  - There is no need to create wrapper types or rely on IDs such as strings.
+- The API is very simple and feels natural to Flutter.
+  - Providers are equipped with `of(context)` and `maybeOf(context)` methods.
+  - All you need is `BuildContext`. There is no additional class needed to inject the providers.
+- The removal of a provider has an impact on its providing and each of its injections.
+  - Each of them is immediately characterized by a static error.
+- The values held by the providers are immutable.
+  - While immutable, some instances allow for inner mutation.
+    - This is great: observables and signals can be passed down.
+- No reactivity is included.
+  - This library focuses on DI, so that state management solutions can focus on the reactivity.
+  - To include reactivity, provide a built-in or third-party observable/signal to the provider (e.g. `Signal`, `ChangeNotifier`, `Cubit`, ...).
+
+### Cons
+
+The cons of this library are:
+
+- Providers might need to be lifted up or down in the widget tree, as requirements change.
+- Modals spawn new widget trees, causing disconnection with the providers in the main tree.
+  - A special widget must be used to restore access to the providers in the main widget tree.
+- It is not fully compile-time safe.
+  - The injection of a provider that cannot be found in any scope results in a runtime error.
+
+In Disco's defense regarding the last point:
+
+- Total compile-time safety is not possible with an approach leveraging scoped DI, which is a pattern ubiquitously used in Flutter and third-party libraries (think about how many times you have already read `MediaQuery.of(context)`, `GoRouter.of(context)`, ...).
+- Disco providers also have a `maybeOf(context)` method, which can help if the presence of a provider cannot be guaranteed.
+- The throwable includes precise information in its stack trace to deduce the missing provider: filepath, line and column.
+
+## Keep in mind: trade-offs
+
+As the <a href="/authors">authors of Disco</a>, we believe this to be the most effective strategy for DI in Flutter. However, every solution has trade-offs. You can limit the impact of these trade-offs by running tests, doing code reviews, and following other crucial practices.

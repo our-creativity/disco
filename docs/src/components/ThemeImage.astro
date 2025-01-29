@@ -1,0 +1,39 @@
+---
+const { src, darkSrc, alt } = Astro.props;
+let uuid = crypto.randomUUID();
+---
+
+<img src={src} alt={alt} id={uuid} class="theme-image" />
+
+<script is:inline define:vars={{src, darkSrc, uuid }}>
+  function updateImage() {
+    const themeMode = document.documentElement.getAttribute("data-theme");
+    const isDarkTheme = themeMode === 'dark'; // Check for dark class
+    const imgElement = document.getElementById(uuid);
+    imgElement.src = isDarkTheme ? darkSrc : src; // Set the appropriate image
+  }
+
+  // Initial check
+  updateImage();
+  // Observe changes to the `data-theme` attribute
+  const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+          if (mutation.attributeName === "data-theme") {
+              updateImage();
+          } 
+      });
+  });
+
+  observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+  });
+</script>
+
+
+<style>
+  .theme-image {
+    width: 100%; 
+    height: auto; 
+  }
+</style>
