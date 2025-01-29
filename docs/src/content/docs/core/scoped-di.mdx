@@ -53,7 +53,7 @@ In full example below, we are going to inject the two providers above with `numb
 </Aside>
 
 <Aside>
-  Users transitioning from Provider or Riverpod should note an important distinction: this library does not include reactivity. Therefore, it does not provide equivalents to `context.watch`/`context.listen` or `ref.watch`/`ref.listen`. The only way to trigger a rebuild is by changing the key of the `ProviderScope`, which is not recommended by us. Instead, we advise injecting observables/signals directly and using their corresponding widgets or helpers to react to changes.
+  Users transitioning from Provider or Riverpod should note an important distinction: this library does not include reactivity. Therefore, it does not provide equivalents to `context.watch`/`context.listen` or `ref.watch`/`ref.listen`. The only way to trigger a rebuild is by changing the key of the `ProviderScope`, which is not recommended by us (the next section explains this in detail). Instead, we advise injecting observables/signals directly and using their corresponding widgets or helpers to react to changes.
 </Aside>
 
 ### Full example

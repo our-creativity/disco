@@ -1,6 +1,6 @@
 ---
 title: Immutability
-description: Learn the providers immutability
+description: Learn how immutability impacts Disco providers.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -75,14 +75,17 @@ class _MainAppState extends State<MainApp> {
 The example renders `The counter is 0`. After the user presses the `FloatingActionButton`, the counter is incremented, but the UI does not update.
 This is because the provider is immutable, and the instance of the provider is not updated. In other words, the `counterProvider` is created only the first time and it still provides the initial instance.
 
-You may be sceptical about the immutability of providers, but be sure this is a nice thing.
-It helps to avoid bugs and makes the application more predictable.
+You may be skeptical about the immutability of providers, but it is actually a good thing.
+It helps avoid bugs and makes the application more predictable.
 
 The typical usage for a provider is to provide a value for a specific page or widget.
-When the Page or Widget is disposed, the provider is also disposed, and the value is no longer available.
+When the page or widget is disposed, the provider gets also disposed, and the value is no longer available.
 When the Page is opened again, a new instance of the provider is created, and the value is provided again.
 
-There is one way to force the recreation of a provider, _which I discourage_, but can be used if you know what you're doing.
+### Force the recreation of a provider
+
+There is one way to force the recreation of a provider, _which we discourage_, but can be used if you know what you are doing.
+
 ```dart {2}
 ProviderScope(
   key: ValueKey(counter),
@@ -93,7 +96,8 @@ ProviderScope(
 )
 ```
 
-This code destroys completely the widget tree and recreates it.
-The provider creation is perfomed inside the `ProviderScope` widget and causes the recreation of the provider.
-As soon as you change the key of the `ProviderScope`, the old `ProviderScope` is disposed and disposes all the providers inside it.
-Then a new `ProviderScope` is created and all the providers are created again.
+When changing a key, the widget subtree gets regenerated.
+The provider recreation is performed inside the `ProviderScope` widget. What exactly happens is the following:
+
+1. The old `ProviderScope` is disposed, which disposes of all the providers inside it.
+2. A new `ProviderScope` is created and all the providers are created again.
