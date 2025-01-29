@@ -28,6 +28,7 @@ export default defineConfig({
           items: [
             'core/providers',
             'core/scoped-di',
+            'core/immutability',
             'core/modals',
             'core/testing',
             'core/provider-retrieval-process',

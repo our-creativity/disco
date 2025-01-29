@@ -1,0 +1,100 @@
+---
+title: Immutability
+description: Learn the providers immutability
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+In Disco, providers are immutable. This means that once a provider is created, it cannot be changed.
+
+This is a design choice that we made to ensure that the instance of the provider is consistent throughout the application.
+
+Let's look at an example, think a bit about the output after the `FloatingActionButton` is pressed, then continue reading to see if you were correct.
+
+```dart
+import 'package:disco/disco.dart';
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MainApp());
+}
+
+final counterProvider =
+    Provider.withArgument((context, Counter counter) => counter);
+
+class Counter {
+  Counter(this.value);
+
+  final int value;
+}
+
+class MainApp extends StatefulWidget {
+  const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  var value = Counter(0);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Immutability',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: ProviderScope(
+        providers: [
+          counterProvider(value),
+        ],
+        child: Scaffold(
+          body: Builder(
+            builder: (context) {
+              final counter = counterProvider.of(context);
+              return Center(
+                child: Text('The counter is ${counter.value}'),
+              );
+            },
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              setState(() {
+                value = Counter(value.value + 1);
+              });
+            },
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+The example renders `The counter is 0`. After the user presses the `FloatingActionButton`, the counter is incremented, but the UI does not update.
+This is because the provider is immutable, and the instance of the provider is not updated. In other words, the `counterProvider` is created only the first time and it still provides the initial instance.
+
+You may be sceptical about the immutability of providers, but be sure this is a nice thing.
+It helps to avoid bugs and makes the application more predictable.
+
+The typical usage for a provider is to provide a value for a specific page or widget.
+When the Page or Widget is disposed, the provider is also disposed, and the value is no longer available.
+When the Page is opened again, a new instance of the provider is created, and the value is provided again.
+
+There is one way to force the recreation of a provider, _which I discourage_, but can be used if you know what you're doing.
+```dart {2}
+ProviderScope(
+  key: ValueKey(value),
+  providers: [
+    counterProvider(value),
+  ],
+  child: ..
+)
+```
+
+This code destroys completely the widget tree and recreates it.
+The provider creation is perfomed inside the `ProviderScope` widget and causes the recreation of the provider.
+As soon as you change the key of the `ProviderScope`, the old `ProviderScope` is disposed and disposes all the providers inside it.
+Then a new `ProviderScope` is created and all the providers are created again.
