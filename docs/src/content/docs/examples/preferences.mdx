@@ -15,14 +15,14 @@ You can take inspiration to provide other asynchronous objects.
 
 ## Dependency
 
-This is the `shared_preferences` version used in the following examples:
+This is the `shared_preferences` version used in the following example:
 
 ```yaml {2}
 dependencies:
   shared_preferences: ^2.4.0
 ```
 
-## Example with error handling
+## Example
 
 The code below handles the loading and error states of the initialization process correctly and it's the preferred way for handling async initialization in Flutter.
 
@@ -118,7 +118,7 @@ class _MyAppState extends State<MyApp> {
 }
 ```
 
-## Example without error handling
+## Alternative example (without error handling)
 
 If you know the initialization cannot fail, or it takes just a fraction of a second and you don't want to show the loading state, you can simplify the code as follows:
 
