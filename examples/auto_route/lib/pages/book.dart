@@ -18,7 +18,7 @@ class BookPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(book.name)),
       body: Center(
-        child: Text(booksController.book(bookId).description),
+        child: Text(book.description),
       ),
     );
   }
