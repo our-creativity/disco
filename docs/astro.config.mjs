@@ -18,7 +18,7 @@ export default defineConfig({
         tag: 'meta',
         attrs: {
           property: 'og:image',
-          content: 'https://disco.mariuti.com/disco.jpeg',
+          content: 'https://disco.mariuti.com/disco.png',
         }
       }],
       sidebar: [
