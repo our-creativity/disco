@@ -42,7 +42,7 @@ Let's look at the file structure:
 
 Let's get started by writing a class that extends `Cubit<bool>`.
 
-```dart title="bloc_example/cubit/theme_cubit.dart"
+```dart title="cubit/theme_cubit.dart"
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// ThemeCubit manages the light/dark theme state
@@ -57,7 +57,7 @@ class ThemeCubit extends Cubit<bool> {
 
 In a separate file, we define the providers.
 
-```dart title="bloc_example/di/providers.dart"
+```dart title="di/providers.dart"
 import 'package:bloc_example/cubit/theme_cubit.dart';
 import 'package:disco/disco.dart';
 
@@ -68,7 +68,7 @@ final themeProvider = Provider((context) => ThemeCubit());
 
 We also define a button where we inject the `themeProvider`. We want it to display different texts based on the current value.
 
-```dart title="bloc_example/ui/widgets/themed_button.dart"
+```dart title="ui/widgets/themed_button.dart"
 import 'package:bloc_example/di/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -107,7 +107,7 @@ class ThemedButton extends StatelessWidget {
 
 We define the page for our example. It contains a `ThemedButton`.
 
-```dart title="bloc_example/ui/screens/theme_switcher_page.dart"
+```dart title="ui/screens/theme_switcher_page.dart"
 import 'package:bloc_example/ui/widgets/themed_button.dart';
 import 'package:flutter/material.dart';
 
@@ -130,7 +130,7 @@ class ThemeSwitcherPage extends StatelessWidget {
 
 Let's finish the example by adding the following code in our `main.dart`.
 
-```dart title="bloc_example/main.dart"
+```dart title="main.dart"
 import 'package:bloc_example/di/providers.dart';
 import 'package:bloc_example/ui/screens/theme_switcher_page.dart';
 import 'package:disco/disco.dart';
