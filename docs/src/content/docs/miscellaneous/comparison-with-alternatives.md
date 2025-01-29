@@ -9,9 +9,9 @@ Disco was developed to overcome the challenges and limitations of the Flutter ec
 
 The Provider package, widely used by the Flutter community, injects values into the widget tree based on their type (e.g., `context.get<SomeClass>()`). However, it has notable drawbacks:
 
-- **Shadowing**: providers with the same type are shadowed by the nearest one.  
+- **Shadowing** (i.e., providers with the same type are shadowed by the nearest one)  
   - Solutions like wrapper types or IDs add verbosity or are error-prone (e.g., string-based IDs can cause issues during refactoring).  
-- **Lack of compile-time safety**:  
+- **Lack of compile-time safety**  
   - It's hard to verify if a provider exists for a given type without inspecting the codebase.  
   - Removing a provider doesn't always trigger a static error, risking invalid injections (runtime errors) or, even worse, injections of the wrong provider (of the same type) higher up the tree.  
   - Debugging errors is challenging due to limited information in stack traces.
