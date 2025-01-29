@@ -14,7 +14,20 @@ export default defineConfig({
       social: {
         github: 'https://github.com/our-creativity/disco',
       },
+      head: [{
+        tag: 'meta',
+        attrs: {
+          property: 'og:image',
+          content: 'https://disco.mariuti.com/disco.jpeg',
+        }
+      }],
       sidebar: [
+        {
+          label: '',
+          link: 'https://pub.dev/packages/disco',
+          badge: { text: 'pub.dev', variant: 'tip' },
+          attrs: { target: '_blank', rel: 'noopener noreferrer' },
+        },
         {
           label: 'Overview',
           link: '',
