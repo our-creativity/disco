@@ -20,9 +20,9 @@ Refer to the following graph to understand how the providers are retrieved.
 
 4. Otherwise, the search continues for the first `ProviderScope` ancestor.
 
-5. If a `ProviderScope` ancestor is found, the provider is searched in the providers map.
+5. If a `ProviderScope` ancestor is found, the provider is searched in its internal map of providers.
 
-6. If the provider is found, its value is returned. It the value was not computed yet (i.e. it is the first time a lazy provider is accessed), it will get created before it is returned.
+6. If the provider is found, its value is returned. It the value was not computed yet (i.e. it is the first time a lazy provider is accessed), it will get created right before it is returned.
 
 7. If the provider is not found, the search proceeds to the next `ProviderScope` ancestor, continuing recursively up the widget tree until the root is reached.
 
