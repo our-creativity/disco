@@ -36,7 +36,7 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  var value = Counter(0);
+  var counter = Counter(0);
 
   @override
   Widget build(BuildContext context) {
@@ -47,21 +47,20 @@ class _MainAppState extends State<MainApp> {
       ),
       home: ProviderScope(
         providers: [
-          counterProvider(value),
+          counterProvider(counter),
         ],
         child: Scaffold(
           body: Builder(
             builder: (context) {
-              final counter = counterProvider.of(context);
               return Center(
-                child: Text('The counter is ${counter.value}'),
+                child: Text('The counter is ${counterProvider.of(context).value}'),
               );
             },
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               setState(() {
-                value = Counter(value.value + 1);
+                counter = Counter(counter.value + 1);
               });
             },
             child: const Icon(Icons.add),
@@ -86,9 +85,9 @@ When the Page is opened again, a new instance of the provider is created, and th
 There is one way to force the recreation of a provider, _which I discourage_, but can be used if you know what you're doing.
 ```dart {2}
 ProviderScope(
-  key: ValueKey(value),
+  key: ValueKey(counter),
   providers: [
-    counterProvider(value),
+    counterProvider(counter),
   ],
   child: ..
 )
