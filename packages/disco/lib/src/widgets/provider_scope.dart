@@ -372,10 +372,12 @@ class _InheritedProvider extends InheritedModel<Object> {
 
   final ProviderScopeState state;
 
+  // coverage:ignore-start
   @override
   bool updateShouldNotify(covariant _InheritedProvider oldWidget) {
     return false;
   }
+  // coverage:ignore-end
 
   bool isSupportedAspectWithType(
     Provider? providerId,
@@ -391,6 +393,7 @@ class _InheritedProvider extends InheritedModel<Object> {
     return state.isArgProviderInScope(argProviderId!);
   }
 
+  // coverage:ignore-start
   @override
   bool updateShouldNotifyDependent(
     covariant _InheritedProvider oldWidget,
@@ -398,6 +401,7 @@ class _InheritedProvider extends InheritedModel<Object> {
   ) {
     return false;
   }
+  // coverage:ignore-end
 
   /// The following two methods are taken from [InheritedModel] and modified
   /// in order to find the first [_InheritedProvider] ancestor that contains

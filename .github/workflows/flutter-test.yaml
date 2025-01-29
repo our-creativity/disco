@@ -37,6 +37,6 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./lcov.info
+          files: ./coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: packages/disco
