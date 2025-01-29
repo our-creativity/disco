@@ -7,8 +7,6 @@
 
 # Disco
 
----
-
 A modern, convenient, simple and safe way to do scoped dependency injection in Flutter.
 
 For learning how to use [Disco](https://github.com/our-creativity/disco), see its documentation: >>> https://disco.mariuti.com <<<
@@ -23,29 +21,28 @@ For learning how to use [Disco](https://github.com/our-creativity/disco), see it
 
 ## Usage
 
-### Creating a provider
+1. Create a provider
 
-```dart
-final modelProvider = Provider((context) => Model());
-```
+    ```dart
+    final modelProvider = Provider((context) => Model());
+    ```
 
-### Providing a provider
+2. Scope/provide the provider
 
-```dart
-ProviderScope(
-  providers: [modelProvider],
-  child: MyWidget(),
-)
-```
+    ```dart
+    ProviderScope(
+      providers: [modelProvider],
+      child: MyWidget(),
+    )
+    ```
 
-### Retrieving a provider
-```dart
-final model = modelProvider.of(context);
-```
+3. Inject the provider (within the above `ProviderScope`'s subtree)
 
-You can retrieve a provider from any widget in the subtree of the `ProviderScope` where the provider has been provided.
+    ```dart
+    final model = modelProvider.of(context);
+    ```
 
-### Examples
+## Examples
 
 There are multiple examples on the repository:
 
