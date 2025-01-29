@@ -1,3 +1,7 @@
+## 1.0.0
+
+- Added comprehensive documentation (see [Disco homepage](https://disco.mariuti.com)) with numerous examples.
+
 ## 0.0.2
 
 - Fix imports, simplify file names and correct repository URL.
