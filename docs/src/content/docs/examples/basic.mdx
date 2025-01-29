@@ -13,9 +13,6 @@ In particular, it shows how to create a provider, how to scope it, how to use it
 import 'package:disco/disco.dart';
 import 'package:flutter/material.dart';
 
-/// ---
-/// Model
-/// ---
 abstract class Model extends ChangeNotifier {
   void incrementCounter();
 
@@ -35,9 +32,6 @@ class ModelImplementation extends Model {
   }
 }
 
-/// ---
-/// Provider
-/// ---
 final modelProvider = Provider<Model>((context) => ModelImplementation());
 
 void main() {
