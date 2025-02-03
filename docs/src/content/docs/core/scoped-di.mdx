@@ -65,17 +65,14 @@ runApp(
   MaterialApp(
     home: Scaffold(
       body: ProviderScope(
-        providers: [numberProvider],
-        child: ProviderScope(
-          providers: [doubleNumberPlusArgProvider(10)],
-          child: Builder(
+        providers: [numberProvider, doubleNumberPlusArgProvider(10)],
+        child: Builder(
             builder: (context) {
               final number = numberProvider.of(context);
               final doubleNumberPlusArg = doubleNumberPlusArgProvider.of(context);
               return Text('$number $doubleNumberPlusArg');
             },
           ),
-        ),
       ),
     ),
   ),
@@ -96,15 +93,16 @@ This is because `doubleNumberPlusArgProvider` uses the context to find the value
 ```dart
 // bad example
 ProviderScope(
-  providers: [
-    numberProvider,
-    doubleNumberPlusArgProvider(10),
-  ],
-  child: // ...
+  providers: [doubleNumberPlusArgProvider(10)],
+  child: ProviderScope(
+    providers: [numberProvider],
+    child: // ...
+  ),
 )
 ```
 
-Placing the `ProviderScope` containing `doubleNumberPlusArgProvider` above the one containing `numberProvider` would also not work. It needs to be like in the full example above.
+Placing the `ProviderScope` containing `doubleNumberPlusArgProvider` above the one containing `numberProvider` does not work.
+It needs to be like in the full example above.
 
 ## Graphical representation
 
