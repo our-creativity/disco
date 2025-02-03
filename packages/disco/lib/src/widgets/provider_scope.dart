@@ -165,7 +165,7 @@ class ProviderScopeState extends State<ProviderScope> {
         // NB: even though `id` and `provider` point to the same reference,
         // two different variables are used to simplify understanding how
         // providers are saved.
-        final id = provider;
+        final id = provider.._scopeState = this;
 
         // In this case, the provider put in scope can be the ID itself.
         allProvidersInScope[id] = provider;
@@ -173,7 +173,7 @@ class ProviderScopeState extends State<ProviderScope> {
         // create non lazy providers.
         if (!provider._lazy) {
           // create and store the provider
-          createdProviderValues[id] = provider._createValue(context, this);
+          createdProviderValues[id] = provider._createValue(context);
         }
       }
 
@@ -205,10 +205,11 @@ class ProviderScopeState extends State<ProviderScope> {
         if (!instantiableArgProvider._argProvider._lazy) {
           // the intermediate ID is a reference to the associated generated
           // intermediate provider
-          final intermediateId = allArgProvidersInScope[id]!;
+          final intermediateId = allArgProvidersInScope[id]!
+            .._scopeState = this;
           // create and store the provider
           createdProviderValues[intermediateId] =
-              allArgProvidersInScope[id]!._createValue(context, this);
+              allArgProvidersInScope[id]!._createValue(context);
         }
       }
     } else if (widget.overrides != null) {
@@ -234,7 +235,7 @@ class ProviderScopeState extends State<ProviderScope> {
       );
 
       for (final override in providerOverrides) {
-        final id = override._provider;
+        final id = override._provider.._scopeState = this;
 
         allProvidersInScope[id] = override._generateIntermediateProvider();
 
@@ -242,7 +243,7 @@ class ProviderScopeState extends State<ProviderScope> {
         {
           // create and store the provider
           createdProviderValues[id] =
-              allProvidersInScope[id]!._createValue(context, this);
+              allProvidersInScope[id]!._createValue(context);
         }
       }
 
@@ -272,14 +273,12 @@ class ProviderScopeState extends State<ProviderScope> {
         allArgProvidersInScope[id] = override._generateIntermediateProvider();
 
         // create providers (they are never lazy in the case of overrides)
-        {
-          // the intermediate ID is a reference to the associated generated
-          // intermediate provider
-          final intermediateId = allArgProvidersInScope[id]!;
-          // create and store the provider
-          createdProviderValues[intermediateId] =
-              allArgProvidersInScope[id]!._createValue(context, this);
-        }
+        // the intermediate ID is a reference to the associated generated
+        // intermediate provider
+        final intermediateId = allArgProvidersInScope[id]!.._scopeState = this;
+        // create and store the provider
+        createdProviderValues[intermediateId] =
+            allArgProvidersInScope[id]!._createValue(context);
       }
     }
   }
@@ -319,9 +318,9 @@ class ProviderScopeState extends State<ProviderScope> {
   /// Creates a provider value and stores it to [createdProviderValues].
   dynamic createProviderValue(Provider id) {
     // find the intermediate provider in the list
-    final provider = getIntermediateProvider(id)!;
+    final provider = getIntermediateProvider(id)!.._scopeState = this;
     // create and return its value
-    final value = provider._createValue(context, this);
+    final value = provider._createValue(context);
     // store the created provider value
     createdProviderValues[id] = value;
     return value;
@@ -348,9 +347,10 @@ class ProviderScopeState extends State<ProviderScope> {
     ArgProvider id,
   ) {
     // find the intermediate provider in the list
-    final provider = getIntermediateProviderForArgProvider(id)!;
+    final provider = getIntermediateProviderForArgProvider(id)!
+      .._scopeState = this;
     // create and return its value
-    final value = provider._createValue(context, this);
+    final value = provider._createValue(context);
     // store the created provider value
     createdProviderValues[allArgProvidersInScope[id]!] = value;
     return value;

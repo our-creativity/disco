@@ -122,17 +122,15 @@ void main() {
             providers: [numberProvider, doubleNumberProvider],
             child: Builder(
               builder: (context) {
-                final number = numberProvider.of(context);
                 final doubleNumber = doubleNumberProvider.of(context);
-                return Text('$number $doubleNumber');
+                return Text('$doubleNumber');
               },
             ),
           ),
         ),
       ),
     );
-    Finder numberFinder(int value1, int value2) => find.text('$value1 $value2');
-    expect(numberFinder(5, 10), findsOneWidget);
+    expect(find.text('10'), findsOneWidget);
   });
 
   testWidgets('Test ProviderScope throws an error for a not found provider',

@@ -35,14 +35,10 @@ class Provider<T extends Object> extends InstantiableProvider {
 
     /// {@macro Provider.lazy}
     bool? lazy,
-  })  : _disposeValue = dispose,
+  })  : _createValue = create,
+        _disposeValue = dispose,
         _lazy = lazy ?? DiscoConfig.lazy,
-        super._() {
-    _createValue = (context, scopeState) {
-      _scopeState = scopeState;
-      return create(context);
-    };
-  }
+        super._();
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
@@ -65,8 +61,7 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// {@template Provider.create}
   /// The function called to create the element.
   /// {@endtemplate}
-  late final T Function(BuildContext context, ProviderScopeState scopeState)
-      _createValue;
+  late final CreateProviderValueFn<T> _createValue;
 
   /// {@template Provider.dispose}
   /// An optional dispose function called when the [ProviderScope] that created
