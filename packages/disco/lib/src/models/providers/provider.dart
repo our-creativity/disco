@@ -21,7 +21,6 @@ typedef DisposeProviderValueFn<T> = void Function(T value);
 /// This behavior can be disabled by passing [_lazy] false.
 ///
 /// {@endtemplate}
-@immutable
 class Provider<T extends Object> extends InstantiableProvider {
   //! NB: do not make the constructor `const`, since that would give the same
   //! hash code to different instances of `Provider` with the same generic
@@ -36,10 +35,14 @@ class Provider<T extends Object> extends InstantiableProvider {
 
     /// {@macro Provider.lazy}
     bool? lazy,
-  })  : _createValue = create,
-        _disposeValue = dispose,
+  })  : _disposeValue = dispose,
         _lazy = lazy ?? DiscoConfig.lazy,
-        super._();
+        super._() {
+    _createValue = (context, scopeState) {
+      _scopeState = scopeState;
+      return create(context);
+    };
+  }
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
@@ -62,7 +65,8 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// {@template Provider.create}
   /// The function called to create the element.
   /// {@endtemplate}
-  final CreateProviderValueFn<T> _createValue;
+  late final T Function(BuildContext context, ProviderScopeState scopeState)
+      _createValue;
 
   /// {@template Provider.dispose}
   /// An optional dispose function called when the [ProviderScope] that created
@@ -115,6 +119,8 @@ class Provider<T extends Object> extends InstantiableProvider {
   void _safeDisposeValue(Object value) {
     _disposeValue?.call(value as T);
   }
+
+  ProviderScopeState? _scopeState;
 
   /// Returns the type of the value.
   Type get _valueType => T;
