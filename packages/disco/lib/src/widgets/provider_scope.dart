@@ -297,6 +297,18 @@ class ProviderScopeState extends State<ProviderScope> {
     super.dispose();
   }
 
+  @override
+  void deactivate() {
+    // Reset the scope state of all providers when the widget is deactivated.
+    //
+    // This is useful, for example, when the key of the [ProviderScope] changes.
+    for (final provider in allProvidersInScope.values) {
+      provider._scopeState = null;
+    }
+
+    super.deactivate();
+  }
+
   // Providers logic ----------------------------------------------------------
 
   /// Tries to find the intermediate [Provider] associated with this [id].

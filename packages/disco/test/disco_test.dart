@@ -119,16 +119,13 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [numberProvider],
-            child: ProviderScope(
-              providers: [doubleNumberProvider],
-              child: Builder(
-                builder: (context) {
-                  final number = numberProvider.of(context);
-                  final doubleNumber = doubleNumberProvider.of(context);
-                  return Text('$number $doubleNumber');
-                },
-              ),
+            providers: [numberProvider, doubleNumberProvider],
+            child: Builder(
+              builder: (context) {
+                final number = numberProvider.of(context);
+                final doubleNumber = doubleNumberProvider.of(context);
+                return Text('$number $doubleNumber');
+              },
             ),
           ),
         ),

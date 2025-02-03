@@ -120,6 +120,8 @@ class Provider<T extends Object> extends InstantiableProvider {
     _disposeValue?.call(value as T);
   }
 
+  // cannot be late
+  // ignore: use_late_for_private_fields_and_variables
   ProviderScopeState? _scopeState;
 
   /// Returns the type of the value.
