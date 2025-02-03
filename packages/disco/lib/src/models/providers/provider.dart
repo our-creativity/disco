@@ -61,7 +61,7 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// {@template Provider.create}
   /// The function called to create the element.
   /// {@endtemplate}
-  late final CreateProviderValueFn<T> _createValue;
+  final CreateProviderValueFn<T> _createValue;
 
   /// {@template Provider.dispose}
   /// An optional dispose function called when the [ProviderScope] that created
