@@ -96,6 +96,10 @@ class ProviderScope extends StatefulWidget {
       final state = providerScopeOverride.providerScopeState;
       if (state.isArgProviderInScope(id)) return state;
     }
+    // try to find the provider in the scope where it was defined
+    if (id._scopeState != null && id._scopeState!.isArgProviderInScope(id)) {
+      return id._scopeState;
+    }
 
     return _InheritedProvider.inheritFromNearest(context, null, id)?.state;
   }
@@ -197,7 +201,7 @@ class ProviderScopeState extends State<ProviderScope> {
       );
 
       for (final instantiableArgProvider in instantiableArgProviders) {
-        final id = instantiableArgProvider._argProvider;
+        final id = instantiableArgProvider._argProvider.._scopeState = this;
         allArgProvidersInScope[id] = instantiableArgProvider._argProvider
             ._generateIntermediateProvider(instantiableArgProvider._arg);
 
@@ -205,8 +209,7 @@ class ProviderScopeState extends State<ProviderScope> {
         if (!instantiableArgProvider._argProvider._lazy) {
           // the intermediate ID is a reference to the associated generated
           // intermediate provider
-          final intermediateId = allArgProvidersInScope[id]!
-            .._scopeState = this;
+          final intermediateId = allArgProvidersInScope[id]!;
           // create and store the provider
           createdProviderValues[intermediateId] =
               allArgProvidersInScope[id]!._createValue(context);
@@ -235,16 +238,14 @@ class ProviderScopeState extends State<ProviderScope> {
       );
 
       for (final override in providerOverrides) {
-        final id = override._provider.._scopeState = this;
+        final id = override._provider;
 
         allProvidersInScope[id] = override._generateIntermediateProvider();
 
         // create providers (they are never lazy in the case of overrides)
-        {
-          // create and store the provider
-          createdProviderValues[id] =
-              allProvidersInScope[id]!._createValue(context);
-        }
+        // create and store the provider
+        createdProviderValues[id] =
+            allProvidersInScope[id]!._createValue(context);
       }
 
       final argProviderOverrides = widget.overrides!
@@ -268,14 +269,14 @@ class ProviderScopeState extends State<ProviderScope> {
       );
 
       for (final override in argProviderOverrides) {
-        final id = override._argProvider;
+        final id = override._argProvider.._scopeState = this;
 
         allArgProvidersInScope[id] = override._generateIntermediateProvider();
 
         // create providers (they are never lazy in the case of overrides)
         // the intermediate ID is a reference to the associated generated
         // intermediate provider
-        final intermediateId = allArgProvidersInScope[id]!.._scopeState = this;
+        final intermediateId = allArgProvidersInScope[id]!;
         // create and store the provider
         createdProviderValues[intermediateId] =
             allArgProvidersInScope[id]!._createValue(context);
@@ -302,6 +303,9 @@ class ProviderScopeState extends State<ProviderScope> {
     //
     // This is useful, for example, when the key of the [ProviderScope] changes.
     for (final provider in allProvidersInScope.values) {
+      provider._scopeState = null;
+    }
+    for (final provider in allArgProvidersInScope.values) {
       provider._scopeState = null;
     }
 

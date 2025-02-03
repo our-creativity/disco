@@ -132,6 +132,33 @@ void main() {
     );
     expect(find.text('10'), findsOneWidget);
   });
+  testWidgets(
+      'Test Provider.of within Provider create fn for Provider.withArgument',
+      (tester) async {
+    final numberProvider = Provider.withArgument((_, int arg) => arg);
+
+    final doubleNumberProvider = Provider.withArgument((context, int arg) {
+      final number = numberProvider.of(context);
+      return number * arg;
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [numberProvider(5), doubleNumberProvider(2)],
+            child: Builder(
+              builder: (context) {
+                final doubleNumber = doubleNumberProvider.of(context);
+                return Text('$doubleNumber');
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('10'), findsOneWidget);
+  });
 
   testWidgets('Test ProviderScope throws an error for a not found provider',
       (tester) async {

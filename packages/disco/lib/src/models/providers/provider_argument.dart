@@ -10,7 +10,6 @@ typedef CreateArgProviderValueFn<T, A> = T Function(
 /// A [Provider] that needs to be given an initial argument before
 /// it can be used.
 /// {@endtemplate}
-@immutable
 class ArgProvider<T extends Object, A> {
   /// {@macro ArgProvider}
   ArgProvider._(
@@ -29,6 +28,10 @@ class ArgProvider<T extends Object, A> {
 
   /// {@macro Provider.dispose}
   final DisposeProviderValueFn<T>? _disposeValue;
+
+  // cannot be late
+  // ignore: use_late_for_private_fields_and_variables
+  ProviderScopeState? _scopeState;
 
   // ---
   // Overrides
