@@ -1,3 +1,7 @@
+## 1.1.0
+
+- **FEAT**: Allow providers to access the scope where they are defined.
+
 ## 1.0.0+1
 
 - **CHORE**: Update README.md
