@@ -37,8 +37,7 @@ class Provider<T extends Object> extends InstantiableProvider {
     bool? lazy,
   })  : _createValue = create,
         _disposeValue = dispose,
-        _lazy = lazy ?? DiscoConfig.lazy,
-        super._();
+        _lazy = lazy ?? DiscoConfig.lazy;
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
@@ -115,9 +114,14 @@ class Provider<T extends Object> extends InstantiableProvider {
     _disposeValue?.call(value as T);
   }
 
-  // cannot be late
-  // ignore: use_late_for_private_fields_and_variables
-  ProviderScopeState? _scopeState;
+  // This map is used to store the state of the provider for each scope.
+  // It is not a variable to keep the class immutable.
+  final Map<String, ProviderScopeState?> __scopeStateMap = {};
+
+  ProviderScopeState? get _scopeState => __scopeStateMap['scope'];
+  set _scopeState(ProviderScopeState? value) {
+    __scopeStateMap['scope'] = value;
+  }
 
   /// Returns the type of the value.
   Type get _valueType => T;
