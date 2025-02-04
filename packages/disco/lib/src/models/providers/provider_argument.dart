@@ -10,7 +10,6 @@ typedef CreateArgProviderValueFn<T, A> = T Function(
 /// A [Provider] that needs to be given an initial argument before
 /// it can be used.
 /// {@endtemplate}
-@immutable
 class ArgProvider<T extends Object, A> {
   /// {@macro ArgProvider}
   ArgProvider._(
@@ -29,6 +28,15 @@ class ArgProvider<T extends Object, A> {
 
   /// {@macro Provider.dispose}
   final DisposeProviderValueFn<T>? _disposeValue;
+
+// This map is used to store the state of the provider for each scope.
+  // It is not a variable to keep the class immutable.
+  final Map<String, ProviderScopeState?> __scopeStateMap = {};
+
+  ProviderScopeState? get _scopeState => __scopeStateMap['scope'];
+  set _scopeState(ProviderScopeState? value) {
+    __scopeStateMap['scope'] = value;
+  }
 
   // ---
   // Overrides
@@ -92,7 +100,7 @@ class ArgProvider<T extends Object, A> {
 class InstantiableArgProvider<T extends Object, A>
     extends InstantiableProvider {
   /// {@macro InstantiableArgProvider}
-  InstantiableArgProvider._(this._argProvider, this._arg) : super._();
+  InstantiableArgProvider._(this._argProvider, this._arg);
   final ArgProvider<T, A> _argProvider;
   final A _arg;
 }

@@ -21,7 +21,6 @@ typedef DisposeProviderValueFn<T> = void Function(T value);
 /// This behavior can be disabled by passing [_lazy] false.
 ///
 /// {@endtemplate}
-@immutable
 class Provider<T extends Object> extends InstantiableProvider {
   //! NB: do not make the constructor `const`, since that would give the same
   //! hash code to different instances of `Provider` with the same generic
@@ -38,8 +37,7 @@ class Provider<T extends Object> extends InstantiableProvider {
     bool? lazy,
   })  : _createValue = create,
         _disposeValue = dispose,
-        _lazy = lazy ?? DiscoConfig.lazy,
-        super._();
+        _lazy = lazy ?? DiscoConfig.lazy;
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
@@ -114,6 +112,15 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// [ProviderScopeState] otherwise assumes).
   void _safeDisposeValue(Object value) {
     _disposeValue?.call(value as T);
+  }
+
+  // This map is used to store the state of the provider for each scope.
+  // It is not a variable to keep the class immutable.
+  final Map<String, ProviderScopeState?> __scopeStateMap = {};
+
+  ProviderScopeState? get _scopeState => __scopeStateMap['scope'];
+  set _scopeState(ProviderScopeState? value) {
+    __scopeStateMap['scope'] = value;
   }
 
   /// Returns the type of the value.
