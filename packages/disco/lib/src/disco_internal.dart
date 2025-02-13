@@ -13,3 +13,4 @@ part 'utils/disco_config.dart';
 part 'widgets/provider_scope.dart';
 part 'widgets/provider_scope_override.dart';
 part 'widgets/provider_scope_portal.dart';
+part 'widgets/provider_scopes.dart';
