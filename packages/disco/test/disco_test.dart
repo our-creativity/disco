@@ -108,27 +108,30 @@ void main() {
   });
 
   testWidgets('Test Provider.of within Provider create fn', (tester) async {
-    final numberProvider = Provider((_) => 5);
+    final numberProvider = Provider((_) => 5, lazy: false);
 
-    final doubleNumberProvider = Provider((context) {
-      final number = numberProvider.of(context);
-      return number * 2;
-    });
+    final doubleNumberProvider = Provider(
+      (context) {
+        final number = numberProvider.of(context);
+        return number * 2;
+      },
+      lazy: false,
+    );
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: ProviderScope(
-            providers: [numberProvider],
-            child: ProviderScope(
-              providers: [doubleNumberProvider],
-              child: Builder(
-                builder: (context) {
-                  final number = numberProvider.of(context);
-                  final doubleNumber = doubleNumberProvider.of(context);
-                  return Text('$number $doubleNumber');
-                },
-              ),
+          body: ProviderScopes(
+            providers: [
+              [numberProvider],
+              [doubleNumberProvider],
+            ],
+            child: Builder(
+              builder: (context) {
+                final number = numberProvider.of(context);
+                final doubleNumber = doubleNumberProvider.of(context);
+                return Text('$number $doubleNumber');
+              },
             ),
           ),
         ),
