@@ -11,7 +11,7 @@
     "staging": {
       "name": "flutter-disco-staging",
       "route": {
-        "pattern": "staging.mariuti.com/disco*",
+        "pattern": "mariuti.com/staging-disco*",
         "zone_id": "d0a11994a881ca8ee4ce73754e474e2c"
       }
     }
