@@ -1,0 +1,19 @@
+{
+  "name": "flutter-disco",
+  "main": "docs/src/index.js",
+  "compatibility_date": "2022-04-05",
+  "workers_dev": true,
+  "route": {
+    "pattern": "mariuti.com/disco*",
+    "zone_id": "d0a11994a881ca8ee4ce73754e474e2c"
+  },
+  "env": {
+    "staging": {
+      "name": "flutter-disco-staging",
+      "route": {
+        "pattern": "staging.mariuti.com/disco*",
+        "zone_id": "d0a11994a881ca8ee4ce73754e474e2c"
+      }
+    }
+  }
+}
