@@ -30,6 +30,6 @@
       "cwd": "examples/solidart",
       "request": "launch",
       "type": "dart"
-    },
+    }
   ]
 }
