@@ -71,7 +71,7 @@ class ProviderScope extends StatefulWidget {
   }) {
     // Try to find the provider in the current widget tree.
     var state = _findState<T>(context, id: id);
-    // If the state has not been found yet, try to find by using the
+    // If the state has not been found yet, try to find it by using the
     // ProviderScopePortal context.
     if (state == null) {
       final providerScopePortalContext = ProviderScopePortal._maybeOf(context);
