@@ -1,6 +1,6 @@
 ## 1.0.1
 
-- **FIX**: A bug prevented users to inject providers inside a `ProviderScope` which was placed inside a `ProviderScopePortal`.
+- **FIX**: A bug prevented users to inject providers from a `ProviderScope` which was placed inside a `ProviderScopePortal`.
 
 ## 1.0.0+1
 
