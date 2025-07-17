@@ -9,3 +9,6 @@ workspace:
   - examples/bloc
   - examples/solidart
   - examples/preferences
+
+flutter:
+  uses-material-design: true

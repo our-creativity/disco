@@ -427,6 +427,70 @@ void main() {
     );
   });
 
+  testWidgets('Test ProviderScope inside ProviderScopePortal works',
+      (tester) async {
+    final numberContainerProvider = Provider(
+      (_) => const NumberContainer(1),
+    );
+
+    final secondNumberContainerProvider = Provider(
+      (_) => const NumberContainer(2),
+    );
+
+    Future<void> showNumberDialog({required BuildContext context}) {
+      return showDialog(
+        context: context,
+        builder: (dialogContext) {
+          return ProviderScopePortal(
+            mainContext: context,
+            child: ProviderScope(
+              providers: [secondNumberContainerProvider],
+              child: Builder(
+                builder: (innerContext) {
+                  final numberContainer =
+                      numberContainerProvider.of(innerContext);
+                  final secondNumberContainer =
+                      secondNumberContainerProvider.of(innerContext);
+                  return Text(
+                    '${numberContainer.number} ${secondNumberContainer.number}',
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [numberContainerProvider],
+            child: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    showNumberDialog(context: context);
+                  },
+                  child: const Text('show dialog'),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    Finder number2Finder(int value, int value2) => find.text('$value $value2');
+
+    final buttonFinder = find.text('show dialog');
+    expect(buttonFinder, findsOneWidget);
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+
+    expect(number2Finder(1, 2), findsOneWidget);
+  });
+
   testWidgets('Test key change in ProviderScope (with Provider)',
       (tester) async {
     var count = 0;
