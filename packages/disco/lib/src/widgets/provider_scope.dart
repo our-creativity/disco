@@ -106,10 +106,17 @@ class ProviderScope extends StatefulWidget {
     BuildContext context, {
     required ArgProvider<T, A> id,
   }) {
-    // If there is a ProviderValue ancestor, use it as the context
-    final providerScopePortalContext = ProviderScopePortal._maybeOf(context);
-    final effectiveContext = providerScopePortalContext ?? context;
-    final state = _findStateForArgProvider<T, A>(effectiveContext, id: id);
+    // Try to find the provider in the current widget tree.
+    var state = _findStateForArgProvider<T, A>(context, id: id);
+    // If the state has not been found yet, try to find it by using the
+    // ProviderScopePortal context.
+    if (state == null) {
+      final providerScopePortalContext = ProviderScopePortal._maybeOf(context);
+      if (providerScopePortalContext != null) {
+        state =
+            _findStateForArgProvider<T, A>(providerScopePortalContext, id: id);
+      }
+    }
     if (state == null) return null;
     final providerAsId = state.allArgProvidersInScope[id];
     final createdProvider = state.createdProviderValues[providerAsId];
