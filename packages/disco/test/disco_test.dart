@@ -437,6 +437,9 @@ void main() {
       (_) => const NumberContainer(2),
     );
 
+    final doubleCountProvider =
+        Provider.withArgument((context, int arg) => arg * 2);
+
     Future<void> showNumberDialog({required BuildContext context}) {
       return showDialog(
         context: context,
@@ -444,15 +447,19 @@ void main() {
           return ProviderScopePortal(
             mainContext: context,
             child: ProviderScope(
-              providers: [secondNumberContainerProvider],
+              providers: [
+                secondNumberContainerProvider,
+                doubleCountProvider(3),
+              ],
               child: Builder(
                 builder: (innerContext) {
                   final numberContainer =
                       numberContainerProvider.of(innerContext);
                   final secondNumberContainer =
                       secondNumberContainerProvider.of(innerContext);
+                  final doubleCount = doubleCountProvider.of(innerContext);
                   return Text(
-                    '${numberContainer.number} ${secondNumberContainer.number}',
+                    '''${numberContainer.number} ${secondNumberContainer.number} $doubleCount''',
                   );
                 },
               ),
@@ -481,14 +488,15 @@ void main() {
         ),
       ),
     );
-    Finder number2Finder(int value, int value2) => find.text('$value $value2');
+    Finder number3Finder(int value, int value2, int value3) =>
+        find.text('$value $value2 $value3');
 
     final buttonFinder = find.text('show dialog');
     expect(buttonFinder, findsOneWidget);
     await tester.tap(buttonFinder);
     await tester.pumpAndSettle();
 
-    expect(number2Finder(1, 2), findsOneWidget);
+    expect(number3Finder(1, 2, 6), findsOneWidget);
   });
 
   testWidgets('Test key change in ProviderScope (with Provider)',
