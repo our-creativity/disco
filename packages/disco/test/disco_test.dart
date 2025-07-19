@@ -273,6 +273,8 @@ void main() {
   testWidgets('Test provider injection', (tester) async {
     final NameContainer nameContainer = MockNameContainer('Ale');
 
+    var fullNameContainerProviderDisposed = false;
+
     final numberContainer1Provider = Provider(
       (_) => const NumberContainer(1),
       lazy: false,
@@ -285,6 +287,12 @@ void main() {
       (_) => nameContainer,
       dispose: (provider) => provider.dispose(),
     );
+    final fullNameContainerProvider = Provider.withArgument(
+      (_, String surname) => MockNameContainer('John $surname'),
+      dispose: (provider) {
+        fullNameContainerProviderDisposed = true;
+      },
+    );
 
     await tester.pumpWidget(
       MaterialApp(
@@ -294,14 +302,16 @@ void main() {
               nameContainerProvider,
               numberContainer1Provider,
               numberContainer2Provider,
+              fullNameContainerProvider('Smith'),
             ],
             child: Builder(
               builder: (context) {
                 final nameContainer = nameContainerProvider.of(context);
                 final numberContainer1 = numberContainer1Provider.of(context);
                 final numberContainer2 = numberContainer2Provider.of(context);
+                final fullNameContainer = fullNameContainerProvider.of(context);
                 return Text(
-                  '''${nameContainer.name} ${numberContainer1.number} ${numberContainer2.number}''',
+                  '''${nameContainer.name} ${numberContainer1.number} ${numberContainer2.number} ${fullNameContainer.name}''',
                 );
               },
             ),
@@ -309,17 +319,22 @@ void main() {
         ),
       ),
     );
-    Finder providerFinder(String value1, int value2, int value3) =>
-        find.text('$value1 $value2 $value3');
+    Finder providerFinder(
+            String value1, int value2, int value3, String value4) =>
+        find.text('$value1 $value2 $value3 $value4');
 
-    expect(providerFinder('Ale', 1, 100), findsOneWidget);
+    expect(providerFinder('Ale', 1, 100, 'John Smith'), findsOneWidget);
 
     // mock NameProvider dispose method
     when(nameContainer.dispose()).thenReturn(null);
+    // Check that the dispose method in the provider with argument is not called
+    expect(fullNameContainerProviderDisposed, false);
     // Push a different widget
     await tester.pumpWidget(Container());
     // check dispose has been called on NameProvider
     verify(nameContainer.dispose()).called(1);
+    // check that the dispose method in the provider with argument is called
+    expect(fullNameContainerProviderDisposed, true);
   });
 
   testWidgets('Test ProviderScopePortal works', (tester) async {
