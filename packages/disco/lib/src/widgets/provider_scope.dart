@@ -297,7 +297,7 @@ class ProviderScopeState extends State<ProviderScope> {
   void dispose() {
     // dispose all the created providers
     createdProviderValues.forEach((key, value) {
-      (allProvidersInScope[key] ?? key)._safeDisposeValue(value);
+      key._safeDisposeValue(value);
     });
 
     allArgProvidersInScope.clear();
