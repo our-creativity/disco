@@ -210,9 +210,7 @@ class ProviderScopeState extends State<ProviderScope> {
             instantiableArgProvider._argProvider._generateIntermediateProvider(
           instantiableArgProvider._arg,
         );
-        allArgProvidersInScope[id] = instantiableArgProvider._argProvider
-            ._generateIntermediateProvider(instantiableArgProvider._arg);
-
+        allArgProvidersInScope[id] = provider;
         // create non lazy providers.
         if (!instantiableArgProvider._argProvider._lazy) {
           // create and store the provider
