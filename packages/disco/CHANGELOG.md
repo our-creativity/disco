@@ -1,3 +1,7 @@
+## 1.0.3
+
+- **FIX**: Disposal of provider with arguments.
+
 ## 1.0.2
 
 - **FIX**: A bug prevented users to inject providers with arguments from a `ProviderScope` which was placed inside a `ProviderScopePortal`.
