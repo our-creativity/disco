@@ -206,16 +206,17 @@ class ProviderScopeState extends State<ProviderScope> {
 
       for (final instantiableArgProvider in instantiableArgProviders) {
         final id = instantiableArgProvider._argProvider;
+        final provider =
+            instantiableArgProvider._argProvider._generateIntermediateProvider(
+          instantiableArgProvider._arg,
+        );
         allArgProvidersInScope[id] = instantiableArgProvider._argProvider
             ._generateIntermediateProvider(instantiableArgProvider._arg);
 
         // create non lazy providers.
         if (!instantiableArgProvider._argProvider._lazy) {
-          // the intermediate ID is a reference to the associated generated
-          // intermediate provider
-          final intermediateId = allArgProvidersInScope[id]!;
           // create and store the provider
-          createdProviderValues[intermediateId] =
+          createdProviderValues[provider] =
               allArgProvidersInScope[id]!._createValue(context);
         }
       }
@@ -296,7 +297,7 @@ class ProviderScopeState extends State<ProviderScope> {
   void dispose() {
     // dispose all the created providers
     createdProviderValues.forEach((key, value) {
-      allProvidersInScope[key]?._safeDisposeValue(value);
+      (allProvidersInScope[key] ?? key)._safeDisposeValue(value);
     });
 
     allArgProvidersInScope.clear();

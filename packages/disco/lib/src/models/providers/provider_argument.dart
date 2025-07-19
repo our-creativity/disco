@@ -78,7 +78,7 @@ class ArgProvider<T extends Object, A> {
   /// This method is used internally by [ProviderScope].
   Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
         (context) => _createValue(context, arg),
-        dispose: _disposeValue,
+        dispose: (Object value) => _disposeValue?.call(value as T),
         lazy: _lazy,
       );
 }
