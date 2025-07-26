@@ -80,44 +80,65 @@ To make things clear, here is the widget tree structure from the example above, 
 
 The **key difference between Disco and other established solutions** is that Disco **does not rely solely on types** for providing and injecting dependencies.
 
-For instance, the [Provider](https://pub.dev/packages/provider) package requires you to declare providers directly in the widget tree using something like `Provider(create: (_) => MyModel())`, and later retrieve them with `context.read<Model>()` or similar. This approach works well but is limited — it injects the *first instance of the given type* it finds, which can be restrictive.
+This part dives a bit deeper into technical details. Let's consider the popular [Provider](https://pub.dev/packages/provider) package; it requires you to declare providers directly in the widget tree using something like `Provider(create: (_) => Model())`, and later retrieve them with `context.read<Model>()`. This approach works but is limited — it injects the *first instance of the given type* it finds, which can be restrictive.
 
 Disco, by contrast, uses **globally defined provider instances as identifiers**. This allows for much greater flexibility, including defining **multiple providers of the same type**. For example:
 
-```dart
-final secondModelProvider = Provider((context) => Model());
-```
+1. Multiple providers of the same type can be defined globally.
 
-This kind of setup isn't possible with Provider or most other scoped DI libraries in the ecosystem — unless you resort to defining separate wrapper types like `MyModelWrapper1` and `MyModelWrapper2`.
+    ```dart
+    final modelProvider = Provider((context) => Model());
+    final secondModelProvider = Provider((context) => Model());
+    ```
+
+2. Providers of the same type can be provided in the same scope:
+
+    ```dart
+    class ProvidingWidget extends StatelessWidget {
+      
+      const ProvidingWidget({super.key});
+
+      @override
+      Widget build(BuildContext context) {
+        return ProviderScope(
+          providers: [modelProvider, secondModelProvider],
+          child: MyWidget(),
+        );
+      }
+    }
+    ```
+
+3. Provers of the same type can also be injected together:
+
+    ```dart
+    class InjectingWidget extends StatelessWidget {
+
+      const InjectingWidget({super.key});
+
+      @override
+      Widget build(BuildContext context) {
+        final model = modelProvider.of(context);
+        final secondModel = secondModelProvider.of(context);
+        // return .. (use model and secondModel here)
+      }
+    }
+    ```
+
+Of course, the providers don’t need to be defined in the same scope to be used together, and they don’t need to be injected in the same widget either. This setup is just meant to demonstrate what’s possible.
+
+This kind of setup is not possible with Provider or other scoped DI libraries in the ecosystem — unless you resort to defining separate wrapper types like `MyModelWrapper1` and `MyModelWrapper2`, which adds complexity and makes the code harder to reason about.
 
 <details>
 <summary><strong>If the difference is still not clear</strong>, click <strong>here</strong> to expand</summary>
 
----
----
----
-
-#### Conceptual Syntax Comparison
-
 The table below highlights the core conceptual difference: traditional DI solutions inject based on **type**, whereas Disco injects based on **provider instances**. If Disco followed the same method-style API, it might look like `context.read(modelProvider)` — which is more intuitive in direct comparisons.
 
-| Typical Scoped DI (e.g., Provider) | Disco (conceptual syntax)               |
-| ---------------------------------- | --------------------------------------- |
-| `context.read<MyModel>()`          | `context.read(modelProvider)`           |
-| Not possible to inject 2nd provider of same type          | `context.read(secondModelProvider)`           |
+| Injection Task        | Typical Scoped DI (e.g., Provider) | Disco (Conceptual Syntax)           | Disco (Actual Syntax)            |
+|-----------------------|------------------------------------|-------------------------------------|----------------------------------|
+| Inject `Model`        | `context.read<Model>()`            | `context.read(modelProvider)`       | `modelProvider.of(context)`      |
+| Inject second `Model` | Not possible                       | `context.read(secondModelProvider)` | `secondModelProvider.of(context)` |
 
-#### Actual Syntax Comparison
-
-Disco intentionally flips the order — the provider comes first — to better align with Flutter conventions (`.of(context)`) and improve clarity. This makes it immediately obvious **what** you're injecting. This syntax is also slightly better for autocomplete and inlay hints display a more concise type.
-
-| Provider                  | Disco (actual syntax)       |
-| ------------------------- | --------------------------- |
-| `context.read<MyModel>()` | `modelProvider.of(context)` |
-| Not possible to inject 2nd provider of same type          | `secondModelProvider.of(context)`           |
-
----
----
----
+Note that Disco intentionally flips the order — the provider comes first — to better align with Flutter conventions (`.of(context)`) and improve clarity. This makes it immediately obvious **what** you are injecting. This syntax is also slightly better for autocomplete and inlay hints display a more concise type.
 
 </details>
 
