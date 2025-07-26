@@ -11,7 +11,7 @@ The package supports many features, like providers that accept arguments. But to
 
 1. Create a provider top level.
 
-    ```dart
+    ```dart {1}
     final modelProvider = Provider((context) => Model());
     ```
 
@@ -19,7 +19,7 @@ The package supports many features, like providers that accept arguments. But to
 
 2. Scope/provide the provider.
 
-    ```dart {7, 8, 9}
+    ```dart {7, 8, 9, 10}
     class ProvidingWidget extends StatelessWidget {
       
       const ProvidingWidget({super.key});
@@ -39,7 +39,7 @@ The package supports many features, like providers that accept arguments. But to
 
 3. Inject the provider directly inside a new stateless widget or a stateful widget's state.
 
-    ```dart  {4,8}
+    ```dart  {7}
     class InjectingWidget extends StatelessWidget {
 
       const InjectingWidget({super.key});
