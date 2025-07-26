@@ -146,7 +146,7 @@ The table below highlights the core conceptual difference: traditional DI soluti
 
 | Solution/Injection             | Inject `Model`                    | Inject second `Model`               |
 |--------------------------------|-----------------------------------|-------------------------------------|
-| Typical Scoped DI              | `context.read<Model>()`           | Not possible                        |
+| Provider package               | `context.read<Model>()`           | Not possible                        |
 | Disco (Conceptual Syntax)      | `context.read(modelProvider)`     | `context.read(secondModelProvider)` |
 | Disco (Actual Syntax)          | `modelProvider.of(context)`       | `secondModelProvider.of(context)`   |
 
