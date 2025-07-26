@@ -7,23 +7,23 @@
 
 # Disco
 
-This package offers a modern, convenient, simple and safe way to do scoped dependency injection in Flutter.
+Disco is a Flutter library that provides scoped dependency injection in a way that is
+- **production-ready**
+- **simple to use**
+- **type-safe**
+- designed with **Flutter-friendly syntax**
+- **testable**
+- **independent** of state management solutions
 
-In order to learn [Disco](https://github.com/our-creativity/disco), consult its documentation: >>> https://disco.mariuti.com <<<
+The full documentation can be consulted [here](https://disco.mariuti.com).
 
-**Note**: this package is intentionally small and feature-complete, so you might not see frequent updates — but don’t worry; it’s still actively maintained, and you can get help anytime from the community/devs if needed. This package is suitable for production environments.
-
-## Features
-
-- Scoped dependency injection
-- Service locator
-- Testable
-- Independent of state management solutions
-  - This library focuses only on DI, so that state management solutions can focus on the reactivity.
+**Note:** this package is intentionally small and feature-complete, so you might not see frequent updates — but don’t worry; it is still actively maintained, and you can get help anytime from the community/devs if needed.
 
 ## Simple usage example
 
-Here's a simple example. **Note**: The package supports more features, like providers that accept arguments.
+The package supports many features, such as providers accepting arguments. The full documentation also includes service locator setup examples.
+
+Here is a simple example:
 
 1. Create a provider top level.
 
@@ -31,7 +31,7 @@ Here's a simple example. **Note**: The package supports more features, like prov
     final modelProvider = Provider((context) => Model());
     ```
 
-    **Note**: the state is never stored directly in the Provider instance; see this provider merely as a type-safe identifier.
+    **Note:** the state is never stored directly in the Provider instance; see this provider merely as a type-safe identifier.
 
 2. Scope/provide the provider.
 
@@ -50,7 +50,7 @@ Here's a simple example. **Note**: The package supports more features, like prov
     }
     ```
 
-    **Note**: the actual state for the provider will be created inside the `ProviderScope` where the provider is referenced.
+    **Note:** the actual state for the provider will be created inside the `ProviderScope` where the provider is referenced.
     This way, when the ProviderScope gets disposed, the state gets disposed — making it ideal for managing **local state**.
 
 3. Inject the provider directly inside a new stateless widget or a stateful widget's `State`.
@@ -63,32 +63,34 @@ Here's a simple example. **Note**: The package supports more features, like prov
       @override
       Widget build(BuildContext context) {
         final model = modelProvider.of(context);
-        // return .. (NB: use model here)
+        // return .. (use model here)
       }
     }
     ```
 
-    **Note**: the `ProviderScope` defined in step 2 needs to be an ancestor of this `InjectingWidget` widget.
+    **Note:** the `ProviderScope` defined in step 2 needs to be an ancestor of this `InjectingWidget` widget.
 
-### Structure summary
+### Widget tree structure
 
-Here's the overall structure used in the example above:
+To make things clear, here is the widget tree structure from the example above, shown in the most detailed form:
 
 * `modelProvider` — a globally defined provider
 
-* `main` — the entry point of every Dart application
+* `main` — the entry point of every Dart application, also global
 
-  * ... (other setup code)
+  * ... — setup widget(s)
 
     * `ProvidingWidget`
 
-      * `ProviderScope`
+      * `ProviderScope` — *`modelProvider` is provided here*
 
         * `MyWidget`
 
-          * ...
+          * ... — widget(s)
 
-            * `InjectingWidget`
+            * `InjectingWidget` — *`modelProvider` is injected here*
+
+              * ... — widget(s)
 
 ### Examples
 
@@ -113,12 +115,11 @@ concepts of the library).
 #### Compatible solutions
 
 Compatible state management solutions are those whose signals/observables can be created locally and passed as arguments, such as
-- [`solidart`](https://pub.dev/packages/flutter_solidart) (a solution maintained by the creators of `disco` built to work really well alongside it.),
+- [`solidart`](https://pub.dev/packages/flutter_solidart) (a solution maintained by the creators of `disco` built to work really well alongside it),
 - `ValueNotifier`/`ChangeNotifier` (Flutter's, for those looking to use the bare minimum),
 - [`bloc`](https://pub.dev/packages/flutter_bloc) (a popular state management library)
-  - Note: the usage of `BlocProvider` should be replaced with the providers present in this library.
-  - Note: the `SignalBuilder` from `solidart` combined with `disco` is currently more ergonomic than Bloc's `BlocBuilder` combined with `disco`.
-    - This is pretty much valid for any state management solution that focus on the [`provider`](https://pub.dev/packages/provider) approach for both DI and reactivity.
+  - **Note:** the usage of `BlocProvider` should be replaced with the providers present in this library.
+  - **Note:** using `SignalBuilder` from Solidart with `disco` feels more ergonomic than combining Bloc's `BlocBuilder` with `disco`. If you want a no-boilerplate setup, we recommend going with Solidart instead of Bloc.
 
 Our repository includes one example with `solidart` and one with `bloc`.
 
