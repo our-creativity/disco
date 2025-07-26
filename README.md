@@ -73,7 +73,7 @@ The package supports many features, like providers that accept arguments. But to
 <details>
 <summary><strong>If the widget tree structure is still not clear</strong>, click <strong>here</strong> to expand</summary>
 
-### Widget tree structure
+### Expanded: Widget tree structure
 
 To make things clear, here is the widget tree structure from the example above, shown in the most detailed form:
 
@@ -150,7 +150,9 @@ Of course, the providers don’t need to be defined in the same scope to be used
 This kind of setup is not possible with Provider or other scoped DI libraries in the ecosystem — unless you resort to defining separate wrapper types like `MyModelWrapper1` and `MyModelWrapper2`, which adds complexity and makes the code harder to reason about.
 
 <details>
-<summary><strong>If the difference is still not clear</strong>, click <strong>here</strong> to expand</summary>
+<summary><strong>If the difference between injection by type and injection by instance is still not clear</strong>, click <strong>here</strong> to expand</summary>
+
+### Expanded: Comparing Injection: Typical Scoped DI vs. Disco
 
 The table below highlights the core conceptual difference: traditional DI solutions inject based on **type**, whereas Disco injects based on **provider instances**. If Disco followed the same method-style API, it might look like `context.read(modelProvider)` — which is more intuitive in direct comparisons.
 
@@ -162,10 +164,6 @@ The table below highlights the core conceptual difference: traditional DI soluti
 Note that Disco intentionally flips the order — the provider comes first — to better align with Flutter conventions (`.of(context)`) and improve clarity. This makes it immediately obvious **what** you are injecting. This syntax is also slightly better for autocomplete and inlay hints display a more concise type.
 
 </details>
-
-<br>
-
-You can find all the tradeoffs and design decisions summarized in the [full documentation](https://disco.mariuti.com).
 
 ### Examples
 
