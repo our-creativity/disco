@@ -1,3 +1,7 @@
+## 1.0.3+1
+
+- **CHORE**: Improve documentation.
+
 ## 1.0.3
 
 - **FIX**: Disposal of provider with arguments.
