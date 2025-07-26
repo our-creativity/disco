@@ -140,10 +140,11 @@ This kind of setup is not possible with [Provider](https://pub.dev/packages/prov
 
 The table below highlights the core conceptual difference: traditional DI solutions inject based on **type**, whereas Disco injects based on **provider instances**. If Disco followed the same method-style API, it might look like `context.read(modelProvider)` — which is more intuitive in direct comparisons.
 
-| Injection Task        | Typical Scoped DI (e.g., Provider) | Disco (Conceptual Syntax)           | Disco (Actual Syntax)            |
-|-----------------------|------------------------------------|-------------------------------------|----------------------------------|
-| Inject `Model`        | `context.read<Model>()`            | `context.read(modelProvider)`       | `modelProvider.of(context)`      |
-| Inject second `Model` | Not possible                       | `context.read(secondModelProvider)` | `secondModelProvider.of(context)` |
+| Solution/Injection             | Inject `Model`                    | Inject second `Model`               |
+|--------------------------------|-----------------------------------|-------------------------------------|
+| Typical Scoped DI              | `context.read<Model>()`           | Not possible                        |
+| Disco (Conceptual Syntax)      | `context.read(modelProvider)`     | `context.read(secondModelProvider)` |
+| Disco (Actual Syntax)          | `modelProvider.of(context)`       | `secondModelProvider.of(context)`   |
 
 Note that Disco intentionally flips the order — the provider comes first — to better align with Flutter conventions (`.of(context)`) and improve clarity. This makes it immediately obvious **what** you are injecting. This syntax is also slightly better for autocomplete and inlay hints display a more concise type.
 
