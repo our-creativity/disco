@@ -129,7 +129,7 @@ Disco, by contrast, uses **globally defined provider instances as identifiers**.
     }
     ```
 
-3. Provers of the same type can also be injected together:
+3. Providers of the same type can also be injected together:
 
     ```dart
     class InjectingWidget extends StatelessWidget {

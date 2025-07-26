@@ -91,14 +91,14 @@ Disco, by contrast, uses **globally defined provider instances as identifiers**.
 
 1. Multiple providers of the same type can be defined globally.
 
-    ```dart
+    ```dart {1, 2}
     final modelProvider = Provider((context) => Model());
     final secondModelProvider = Provider((context) => Model());
     ```
 
 2. Providers of the same type can be provided in the same scope:
 
-    ```dart
+    ```dart {7, 8, 9, 10}
     class ProvidingWidget extends StatelessWidget {
       
       const ProvidingWidget({super.key});
@@ -113,9 +113,9 @@ Disco, by contrast, uses **globally defined provider instances as identifiers**.
     }
     ```
 
-3. Provers of the same type can also be injected together:
+3. Providers of the same type can also be injected together:
 
-    ```dart
+    ```dart {7, 8}
     class InjectingWidget extends StatelessWidget {
 
       const InjectingWidget({super.key});
