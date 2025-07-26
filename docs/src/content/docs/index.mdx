@@ -83,7 +83,7 @@ To make things clear, here is the widget tree structure from the example above, 
 
 ## What is unique about this library
 
-The **key difference between Disco and other established solutions** is that Disco **does not rely solely on types** for providing and injecting dependencies.
+The **key difference between Disco and other established scoped solutions** is that Disco **does not rely solely on types** for providing and injecting dependencies.
 
 This part dives a bit deeper into technical details. Let's consider the popular [Provider](https://pub.dev/packages/provider) package; it requires you to declare providers directly in the widget tree using something like `Provider(create: (_) => Model())`, and later retrieve them with `context.read<Model>()`. This approach works but is limited — it injects the *first instance of the given type* it finds, which can be restrictive.
 
@@ -131,7 +131,7 @@ Disco, by contrast, uses **globally defined provider instances as identifiers**.
 
 Of course, the providers don’t need to be defined in the same scope to be used together, and they don’t need to be injected in the same widget either. This setup is just meant to demonstrate what’s possible.
 
-This kind of setup is not possible with Provider or other scoped DI libraries in the ecosystem — unless you resort to defining separate wrapper types like `MyModelWrapper1` and `MyModelWrapper2`, which adds complexity and makes the code harder to reason about.
+This kind of setup is not possible with [Provider](https://pub.dev/packages/provider) or other scoped DI libraries in the ecosystem — unless you resort to defining separate wrapper types like `MyModelWrapper1` and `MyModelWrapper2`, which adds complexity and makes the code harder to reason about.
 
 <details>
 <summary><strong>If the difference between injection by type and injection by instance is still not clear</strong>, click <strong>here</strong> to expand</summary>
