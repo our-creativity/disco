@@ -5,28 +5,78 @@ description: Official documentation for Disco, a modern and simple library for s
 
 Disco is a library introducing a new concept of providers that operate differently from those already present in the Flutter ecosystem. It was developed to overcome the challenges and limitations in the context of dependency injection.
 
-## Usage
+## Simple usage example
 
-1. Create a provider
+The package supports many features, such as providers accepting arguments. The full documentation also includes service locator setup examples.
+
+Here is a simple example:
+
+1. Create a provider top level.
 
     ```dart
     final modelProvider = Provider((context) => Model());
     ```
 
-2. Scope/provide the provider
+    **Note:** the state is never stored directly in the Provider instance; see this provider merely as a type-safe identifier.
+
+2. Scope/provide the provider.
 
     ```dart
-    ProviderScope(
-      providers: [modelProvider],
-      child: MyWidget(),
-    )
+    class ProvidingWidget extends StatelessWidget {
+      
+      const ProvidingWidget({super.key});
+
+      @override
+      Widget build(BuildContext context) {
+        return ProviderScope(
+          providers: [modelProvider],
+          child: MyWidget(),
+        );
+      }
+    }
     ```
 
-3. Inject the provider (within the above `ProviderScope`'s subtree)
+    **Note:** the actual state for the provider will be created and stored inside the `ProviderScope` where the provider is referenced.
+    This way, when the ProviderScope gets disposed, the state gets disposed — making it ideal for managing **local state**.
+
+3. Inject the provider directly inside a new stateless widget or a stateful widget's state.
 
     ```dart
-    final model = modelProvider.of(context);
+    class InjectingWidget extends StatelessWidget {
+
+      const InjectingWidget({super.key});
+
+      @override
+      Widget build(BuildContext context) {
+        final model = modelProvider.of(context);
+        // return .. (use model here)
+      }
+    }
     ```
+
+    **Note:** the `ProviderScope` defined in step 2 needs to be an ancestor of this `InjectingWidget` widget.
+
+### Widget tree structure
+
+To make things clear, here is the widget tree structure from the example above, shown in the most detailed form:
+
+* `modelProvider` — a globally defined provider
+
+* `main` — the entry point of every Dart application, also global
+
+  * ... — setup widget(s)
+
+    * `ProvidingWidget`
+
+      * `ProviderScope` — *`modelProvider` is provided here*
+
+        * `MyWidget`
+
+          * ... — widget(s)
+
+            * `InjectingWidget` — *`modelProvider` is injected here*
+
+              * ... — widget(s)
 
 ## Trade-offs
 
