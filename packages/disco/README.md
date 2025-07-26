@@ -70,6 +70,9 @@ The package supports many features, like providers that accept arguments. But to
 
     **Note:** the `ProviderScope` defined in step 2 needs to be an ancestor of this `InjectingWidget` widget.
 
+<details>
+<summary><strong>If the widget tree structure is still not clear</strong>, click <strong>here</strong> to expand</summary>
+
 ### Widget tree structure
 
 To make things clear, here is the widget tree structure from the example above, shown in the most detailed form:
@@ -91,6 +94,8 @@ To make things clear, here is the widget tree structure from the example above, 
             * `InjectingWidget` — *`modelProvider` is injected here*
 
               * ... — widget(s)
+
+</details>
 
 ## What is unique about this library
 
