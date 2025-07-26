@@ -140,12 +140,28 @@ This kind of setup is not possible with [Provider](https://pub.dev/packages/prov
 
 The table below highlights the core conceptual difference: traditional DI solutions inject based on **type**, whereas Disco injects based on **provider instances**. If Disco followed the same method-style API, it might look like `context.read(modelProvider)` — which is more intuitive in direct comparisons.
 
-| Solution/Injection        | Inject `Model`                 | Inject second `Model`               |
-|---------------------------|--------------------------------|-------------------------------------|
-| <small>Typical Scoped DI</small>         | <small>`context.read<Model>()`</small>        | <small>Not possible</small>                        |
-| <small>Disco (Conceptual Syntax)</small> | <small>`context.read(modelProvider)`</small>  | <small>`context.read(secondModelProvider)`</small> |
-| <small>Disco (Actual Syntax)</small>     | <small>`modelProvider.of(context)`</small>    | <small>`secondModelProvider.of(context)`</small>   |
-
+<table>
+  <tr>
+    <th><span style="font-size: 0.65em;">Solution/Injection</span></th>
+    <th><span style="font-size: 0.65em;">Inject <code>Model</code></span></th>
+    <th><span style="font-size: 0.65em;">Inject second <code>Model</code></span></th>
+  </tr>
+  <tr>
+    <td><span style="font-size: 0.65em;">Typical Scoped DI</span></td>
+    <td><span style="font-size: 0.65em;"><code>context.read&lt;Model&gt;()</code></span></td>
+    <td><span style="font-size: 0.65em;">Not possible</span></td>
+  </tr>
+  <tr>
+    <td><span style="font-size: 0.65em;">Disco (Conceptual Syntax)</span></td>
+    <td><span style="font-size: 0.65em;"><code>context.read(modelProvider)</code></span></td>
+    <td><span style="font-size: 0.65em;"><code>context.read(secondModelProvider)</code></span></td>
+  </tr>
+  <tr>
+    <td><span style="font-size: 0.65em;">Disco (Actual Syntax)</span></td>
+    <td><span style="font-size: 0.65em;"><code>modelProvider.of(context)</code></span></td>
+    <td><span style="font-size: 0.65em;"><code>secondModelProvider.of(context)</code></span></td>
+  </tr>
+</table>
 
 Note that Disco intentionally flips the order — the provider comes first — to better align with Flutter conventions (`.of(context)`) and improve clarity. This makes it immediately obvious **what** you are injecting. This syntax is also slightly better for autocomplete and inlay hints display a more concise type.
 
