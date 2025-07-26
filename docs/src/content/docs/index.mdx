@@ -7,9 +7,7 @@ Disco is a library introducing a new concept of providers that operate different
 
 ## Simple usage example
 
-The package supports many features, such as providers accepting arguments. The full documentation also includes service locator setup examples.
-
-Here is a simple example:
+The package supports many features, like providers that accept arguments. But to keep things simple, here is a basic example to get you started:
 
 1. Create a provider top level.
 
@@ -21,7 +19,7 @@ Here is a simple example:
 
 2. Scope/provide the provider.
 
-    ```dart
+    ```dart {7, 8, 9}
     class ProvidingWidget extends StatelessWidget {
       
       const ProvidingWidget({super.key});
@@ -41,7 +39,7 @@ Here is a simple example:
 
 3. Inject the provider directly inside a new stateless widget or a stateful widget's state.
 
-    ```dart
+    ```dart  {4,8}
     class InjectingWidget extends StatelessWidget {
 
       const InjectingWidget({super.key});

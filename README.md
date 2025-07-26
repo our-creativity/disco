@@ -21,9 +21,7 @@ The full documentation can be consulted [here](https://disco.mariuti.com).
 
 ## Simple usage example
 
-The package supports many features, such as providers accepting arguments. The full documentation also includes service locator setup examples.
-
-Here is a simple example:
+The package supports many features, like providers that accept arguments. But to keep things simple, here is a basic example to get you started:
 
 1. Create a provider top level.
 
