@@ -92,7 +92,7 @@ To make things clear, here is the widget tree structure from the example above, 
 
               * ... — widget(s)
 
-### What is unique about this library
+## What is unique about this library
 
 The **key difference between Disco and other established solutions** is that Disco **does not rely solely on types** for providing and injecting dependencies.
 
