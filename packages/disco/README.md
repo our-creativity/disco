@@ -7,7 +7,7 @@
 
 # Disco
 
-Disco is a Flutter library that provides scoped dependency injection in a way that is
+Disco is a Flutter library that provides scoped dependency injection in a way that is:
 - **production-ready**
 - **simple to use**
 - **type-safe**
@@ -50,10 +50,10 @@ Here is a simple example:
     }
     ```
 
-    **Note:** the actual state for the provider will be created inside the `ProviderScope` where the provider is referenced.
+    **Note:** the actual state for the provider will be created and stored inside the `ProviderScope` where the provider is referenced.
     This way, when the ProviderScope gets disposed, the state gets disposed — making it ideal for managing **local state**.
 
-3. Inject the provider directly inside a new stateless widget or a stateful widget's `State`.
+3. Inject the provider directly inside a new stateless widget or a stateful widget's state.
 
     ```dart
     class InjectingWidget extends StatelessWidget {
