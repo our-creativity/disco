@@ -82,9 +82,16 @@ To make things clear, here is the widget tree structure from the example above, 
 
 Disco takes a fundamentally different approach to dependency injection in Flutter. It is — **to our knowledge** — the **first and only solution** that supports **multiple providers of the same type** (without wrapper types or string identifiers) while staying **purely local**, aligned with the **natural structure of the Flutter widget tree**.
 
-Let’s walk through what this really means and how it compares with Provider and Riverpod — the two most popular DI libraries featuring providers — both of which have had a huge influence on the design and philosophy behind this library.
+Provider and Riverpod — the two most popular DI libraries built around providers — have significantly influenced the design and philosophy of this library.
 
-### Glimpse into Provider
+<details>
+<summary><strong>To get a glimpse into Provider and Riverpod</strong>, click <strong>here</strong> to expand</summary>
+
+### Expanded: Quick look at Provider and Riverpod
+
+Let’s walk through what this actually means and how Provider and Riverpod work, so we can draw a meaningful comparison.
+
+#### Glimpse into Provider
 
 The [`Provider`](https://pub.dev/packages/provider) package (and libraries built on top of it like [Bloc (BlocProvider component)](https://pub.dev/packages/flutter_bloc#blocprovider])) let you scope dependencies using the widget tree. However, **they rely entirely on types** to resolve injections.
 
@@ -131,7 +138,7 @@ class MyScreen extends StatelessWidget {
 
 You are forced to create wrapper types like `PrimaryModel`, `SecondaryModel`, etc., to distinguish between different providers. This clutters your codebase and increases boilerplate.
 
-### Glimpse into Riverpod
+#### Glimpse into Riverpod
 
 Libraries like [`Riverpod`](https://pub.dev/packages/riverpod) solve the above limitation by allowing **multiple providers of the same type**, using globally defined provider *instances* as identifiers:
 
@@ -159,7 +166,7 @@ Without this `ProviderScope`, it is not possible to access any provider.
 
 In order to access a provider, you must use specialized widgets (`ConsumerWidget`, `ConsumerStatefulWidget`) instead of Flutter's native ones.
 
-#### Parameterized Providers and Lifecycle Management in Riverpod
+##### Parameterized Providers and Lifecycle Management in Riverpod
 
 Riverpod offers powerful modifiers like `family` and `autoDispose` to enhance provider flexibility and lifecycle:
 
@@ -192,6 +199,8 @@ Riverpod offers powerful modifiers like `family` and `autoDispose` to enhance pr
   * May cause unexpected disposal and recreation during fast navigation or widget rebuilds.
 
 Together, `family` and `autoDispose` enhance flexibility and resource handling in Riverpod but don’t offer true local, widget-tree-based scoping and lifecycle guarantees.
+
+</details>
 
 ### Disco: The best of both worlds
 
