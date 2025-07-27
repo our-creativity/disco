@@ -22,7 +22,7 @@ The full documentation can be consulted [here](https://disco.mariuti.com).
 ## Table of content
 
 - [Simple usage example](#simple-usage-example)
-- [What is unique about this library](#what-is-unique-about-this-library)
+- [What makes this library unique](#what-makes-this-library-unique)
 - [Trade-offs](#trade-offs)
 - [Examples](#examples)
 - [Additional information](#additional-information)
@@ -93,115 +93,194 @@ To make things clear, here is the widget tree structure from the example above, 
 
 </details>
 
-## What is unique about this library
+## What makes this library unique
 
-The **key difference** between Disco and other established scoped solutions is that **Disco does not rely solely on types** for providing and injecting dependencies; **by contrast**, it uses **globally defined provider instances as identifiers**. This allows for much greater flexibility, especially defining **multiple providers of the same type**.
+Disco takes a fundamentally different approach to dependency injection in Flutter. It is — **to our knowledge** — the **first and only solution** that supports **multiple providers of the same type** (without wrapper types or string identifiers) while staying **purely local**, aligned with the **natural structure of the Flutter widget tree**.
 
-<details>
-<summary><strong>For precise steps on how to use multiple providers of the same type</strong>, click <strong>here</strong> to expand</summary>
+Let’s walk through what this really means and how it compares with Provider and Riverpod — the two most popular DI libraries featuring providers — both of which have had a huge influence on the design and philosophy behind this library.
 
-### Expanded: Multiple providers of the same type
+### Glimpse into Provider
 
-1. Define multiple providers of the same generic type at the top level.
+The [`Provider`](https://pub.dev/packages/provider) package (and libraries built on top of it like [Bloc (BlocProvider component)](https://pub.dev/packages/flutter_bloc#blocprovider])) let you scope dependencies using the widget tree. However, **they rely entirely on types** to resolve injections.
 
-    ```dart
-    final modelProvider = Provider((context) => Model());
-    final secondModelProvider = Provider((context) => Model());
-    ```
+This means you can only have **one provider per type** in a branch of the tree.
 
-2. Insert a `ProviderScope` at the desired point in the widget tree to define the scope of the providers and make them accessible to the corresponding subtree.
+```dart
+void main() {
+  runApp(
+    Provider<Model>(
+      create: (_) => Model(),
+      child: MaterialApp(
+        home: MyWidget(),
+      ),
+    ),
+  );
+}
 
-    ```dart
+/// In the subtree of MyWidget.
+class MyScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Reads the first Model above this widget in the tree
+    final model = context.read<Model>();
+    // return ...
+  }
+}
+```
+
+If you want two different `Model` instances, you can't just write:
+
+```dart
+/// In the subtree of MyWidget.
+class MyScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Reads the first Model above this widget in the tree
+    final model = context.read<Model>();
+    // This one also reads the first Model it finds instead of reading the second one in the tree...
+    final secondModel = context.read<Model>();
+    // return ...
+  }
+}
+```
+
+You are forced to create wrapper types like `PrimaryModel`, `SecondaryModel`, etc., to distinguish between different providers. This clutters your codebase and increases boilerplate.
+
+### Glimpse into Riverpod
+
+Libraries like [`Riverpod`](https://pub.dev/packages/riverpod) solve the above limitation by allowing **multiple providers of the same type**, using globally defined provider *instances* as identifiers:
+
+```dart
+final modelProvider = Provider((ref) => Model());
+final secondModelProvider = Provider((ref) => Model());
+```
+
+The `ref` is a special object that allow to access providers.
+
+Note that **the state for these providers is not local** — it's managed from a single, top-level `ProviderScope`:
+
+```dart
+void main() {
+  runApp(
+    // The state for all providers is handled here, not in the providers themselves.
     ProviderScope(
-      providers: [modelProvider, secondModelProvider],
-      child: MyWidget(),
-    )
-    ```
+      child: MyApp(),
+    ),
+  );
+}
+```
 
-3. Inject the provider directly inside a new stateless widget or a stateful widget's state.
+Without this `ProviderScope`, it is not possible to access any provider.
 
-    ```dart
-    class InjectingWidget extends StatelessWidget {
+In order to access a provider, you must use specialized widgets (`ConsumerWidget`, `ConsumerStatefulWidget`) instead of Flutter's native ones.
 
-      const InjectingWidget({super.key});
+#### Parameterized Providers and Lifecycle Management in Riverpod
 
-      @override
-      Widget build(BuildContext context) {
-        final model = modelProvider.of(context);
-        final secondModel = secondModelProvider.of(context);
-        // return .. (use model and secondModel here)
-      }
-    }
-    ```
+Riverpod offers powerful modifiers like `family` and `autoDispose` to enhance provider flexibility and lifecycle:
 
-Of course, the providers don’t need to be defined in the same scope to be used together, and they don’t need to be injected in the same widget either. This setup is just meant to demonstrate what’s possible.
+* **`family`** enables **parameterized providers** allowing multiple instances of the same provider with different parameters:
 
-</details>
+  ```dart
+  final userProvider = Provider.family<User, int>((ref, userId) {
+    return fetchUser(userId);
+  });
+  ```
 
-### Typical Scoped DI vs Disco: Side-by-side comparison
+  This provides the illusion of scoped instances but with important caveats:
 
-Let's consider the — by far — most popular scoped DI package: [Provider](https://pub.dev/packages/provider). It requires you to declare providers directly in the widget tree using something like `Provider(create: (_) => Model())`, and later retrieve them with `context.read<Model>()`. This approach works but is limited — it injects the *first instance of the given type* it finds, which can be restrictive.
+  * All instances remain **globally stored** within the single top-level `ProviderScope`.
+  * Lifecycle is **not tightly bound to the widget tree**, complicating disposal and resource management.
+  * Breaks the Flutter principle of *“let the tree define scope.”*
 
-The table below highlights the core conceptual difference: traditional DI solutions inject based on **type**, whereas Disco injects based on **provider instances**. If Disco followed the same method-style API as the Provider package, it might look like `context.read(modelProvider)`. This conceptual syntax is not the actual one, but is a bit more intuitive in direct comparisons.
+* **`autoDispose`** automatically cleans up providers when no longer used by any widget:
 
-| Solution/Injection             | Inject `Model`                    | Inject second `Model`               |
-|--------------------------------|-----------------------------------|-------------------------------------|
-| Provider package               | `context.read<Model>()`           | Not possible                        |
-| Disco (Conceptual Syntax)      | `context.read(modelProvider)`     | `context.read(secondModelProvider)` |
-| Disco (Actual Syntax)          | `modelProvider.of(context)`       | `secondModelProvider.of(context)`   |
+  ```dart
+  final userProvider = Provider.autoDispose<User>((ref) {
+    return fetchUser();
+  });
+  ```
 
-Note that Disco intentionally flips the order — the provider comes first — to better align with Flutter conventions (the `.of(context)` part).
+  However:
 
-Injecting different providers of the same type is not possible with [Provider](https://pub.dev/packages/provider) or other scoped DI libraries in the ecosystem — unless you resort to defining separate wrapper types like `MyModelWrapper1` and `MyModelWrapper2`; such process, however, adds complexity and can make the code harder to reason about.
+  * It still operates inside the global `ProviderScope`, so it’s **not true local scoping**.
+  * Providers are **not removed while any widget is listening**, potentially extending their lifecycle beyond expectations.
+  * May cause unexpected disposal and recreation during fast navigation or widget rebuilds.
 
-### Comparison with global solutions
+Together, `family` and `autoDispose` enhance flexibility and resource handling in Riverpod but don’t offer true local, widget-tree-based scoping and lifecycle guarantees.
 
-While many existing solutions support multiple providers of the same type (without wrapper types, string identifiers or similar), they typically rely on globally-scoped-endorsed approaches (such as [Riverpod](https://pub.dev/packages/riverpod)). In contrast, **Disco** is — to our knowledge — the **first and only solution** to support multiple providers of the same type **purely through local scoping that aligns with the widget tree structure**  without introducing wrapper types, string identifiers, or similar.
+### Disco: The best of both worlds
+
+Disco **combines** the **type flexibility of Riverpod** with the **explicit scoping of Provider** — while reducing the downsides of both to a minimum.
+
+#### Providers as identifiers
+
+You define providers as top-level identifiers. They can be of the same generic type, as in the example below.
+
+```dart
+final modelProvider = Provider((context) => Model());
+final secondModelProvider = Provider((context) => Model());
+```
+
+Disco uses the **provider instance**, not the return type, to locate dependencies — allowing multiple providers of the same type *without confusion*.
+
+#### Scoped where you need it
+
+You insert a `ProviderScope` **where** you want the providers to be active — no global registry required.
+
+```dart
+ProviderScope(
+  providers: [modelProvider, secondModelProvider],
+  child: MyWidget(),
+)
+```
+
+This is **true scoping**, fully aligned with the widget tree.
+
+#### Clean and type-safe injection
+
+No special widget base class is needed. Just call the `of` (or `maybeOf` if optional) method of the provider:
+
+```dart
+class HomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final model = modelProvider.of(context);
+    final secondModel = secondModelProvider.of(context);
+
+    return Text(model.toString() + " " + secondModel.toString());
+  }
+}
+```
+
+You can inject providers in **any** `StatelessWidget` or `StatefulWidget`.
 
 ## Trade-offs
 
-### Pros
+Below is a summary of the trade-offs between the main provider-based dependency injection packages — Provider and Riverpod — and Disco.
 
-The pros of Disco are:
+| Feature / DI Library               | Provider     | Riverpod                           | Disco                                  |
+| ------------------------------- | -------------- | ------------------------------------ | ---------------------------------------- |
+| **Multiple providers of same type** | ❌ type is leveraged           | ✅ provider instance is leveraged | ✅ provider instance is leveraged   |
+| **Lifecycle management**            | ✅ Widget tree    | ❌ Top-level `ProviderScope` by default, or manual | ✅ Widget tree |
+| **Works with default Flutter widgets**      | ✅ Compatible             | ❌ `ConsumerWidget` required        | ✅  Compatible                                      |
+| **Local state endorsed**            | ✅ Yes             | ❌ No                                   | ✅ Yes                                       |
+| **Reactivity methods included**             | ✅ `context.watch`              | ✅ `ref.watch`, `ref.listen`                                       | ❌ Totally unopinionated on purpose¹  |
+| **Mutable state support**           | ⚠️ Usually done via `ChangeNotifier`       | ✅ Built-in                                                           | ⚠️ Allows mutable inner state via observables/signals             |
+| **Compile-time safety**             | ❌ Runtime error if provider not found | ✅ No runtime error possible                          | ❌ Runtime error if provider not found² |
+| **Fallback support**                | ❌ Not available; try-catch block necessary                                        | ✅ No need                                        | ✅ `maybeOf(context)` for optional injection                      |
+| **Modal compatibility**             | ⚠️ Needs to specify all required providers one by one                  | ✅ Scoped globally, no special handling needed                                                    | ✅ Needs `ProviderPortal`, which is a portal to the main tree (all providers are available)      |
+| **API simplicity**                  | ✅ Simple                             | ⚠️ Requires learning `WidgetRef`, `ConsumerWidget`, ... | ✅ Extremely simple                   |
+| **Ease of integration into state management** | ❌ Requires wiring | ❌ Requires wiring   | ✅ No integration needed, works out of the box |
 
-- The providers are scoped.
-  - The widget tree is fully leveraged.
-    - This keeps the architecture simple.
-- No global state is possible.
-  - Circular dependencies are impossible.
-- Multiple providers of the same type are possible.
-  - There is no need to create wrapper types or rely on IDs such as strings.
-- The API is very simple and feels natural to Flutter.
-  - Providers are equipped with `of(context)` and `maybeOf(context)` methods.
-  - All you need is `BuildContext`. There is no additional class needed to inject the providers.
-- The removal of a provider has an impact on its providing and each of its injections.
-  - Each of them is immediately characterized by a static error.
-- The values held by the providers are immutable.
-  - While immutable, some instances allow for inner mutation.
-    - This is great: observables and signals can be passed down.
-- No reactivity is included.
-  - This library focuses on DI, so that state management solutions can focus on the reactivity.
-  - To include reactivity, provide a built-in or third-party observable/signal to the provider (e.g. `Signal`, `ChangeNotifier`, `Cubit`, ...).
+¹ In Disco's defense regarding the **Reactivity methods included** point:
 
-### Cons
+- Including a `watch` method, like Provider and Riverpod do, is not necessary. Instead of using `watch`, an observable/signal can be injected and its relative widget can be used to react to changes. This reduces this library's codebase, prevents possible bugs and allows the state-management library of your choice to be used for the reactivity.
 
-The cons of this library are:
-
-- Providers might need to be lifted up or down in the widget tree, as requirements change.
-- Modals spawn new widget trees, causing disconnection with the providers in the main tree.
-  - A special widget must be used to restore access to the providers in the main widget tree.
-- It is not fully compile-time safe.
-  - The injection of a provider that cannot be found in any scope results in a runtime error.
-
-In Disco's defense regarding the last point:
+² In Disco's defense regarding the **Compile-time safety** point:
 
 - Total compile-time safety is not possible with an approach leveraging scoped DI, which is a pattern ubiquitously used in Flutter and third-party libraries (think about how many times you have already read `MediaQuery.of(context)`, `GoRouter.of(context)`, ...).
 - Disco providers also have a `maybeOf(context)` method, which can help if the presence of a provider cannot be guaranteed.
 - The throwable includes precise information in its stack trace to deduce the missing provider: filepath, line and column.
-
-### Keep in mind
-
-As the authors of Disco, we believe this to be the most effective strategy for DI in Flutter. However, every solution has trade-offs. You can limit the impact of these trade-offs by running tests, doing code reviews, and following other crucial practices.
 
 ## Examples
 
