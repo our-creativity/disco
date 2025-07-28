@@ -17,8 +17,6 @@ Disco is a Flutter library that provides scoped dependency injection in a way th
 
 The full documentation can be consulted [here](https://disco.mariuti.com).
 
-**Note:** this package is intentionally small and feature-complete, so you might not see frequent updates — but don’t worry; it is still actively maintained, and you can get help anytime from the community/devs if needed.
-
 ## Table of content
 
 - [Simple usage example](#simple-usage-example)
@@ -68,31 +66,6 @@ The package supports many features, like providers that accept arguments. But to
 
     **Note:** the `ProviderScope` defined in step 2 needs to be an ancestor of this `InjectingWidget` widget.
 
-<details>
-<summary><strong>If the widget tree structure is still not clear</strong>, click <strong>here</strong> to expand</summary>
-
-### Expanded: Widget tree structure
-
-To make things clear, here is the widget tree structure from the example above, shown in the most detailed form:
-
-* `modelProvider` — a globally defined provider
-
-* `main` — the entry point of every Dart application, also global
-
-  * ... — setup widget(s)
-
-    * `ProviderScope` — *`modelProvider` is provided here*
-
-      * `MyWidget` — the child defined in the second code snippet if you notice carefully
-
-        * ... — widget(s)
-
-          * `InjectingWidget` — *`modelProvider` is injected here*
-
-            * ... — widget(s)
-
-</details>
-
 ## What makes this library unique
 
 **Disco** draws inspiration from both [Provider](https://pub.dev/packages/provider) and [Riverpod](https://pub.dev/packages/riverpod) — the two most widely used DI libraries in Flutter, both built around the concept of providers — while aiming to overcome their respective limitations. These libraries have significantly shaped how developers manage state and dependencies: **Provider** supports a simple, widget-tree–aligned scoping model, but does not allow multiple providers of the same type. **Riverpod**, by contrast, supports multiple providers of the same type, but relies on a globally structured architecture that breaks away from the widget tree.
@@ -132,22 +105,25 @@ This is **true scoping**, fully aligned with the widget tree.
 No special widget base class is needed. Just call the `of` (or `maybeOf` if optional) method of the provider:
 
 ```dart
-class HomePage extends StatelessWidget {
+class InjectingWidget extends StatelessWidget {
+  const InjectingWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     final model = modelProvider.of(context);
-    final secondModel = secondModelProvider.of(context);
-
-    return Text(model.toString() + " " + secondModel.toString());
+    final secondModel = secondModelProvider.maybeOf(context);
+    return Text(model.toString() + ", " + secondModel?.toString() ?? "(empty)");
   }
 }
 ```
 
-Of course, the providers don’t need to be defined in the same scope to be used together, and they don’t need to be injected in the same widget either. This setup is just meant to demonstrate what’s possible.
+Of course, providers — whether of the same type or not — do not need to be defined in the same scope to be used together, and they don’t need to be injected in the same widget either. This setup is just meant to demonstrate that it is possible.
 
 ## Trade-offs
 
-Below is a summary of the trade-offs between the main provider-based dependency injection packages — Provider and Riverpod — and Disco.
+Below is a comparison of the trade-offs between the primary provider-based dependency injection packages — Provider and Riverpod — and Disco, this new alternative.
+
+> Note that many state management libraries rely on these packages for dependency injection; for example, [Bloc offers `BlocProvider`](https://pub.dev/packages/flutter_bloc#blocprovider), which builds on top of Provider.
 
 | Feature / DI Library               | Provider     | Riverpod                           | Disco                                  |
 | ------------------------------- | -------------- | ------------------------------------ | ---------------------------------------- |
@@ -204,6 +180,10 @@ Compatible state management solutions are those whose signals/observables can be
 #### Incompatible solutions
 
 State management solution entirely leveraging or endorsing global state, such as [`riverpod`](https://pub.dev/packages/riverpod), are not compatible with this library.
+
+### Development Activity
+
+This package is intentionally small and feature-complete, so you might not see frequent updates — but don’t worry; it is still actively maintained, and you can get help anytime from the community/devs if needed.
 
 ### Contributions
 

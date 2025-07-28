@@ -3,14 +3,9 @@ title: Disco
 description: Official documentation for Disco, a modern and simple library for scoped dependency injection in Flutter.
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 Disco is a library introducing a new concept of providers that operate differently from those already present in the Flutter ecosystem. It was developed to overcome the challenges and limitations in the context of dependency injection.
-
-
-## Table of content
-
-- [Simple usage example](#simple-usage-example)
-- [What makes this library unique](#what-makes-this-library-unique)
-- [Trade-offs](#trade-offs)
 
 ## Simple usage example
 
@@ -18,65 +13,39 @@ The package supports many features, like providers that accept arguments. But to
 
 1. Define a provider at the top level.
 
-    ```dart {1}
+    ```dart
     final modelProvider = Provider((context) => Model());
     ```
 
-    **Note:** the state is never stored globally, directly in the Provider instance; see this provider solely as a type-safe identifier.
+    <Aside>The state is never stored globally, directly in the Provider instance; see this provider solely as a type-safe identifier.</Aside>
 
 2. Insert a `ProviderScope` at the desired point in the widget tree to define the scope of the provider and make it accessible to the corresponding subtree.
 
-    ```dart {1, 2, 3, 4}
+    ```dart
     ProviderScope(
       providers: [modelProvider],
       child: MyWidget(),
     )
     ```
 
-    **Note:** the actual state for the provider is created and stored inside the `ProviderScope` instance where the provider is referenced.
-    This way, when the ProviderScope gets disposed, the state gets disposed — making it ideal for managing **local state**.
+    <Aside>The actual state for the provider is created and stored inside the `ProviderScope` instance where the provider is referenced.
+    This way, when the ProviderScope gets disposed, the state gets disposed — making it ideal for managing **local state**.</Aside>
 
 3. Inject the provider directly inside a new stateless widget or a stateful widget's state.
 
-    ```dart {7}
+    ```dart {6}
     class InjectingWidget extends StatelessWidget {
-
       const InjectingWidget({super.key});
 
       @override
       Widget build(BuildContext context) {
         final model = modelProvider.of(context);
-        // return .. (use model here)
+        return Text(model.toString());
       }
     }
     ```
 
-    **Note:** the `ProviderScope` defined in step 2 needs to be an ancestor of this `InjectingWidget` widget.
-
-<details>
-<summary><strong>If the widget tree structure is still not clear</strong>, click <strong>here</strong> to expand</summary>
-
-### Expanded: Widget tree structure
-
-To make things clear, here is the widget tree structure from the example above, shown in the most detailed form:
-
-* `modelProvider` — a globally defined provider
-
-* `main` — the entry point of every Dart application, also global
-
-  * ... — setup widget(s)
-
-    * `ProviderScope` — *`modelProvider` is provided here*
-
-      * `MyWidget` — the child defined in the second code snippet if you notice carefully
-
-        * ... — widget(s)
-
-          * `InjectingWidget` — *`modelProvider` is injected here*
-
-            * ... — widget(s)
-
-</details>
+    <Aside>The `ProviderScope` defined in step 2 needs to be an ancestor of this `InjectingWidget` widget.</Aside>
 
 ## What makes this library unique
 
@@ -97,7 +66,7 @@ final modelProvider = Provider((context) => Model());
 final secondModelProvider = Provider((context) => Model());
 ```
 
-Disco uses the **provider instance**, not the return type, to locate dependencies — allowing multiple providers of the same type *without confusion*.
+<Aside>Disco uses the **provider instance**, not the return type, to locate dependencies — allowing multiple providers of the same type *without confusion*.</Aside>
 
 #### Scoped where you need it
 
@@ -110,25 +79,26 @@ ProviderScope(
 )
 ```
 
-This is **true scoping**, fully aligned with the widget tree.
+<Aside>This is **true scoping**, fully aligned with the widget tree.</Aside>
 
 #### Clean and type-safe injection
 
 No special widget base class is needed. Just call the `of` (or `maybeOf` if optional) method of the provider:
 
-```dart
-class HomePage extends StatelessWidget {
+```dart {6, 7}
+class InjectingWidget extends StatelessWidget {
+  const InjectingWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     final model = modelProvider.of(context);
-    final secondModel = secondModelProvider.of(context);
-
-    return Text(model.toString() + " " + secondModel.toString());
+    final secondModel = secondModelProvider.maybeOf(context);
+    return Text(model.toString() + ", " + secondModel?.toString() ?? "(empty)");
   }
 }
 ```
 
-Of course, the providers don’t need to be defined in the same scope to be used together, and they don’t need to be injected in the same widget either. This setup is just meant to demonstrate what’s possible.
+<Aside>Of course, providers — whether of the same type or not — do not need to be defined in the same scope to be used together, and they don’t need to be injected in the same widget either. This setup is just meant to demonstrate that it is possible.</Aside>
 
 ## Trade-offs
 
