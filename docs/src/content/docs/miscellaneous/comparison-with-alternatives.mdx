@@ -11,7 +11,7 @@ In this section, we will have a glimpse into both solutions and focus on their p
 
 ## Provider
 
-The [`Provider`](https://pub.dev/packages/provider) package is a widely used solution in the Flutter community that lets you scope dependencies using the widget tree. However, it relies entirely on the type of the value to resolve injections (e.g., `context.get<SomeClass>()`). This means you can only have one provider of a specific type within the same branch of the widget tree.
+The [Provider](https://pub.dev/packages/provider) package is a widely used solution in the Flutter community that lets you scope dependencies using the widget tree. However, it relies entirely on the type of the value to resolve injections (e.g., `context.get<SomeClass>()`). This means you can only have one provider of a specific type within the same branch of the widget tree.
 
 ```dart
 void main() {
@@ -45,7 +45,7 @@ Libraries built on top of Provider, like the [`BlocProvider` component from the 
 
 ## Riverpod
 
-Libraries such as [`Riverpod`](https://www.google.com/search?q=%5Bhttps://pub.dev/packages/riverpod%5D\(https://pub.dev/packages/riverpod\)) address Provider's limitations by allowing multiple providers of the same type. This is achieved by using globally defined provider *instances* as unique identifiers.
+Libraries such as [Riverpod](https://pub.dev/packages/riverpod) address Provider's limitations by allowing multiple providers of the same type. This is achieved by using globally defined provider *instances* as unique identifiers.
 
 ```dart
 final modelProvider = Provider((ref) => Model());
