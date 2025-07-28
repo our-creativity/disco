@@ -58,7 +58,7 @@ final modelProvider = Provider((ref) => Model());
 final secondModelProvider = Provider((ref) => Model());
 ```
 
-The `ref` is a special object that allow to access providers.
+The `ref` is a special object that allows you to access providers.
 
 Note that **the state for these providers is not local** — it's managed from a single, top-level `ProviderScope`:
 

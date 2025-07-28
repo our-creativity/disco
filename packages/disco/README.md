@@ -131,7 +131,7 @@ Below is a comparison of the trade-offs between the primary provider-based depen
 | **Lifecycle management**            | ✅ Widget tree    | ❌ Top-level `ProviderScope` by default, or manual | ✅ Widget tree |
 | **Works with default Flutter widgets**      | ✅ Compatible             | ❌ `ConsumerWidget` required        | ✅  Compatible                                      |
 | **Local state endorsed**            | ✅ Yes             | ❌ No                                   | ✅ Yes                                       |
-| **Circular dependencies possible**    | ✅ Never             | ❌ Yes, if the app is not carefully architectured        | ✅ Never   |
+| **Circular dependencies possible**    | ✅ Never             | ❌ Yes, if the app is not carefully architected        | ✅ Never   |
 | **Reactivity methods included**             | ✅ `context.watch`              | ✅ `ref.watch`, `ref.listen`                                       | ❌ Deliberately unopinionated¹  |
 | **Mutable state support**           | ⚠️ Usually done via `ChangeNotifier`       | ✅ Built-in                                                           | ⚠️ Allows mutable inner state via observables/signals             |
 | **Compile-time safety**             | ❌ Runtime error if provider not found | ✅ No runtime error possible                          | ❌ Runtime error if provider not found² |
