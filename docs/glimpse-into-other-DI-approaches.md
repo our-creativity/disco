@@ -4,7 +4,7 @@ Let’s walk through how Provider and Riverpod work, focusing on what their pain
 
 ### Glimpse into Provider
 
-The [`Provider`](https://pub.dev/packages/provider) package and libraries built on top of it, such as [Bloc (BlocProvider component)](https://pub.dev/packages/flutter_bloc#blocprovider]), let you scope dependencies using the widget tree. However, **they rely entirely on types** to resolve injections.
+The [`Provider`](https://pub.dev/packages/provider) package and libraries built on top of it, such as [Bloc (BlocProvider component)](https://pub.dev/packages/flutter_bloc#blocprovider), let you scope dependencies using the widget tree. However, **they rely entirely on types** to resolve injections.
 
 This means you can only have **one provider per type** in a branch of the tree.
 
