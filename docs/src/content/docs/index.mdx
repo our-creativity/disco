@@ -93,7 +93,7 @@ class InjectingWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = modelProvider.of(context);
     final secondModel = secondModelProvider.maybeOf(context);
-    return Text('${model}, ${secondModel?.toString() ?? "(empty)"}');
+    return Text('$model, ${secondModel?.toString() ?? "(empty)"}');
   }
 }
 ```
