@@ -3,17 +3,23 @@ title: Disco
 description: Official documentation for Disco, a modern and simple library for scoped dependency injection in Flutter.
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+
 Disco is a library introducing a new concept of providers that operate differently from those already present in the Flutter ecosystem. It was developed to overcome the challenges and limitations in the context of dependency injection.
 
-## Usage
+## Simple usage example
 
-1. Create a provider
+The package supports many features, like providers that accept arguments. But to keep things simple, here is a basic example to get you started:
+
+1. Define a provider at the top level.
 
     ```dart
     final modelProvider = Provider((context) => Model());
     ```
 
-2. Scope/provide the provider
+    <Aside>The state is never stored globally, directly in the Provider instance; see this provider solely as a type-safe identifier.</Aside>
+
+2. Insert a `ProviderScope` at the desired point in the widget tree to define the scope of the provider and make it accessible to the corresponding subtree.
 
     ```dart
     ProviderScope(
@@ -22,11 +28,32 @@ Disco is a library introducing a new concept of providers that operate different
     )
     ```
 
-3. Inject the provider (within the above `ProviderScope`'s subtree)
+    <Aside>The actual state for the provider is created and stored inside the `ProviderScope` instance where the provider is referenced.
+    This way, when the ProviderScope gets disposed, the state gets disposed — making it ideal for managing **local state**.</Aside>
 
-    ```dart
-    final model = modelProvider.of(context);
+3. Inject the provider directly inside a new stateless widget or a stateful widget's state.
+
+    ```dart {6}
+    class InjectingWidget extends StatelessWidget {
+      const InjectingWidget({super.key});
+
+      @override
+      Widget build(BuildContext context) {
+        final model = modelProvider.of(context);
+        return Text(model.toString());
+      }
+    }
     ```
+
+    <Aside>The `ProviderScope` defined in step 2 needs to be an ancestor of this `InjectingWidget` widget.</Aside>
+
+## What makes this library unique
+
+**Disco** draws inspiration from both [Provider](https://pub.dev/packages/provider) and [Riverpod](https://pub.dev/packages/riverpod) — the two most widely used DI libraries in Flutter, both built around the concept of providers — while aiming to overcome their respective limitations. These libraries have significantly shaped how developers manage state and dependencies: **Provider** supports a simple, **widget-tree–aligned scoping model**, but does not allow multiple providers of the same type. **Riverpod**, by contrast, supports **multiple providers of the same type**, but relies on a globally structured architecture that breaks away from the widget tree.
+
+**Disco** builds on the strengths of both while taking a different path. It is — **to our knowledge** — the **first and only solution** that supports **multiple providers of the same type** (without wrapper types or string keys) using a model that remains **fully local and naturally integrated into the Flutter widget tree** — while reducing the downsides of both to a minimum.
+
+If you would like to explore in detail the pain points of Provider and Riverpod, and how Disco compares, see our page [Comparison with alternatives](https://disco.mariuti.com/miscellaneous/comparison-with-alternatives/).
 
 ## Trade-offs
 

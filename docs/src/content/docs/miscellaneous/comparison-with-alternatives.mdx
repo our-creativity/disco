@@ -1,0 +1,156 @@
+---
+title: Comparison with alternatives
+description: Challenges and limitations found in other approaches.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Disco was developed to overcome the challenges and limitations of the Flutter ecosystem in the context of dependency injection. Inspiration was taken from both [Provider](https://pub.dev/packages/provider) and [Riverpod](https://pub.dev/packages/riverpod) — the two most widely used DI libraries in Flutter, both built around the concept of providers — while aiming to overcome their respective limitations.
+
+In this section, we will have a glimpse into both solutions and focus on their pain points.
+
+## Provider
+
+The [Provider](https://pub.dev/packages/provider) package is a widely used solution in the Flutter community that lets you scope dependencies using the widget tree. However, it relies entirely on the type of the value to resolve injections (e.g., `context.get<SomeClass>()`). This means you can only have one provider of a specific type within the same branch of the widget tree.
+
+```dart
+void main() {
+  runApp(
+    Provider<Model>(
+      create: (_) => Model(),
+      child: MaterialApp(
+        home: MyWidget(),
+      ),
+    ),
+  );
+}
+
+/// In the subtree of MyWidget.
+class MyScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Reads the first Model above this widget in the tree
+    final model = context.read<Model>();
+    // return ...
+  }
+}
+```
+
+This approach has notable drawbacks:
+
+  * **Shadowing**: Providers of the same type are "shadowed" by the nearest one in the widget tree. If you need two different instances of the same `Model` class, you cannot simply add another `Provider<Model>` and expect to access both. To work around this, developers are often forced to create wrapper types (e.g., `PrimaryModel`, `SecondaryModel`) or use string-based IDs, which adds verbosity and can be error-prone during refactoring.
+  * **Lack of compile-time safety**: It is difficult to verify if a provider for a given type exists without inspecting the codebase. Removing a provider does not guarantee a static error, which can lead to runtime errors or, worse, the injection of an incorrect provider of the same type from higher up the widget tree. Debugging these issues is challenging because stack traces provide limited information.
+
+Libraries built on top of Provider, like the [`BlocProvider` component from the Bloc library](https://pub.dev/packages/flutter_bloc#blocprovider), also use this same type-based resolution mechanism.
+
+## Riverpod
+
+Libraries such as [Riverpod](https://pub.dev/packages/riverpod) address Provider's limitations by allowing multiple providers of the same type. This is achieved by using globally defined provider *instances* as unique identifiers.
+
+```dart
+final modelProvider = Provider((ref) => Model());
+final secondModelProvider = Provider((ref) => Model());
+```
+
+In Riverpod, the state for all providers is managed from a single, top-level `ProviderScope`; without it, accessing any provider is impossible. To access a provider, you must use specialized widgets like `ConsumerWidget` instead of Flutter's native ones.
+
+```dart
+void main() {
+  runApp(
+    // The state for all providers is handled here, not in the providers themselves.
+    ProviderScope(
+      child: MyApp(),
+    ),
+  );
+}
+```
+
+#### Parameterized providers and lifecycle in Riverpod
+
+Riverpod offers modifiers like `family` and `autoDispose` to add flexibility, but they operate within the global scope. These modifiers are outlined below separately, but can also be used together.
+
+  * **`family`**: This modifier enables parameterized providers, creating the illusion of scoped instances. However, all instances are stored globally in the `ProviderScope`, and their lifecycle is not tightly bound to the widget tree, which breaks the Flutter principle of "let the tree define scope."
+    ```dart
+    final userProvider = Provider.family<User, int>((ref, userId) {
+      return fetchUser(userId);
+    });
+    ```
+
+  * **`autoDispose`**: This modifier cleans up a provider's state when it is no longer being used. Yet, this is not true local scoping, as it operates within the global `ProviderScope`. The provider's lifecycle can be extended unexpectedly if any widget is still listening, and fast navigation can cause unintended disposal and recreation.
+
+    ```dart
+    final userProvider = Provider.autoDispose<User>((ref) {
+      return fetchUser();
+    });
+    ```
+
+#### Challenges
+
+Riverpod and similar other global state-management solutions solve issues like shadowing and improve compile-time safety. They also help separate business logic from the UI and can function as service locators. However, this global approach introduces new challenges:
+
+  * **Unrestricted access**: Unrestricted access, where components can be accessed from anywhere, can lead to highly coupled components that are difficult to maintain.
+  * **Circular dependencies**: A global architecture can make it easier to introduce circular dependencies between services.
+  * **Complex local-state logic**: These solutions can introduce logic that mimics local state but doesn't behave identically, which complicates development, especially for beginners. Some packages require using special classes to manage the global state, and passing these objects around can feel inconsistent with the framework's design.
+  * **Code generation**: Some solutions rely on code generation, which can create a high learning curve for new developers and is not strictly necessary.
+
+## Disco's approach
+
+Let's reflect about how Disco defines, scopes and injects providers.
+
+#### Providers as identifiers
+
+You define providers as top-level identifiers. They can be of the same generic type, as in the example below.
+
+```dart
+final modelProvider = Provider((context) => Model());
+final secondModelProvider = Provider((context) => Model());
+```
+
+<Aside>Disco uses the <strong>provider instance</strong>, not the return type, to locate dependencies — allowing multiple providers of the same type <em>without confusion</em>.</Aside>
+
+#### Scoped where you need it
+
+You insert a `ProviderScope` **where** you want the providers to be active — no global registry required.
+
+```dart
+ProviderScope(
+  providers: [modelProvider, secondModelProvider],
+  child: MyWidget(),
+)
+```
+
+<Aside>This is **true scoping**, fully aligned with the widget tree.</Aside>
+
+#### Clean and type-safe injection
+
+No special widget base class is needed. Just call the `of` (or `maybeOf` if optional) method of the provider:
+
+```dart {6, 7}
+class InjectingWidget extends StatelessWidget {
+  const InjectingWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final model = modelProvider.of(context);
+    final secondModel = secondModelProvider.maybeOf(context);
+    return Text('$model, ${secondModel?.toString() ?? "(empty)"}');
+  }
+}
+```
+
+<Aside>Of course, providers — whether of the same type or not — do not need to be defined in the same scope to be used together, and they don’t need to be injected in the same widget either. This setup is just meant to demonstrate that it is possible.</Aside>
+
+### Summary
+
+Disco brings together the best of both worlds:
+
+* **Widget tree–aligned scoping (from Provider)**: Disco adopts Provider’s approach to scoping through the widget tree, which aligns naturally with Flutter’s declarative UI model.
+* **Support for multiple providers of the same type (from Riverpod)**: Like Riverpod, Disco allows multiple providers of the same type — without relying on wrapper types or global identifiers.
+
+At the same time, Disco inherits one suboptimal trade-off:
+
+* **Lack of compile-time safety (from Provider)**: Because Disco uses locally scoped providers rather than global ones, it cannot offer the same level of compile-time safety as Riverpod. This is a known trade-off for gaining flexibility and locality.
+
+Additionally, Disco emphasizes:
+
+* **Injecting observables/signals directly**: It allows for the direct injection of observables or signals, which enables loose coupling with third-party state management solutions.
