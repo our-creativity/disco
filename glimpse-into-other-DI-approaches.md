@@ -1,11 +1,11 @@
 
 ## Quick look at Provider and Riverpod
 
-Let’s walk through how Provider and Riverpod work, focusing on what they pain points are.
+Let’s walk through how Provider and Riverpod work, focusing on what their pain points are.
 
 ### Glimpse into Provider
 
-The [`Provider`](https://pub.dev/packages/provider) package (and libraries built on top of it like [Bloc (BlocProvider component)](https://pub.dev/packages/flutter_bloc#blocprovider])) let you scope dependencies using the widget tree. However, **they rely entirely on types** to resolve injections.
+The [`Provider`](https://pub.dev/packages/provider) package and libraries built on top of it, such as [Bloc (BlocProvider component)](https://pub.dev/packages/flutter_bloc#blocprovider]), let you scope dependencies using the widget tree. However, **they rely entirely on types** to resolve injections.
 
 This means you can only have **one provider per type** in a branch of the tree.
 
@@ -110,4 +110,4 @@ Riverpod offers powerful modifiers like `family` and `autoDispose` to enhance pr
   * Providers are **not removed while any widget is listening**, potentially extending their lifecycle beyond expectations.
   * May cause unexpected disposal and recreation during fast navigation or widget rebuilds.
 
-Together, `family` and `autoDispose` enhance flexibility and resource handling in Riverpod but don’t offer true local, widget-tree-based scoping and lifecycle guarantees.
+Together, `family` and `autoDispose` enhance flexibility and resource handling in Riverpod but don’t offer true widget-tree-based scoping and lifecycle guarantees.
