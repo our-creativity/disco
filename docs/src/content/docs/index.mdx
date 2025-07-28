@@ -51,54 +51,9 @@ The package supports many features, like providers that accept arguments. But to
 
 **Disco** draws inspiration from both [Provider](https://pub.dev/packages/provider) and [Riverpod](https://pub.dev/packages/riverpod) — the two most widely used DI libraries in Flutter, both built around the concept of providers — while aiming to overcome their respective limitations. These libraries have significantly shaped how developers manage state and dependencies: **Provider** supports a simple, widget-tree–aligned scoping model, but does not allow multiple providers of the same type. **Riverpod**, by contrast, supports multiple providers of the same type, but relies on a globally structured architecture that breaks away from the widget tree.
 
-If you’d like to explore the pain points of Provider and Riverpod in more detail, see our short article [here](https://github.com/our-creativity/disco/blob/main/docs/glimpse-into-other-DI-approaches.md).
-
-### Disco: The best of both worlds
-
 **Disco** builds on the strengths of both while taking a different path. It is — **to our knowledge** — the **first and only solution** that supports **multiple providers of the same type** (without wrapper types or string keys) using a model that remains **fully local and naturally integrated into the Flutter widget tree** — while reducing the downsides of both to a minimum.
 
-#### Providers as identifiers
-
-You define providers as top-level identifiers. They can be of the same generic type, as in the example below.
-
-```dart
-final modelProvider = Provider((context) => Model());
-final secondModelProvider = Provider((context) => Model());
-```
-
-<Aside>Disco uses the **provider instance**, not the return type, to locate dependencies — allowing multiple providers of the same type *without confusion*.</Aside>
-
-#### Scoped where you need it
-
-You insert a `ProviderScope` **where** you want the providers to be active — no global registry required.
-
-```dart
-ProviderScope(
-  providers: [modelProvider, secondModelProvider],
-  child: MyWidget(),
-)
-```
-
-<Aside>This is **true scoping**, fully aligned with the widget tree.</Aside>
-
-#### Clean and type-safe injection
-
-No special widget base class is needed. Just call the `of` (or `maybeOf` if optional) method of the provider:
-
-```dart {6, 7}
-class InjectingWidget extends StatelessWidget {
-  const InjectingWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final model = modelProvider.of(context);
-    final secondModel = secondModelProvider.maybeOf(context);
-    return Text('$model, ${secondModel?.toString() ?? "(empty)"}');
-  }
-}
-```
-
-<Aside>Of course, providers — whether of the same type or not — do not need to be defined in the same scope to be used together, and they don’t need to be injected in the same widget either. This setup is just meant to demonstrate that it is possible.</Aside>
+If you would like to explore in detail the pain points of Provider and Riverpod, and how Disco compares, see our page [Comparison with alternatives](https://disco.mariuti.com/miscellaneous/comparison-with-alternatives/).
 
 ## Trade-offs
 
