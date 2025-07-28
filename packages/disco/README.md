@@ -17,7 +17,7 @@ Disco is a Flutter library that provides scoped dependency injection in a way th
 
 The full documentation can be consulted [here](https://disco.mariuti.com).
 
-## Table of content
+## Table of contents
 
 - [Simple usage example](#simple-usage-example)
 - [What makes this library unique](#what-makes-this-library-unique)
@@ -59,7 +59,7 @@ The package supports many features, like providers that accept arguments. But to
       @override
       Widget build(BuildContext context) {
         final model = modelProvider.of(context);
-        // return .. (use model here)
+        return Text(model.toString());
       }
     }
     ```
@@ -132,12 +132,12 @@ Below is a comparison of the trade-offs between the primary provider-based depen
 | **Works with default Flutter widgets**      | ✅ Compatible             | ❌ `ConsumerWidget` required        | ✅  Compatible                                      |
 | **Local state endorsed**            | ✅ Yes             | ❌ No                                   | ✅ Yes                                       |
 | **Circular dependencies possible**    | ✅ Never             | ❌ Yes, if the app is not carefully architectured        | ✅ Never   |
-| **Reactivity methods included**             | ✅ `context.watch`              | ✅ `ref.watch`, `ref.listen`                                       | ❌ Totally unopinionated on purpose¹  |
+| **Reactivity methods included**             | ✅ `context.watch`              | ✅ `ref.watch`, `ref.listen`                                       | ❌ Deliberately unopinionated¹  |
 | **Mutable state support**           | ⚠️ Usually done via `ChangeNotifier`       | ✅ Built-in                                                           | ⚠️ Allows mutable inner state via observables/signals             |
 | **Compile-time safety**             | ❌ Runtime error if provider not found | ✅ No runtime error possible                          | ❌ Runtime error if provider not found² |
 | **Fallback support**                | ❌ Not available; try-catch block necessary                                        | ✅ No need                                        | ✅ `maybeOf(context)` for optional injection                      |
 | **Modal compatibility**             | ⚠️ Needs to specify all required providers one by one                  | ✅ Scoped globally, no special handling needed                                                    | ✅ Needs `ProviderPortal`, which is a portal to the main tree (all providers are available)      |
-| **API simplicity**                  | ✅ Simple                             | ⚠️ Requires learning `WidgetRef`, `ConsumerWidget`, ... | ✅ Extremely simple                   |
+| **API simplicity**                  | ✅ Simple                             | ⚠️ Requires learning `WidgetRef`, `ConsumerWidget`, ... | ✅ Very simple                   |
 | **Ease of integration into state management** | ❌ Requires wiring | ❌ Requires wiring   | ✅ No integration needed, works out of the box |
 
 ¹ In Disco's defense regarding the **Reactivity methods included** point:
@@ -164,7 +164,7 @@ There are multiple examples on the repository:
 
 ### State management
 
-Like already mentioned in the trade-offs section, this package is not opinionated about reactivity: feel free to use your
+As mentioned earlier in the trade-offs section, this package is not opinionated about reactivity: feel free to use your
 state management solution of choice (as long as it is compatible with the
 concepts of the library).
 
@@ -181,11 +181,11 @@ Compatible state management solutions are those whose signals/observables can be
 
 State management solution entirely leveraging or endorsing global state, such as [`riverpod`](https://pub.dev/packages/riverpod), are not compatible with this library.
 
-### Development Activity
-
-This package is intentionally small and feature-complete, so you might not see frequent updates — but don’t worry; it is still actively maintained, and you can get help anytime from the community/devs if needed.
-
 ### Contributions
 
 PRs are welcome, especially for documentation and more examples.
 New features or breaking changes will have to be motivated.
+
+### Development Activity
+
+This package is intentionally small and feature-complete, so you might not see frequent updates — but don’t worry; it is still actively maintained, and you can get help anytime from the community/devs if needed.
