@@ -1,10 +1,7 @@
-## 1.0.3+2
-
-- **CHORE**: Fix automatic deployment to pub.dev (GitHub workflow).
-
 ## 1.0.3+1
 
 - **CHORE**: Improve documentation.
+- **CHORE**: Fix automatic deployment to pub.dev (GitHub workflow).
 
 ## 1.0.3
 
