@@ -53,7 +53,6 @@ The package supports many features, like providers that accept arguments. But to
 
     ```dart
     class InjectingWidget extends StatelessWidget {
-
       const InjectingWidget({super.key});
 
       @override
@@ -93,7 +92,7 @@ Below is a comparison of the trade-offs between the primary provider-based depen
 | **Fallback support**                | ❌ Not available; try-catch block necessary                                        | ✅ No need                                        | ✅ `maybeOf(context)` for optional injection                      |
 | **Modal compatibility**             | ⚠️ Needs to specify all required providers one by one                  | ✅ Scoped globally, no special handling needed                                                    | ✅ Needs `ProviderPortal`, which is a portal to the main tree (all providers are available)      |
 | **API simplicity**                  | ✅ Simple                             | ⚠️ Requires learning `WidgetRef`, `ConsumerWidget`, ... | ✅ Very simple                   |
-| **Ease of integration into state management** | ❌ Requires wiring | ❌ Requires wiring   | ✅ No integration needed, works out of the box |
+| **Ease of integration into 3rd-party state management solutions** | ❌ Requires wiring | ❌ Requires wiring   | ✅ No integration needed, works out of the box |
 
 ¹ In Disco's defense regarding the **Reactivity methods included** point:
 
