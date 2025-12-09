@@ -88,12 +88,16 @@ class ProviderScope extends StatefulWidget {
             // Forward reference detected!
             // Use O(1) lookup from reverse index map instead of O(n) search
             final currentProvider = initializingScope._indexToProvider[
-                currentIndex]!;
+                currentIndex];
+            assert(
+              currentProvider != null,
+              'Provider at index $currentIndex not found in reverse map',
+            );
             throw ProviderForwardReferenceError(
               requestedProvider: id,
               requestedIndex: requestedIndex,
               currentIndex: currentIndex,
-              currentProvider: currentProvider,
+              currentProvider: currentProvider!,
             );
           }
         }
@@ -223,6 +227,8 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Reverse map from index to provider for fast error reporting.
   /// Only populated during initialization for O(1) lookups.
+  /// Stores either Provider or ArgProvider instances (both extend Object).
+  /// Using Object as the type allows storing both without a union type.
   final _indexToProvider = HashMap<int, Object>();
 
   /// The index of the provider currently being created during initialization.
