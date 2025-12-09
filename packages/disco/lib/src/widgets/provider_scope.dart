@@ -86,20 +86,9 @@ class ProviderScope extends StatefulWidget {
         if (currentIndex != null && requestedIndex != null) {
           if (requestedIndex >= currentIndex) {
             // Forward reference detected!
-            // Find the current provider being created - could be a Provider
-            // or an ArgProvider
-            final currentProvider = initializingScope.allProvidersInScope.keys
-                    .cast<Provider?>()
-                    .firstWhere(
-                      (p) =>
-                          p != null &&
-                          initializingScope._providerIndices[p] == currentIndex,
-                      orElse: () => null,
-                    ) ??
-                // If not found in regular providers, it must be an ArgProvider
-                // accessing a regular Provider
-                initializingScope.allArgProvidersInScope.keys.firstWhere((ap) =>
-                    initializingScope._argProviderIndices[ap] == currentIndex);
+            // Use O(1) lookup from reverse index map instead of O(n) search
+            final currentProvider = initializingScope._indexToProvider[
+                currentIndex]!;
             throw ProviderForwardReferenceError(
               requestedProvider: id,
               requestedIndex: requestedIndex,
@@ -232,6 +221,10 @@ class ProviderScopeState extends State<ProviderScope> {
   /// Used to enforce ordering constraints during same-scope access.
   final _argProviderIndices = HashMap<ArgProvider, int>();
 
+  /// Reverse map from index to provider for fast error reporting.
+  /// Only populated during initialization for O(1) lookups.
+  final _indexToProvider = HashMap<int, Object>();
+
   /// The index of the provider currently being created during initialization.
   /// Null when not initializing. Used to detect forward/circular references.
   int? _currentlyCreatingProviderIndex;
@@ -252,38 +245,29 @@ class ProviderScopeState extends State<ProviderScope> {
     } finally {
       _currentlyInitializingScope = null;
       _currentlyCreatingProviderIndex = null;
+      // Clear reverse index map after initialization to save memory
+      // (only needed during initialization for error reporting)
+      _indexToProvider.clear();
     }
   }
 
   /// Validates that there are no duplicate providers in the list.
+  /// Optimized to use Sets for O(1) lookup and single-pass validation.
   void _validateProvidersUniqueness(List<InstantiableProvider> allProviders) {
-    // Check for duplicate Providers
     assert(
       () {
-        final providerIds = <Provider>[];
+        final providerIds = <Provider>{};
+        final argProviderIds = <ArgProvider>{};
+
         for (final item in allProviders) {
           if (item is Provider) {
-            if (providerIds.contains(item)) {
+            if (!providerIds.add(item)) {
               throw MultipleProviderOfSameInstance();
             }
-            providerIds.add(item);
-          }
-        }
-        return true;
-      }(),
-      '',
-    );
-
-    // Check for duplicate ArgProviders
-    assert(
-      () {
-        final argProviderIds = <ArgProvider>[];
-        for (final item in allProviders) {
-          if (item is InstantiableArgProvider) {
-            if (argProviderIds.contains(item._argProvider)) {
+          } else if (item is InstantiableArgProvider) {
+            if (!argProviderIds.add(item._argProvider)) {
               throw MultipleProviderOfSameInstance();
             }
-            argProviderIds.add(item._argProvider);
           }
         }
         return true;
@@ -305,6 +289,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // Track original index for ordering validation
         _providerIndices[id] = i;
+        _indexToProvider[i] = id;
 
         // In this case, the provider put in scope can be the ID itself.
         allProvidersInScope[id] = provider;
@@ -314,6 +299,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // Track original index for ordering validation
         _argProviderIndices[id] = i;
+        _indexToProvider[i] = id;
 
         final provider =
             instantiableArgProvider._argProvider._generateIntermediateProvider(
