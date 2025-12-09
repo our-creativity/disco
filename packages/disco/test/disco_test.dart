@@ -187,8 +187,8 @@ void main() {
     );
     expect(
       tester.takeException(),
-      const TypeMatcher<ArgProviderWithoutScopeError>().having(
-        (error) => error.argProvider,
+      const TypeMatcher<ProviderWithoutScopeError>().having(
+        (error) => error.provider,
         'Matching the wrong ID should result in a ProviderError.',
         equals(numberProvider),
       ),
@@ -767,7 +767,7 @@ void main() {
 
     expect(
       tester.takeException(),
-      const TypeMatcher<MultipleProviderOverrideOfSameProviderInstance>(),
+      const TypeMatcher<MultipleProviderOverrideOfSameInstance>(),
     );
   });
 
@@ -797,6 +797,277 @@ void main() {
     expect(
       tester.takeException(),
       const TypeMatcher<MultipleProviderOfSameInstance>(),
+    );
+  });
+
+  // Same-scope provider access tests
+  testWidgets('Provider can access earlier provider in same scope (non-lazy)',
+      (tester) async {
+    final numberProvider = Provider((_) => 5, lazy: false);
+    final doubleProvider = Provider((context) {
+      final number = numberProvider.of(context);
+      return number * 2;
+    }, lazy: false);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [numberProvider, doubleProvider],
+            child: Builder(
+              builder: (context) {
+                final double = doubleProvider.of(context);
+                return Text(double.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('10'), findsOneWidget);
+  });
+
+  testWidgets('Throws ProviderForwardReferenceError on forward reference',
+      (tester) async {
+    final numberProvider = Provider<int>((_) => 5, lazy: false);
+    final doubleProvider = Provider<int>((context) {
+      final number = numberProvider.of(context); // Forward reference!
+      return number * 2;
+    }, lazy: false);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            // Wrong order: doubleProvider depends on numberProvider
+            // but comes first
+            providers: [doubleProvider, numberProvider],
+            child: Container(),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.takeException(),
+      const TypeMatcher<ProviderForwardReferenceError>(),
+    );
+  });
+
+  testWidgets('Lazy provider can access earlier lazy provider', (tester) async {
+    final numberProvider = Provider((_) => 5); // lazy by default
+    final doubleProvider = Provider((context) {
+      final number = numberProvider.of(context);
+      return number * 2;
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [numberProvider, doubleProvider],
+            child: Builder(
+              builder: (context) {
+                final double = doubleProvider.of(context);
+                return Text(double.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('10'), findsOneWidget);
+  });
+
+  testWidgets('Non-lazy provider can access lazy earlier provider',
+      (tester) async {
+    final numberProvider = Provider((_) => 5); // lazy
+    final doubleProvider = Provider((context) {
+      final number = numberProvider.of(context);
+      return number * 2;
+    }, lazy: false); // non-lazy
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [numberProvider, doubleProvider],
+            child: Builder(
+              builder: (context) {
+                final double = doubleProvider.of(context);
+                return Text(double.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // doubleProvider's creation should trigger numberProvider's creation
+    expect(find.text('10'), findsOneWidget);
+  });
+
+  testWidgets('ArgProvider can access earlier provider in same scope',
+      (tester) async {
+    final numberProvider = Provider((_) => 5, lazy: false);
+    final multiplierProvider = Provider.withArgument(
+      (context, int multiplier) {
+        final number = numberProvider.of(context);
+        return number * multiplier;
+      },
+      lazy: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [numberProvider, multiplierProvider(3)],
+            child: Builder(
+              builder: (context) {
+                final result = multiplierProvider.of(context);
+                return Text(result.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('15'), findsOneWidget);
+  });
+
+  testWidgets('Nested provider dependencies work (A→B→C)', (tester) async {
+    final aProvider = Provider((_) => 1, lazy: false);
+    final bProvider = Provider((context) {
+      return aProvider.of(context) + 1;
+    }, lazy: false);
+    final cProvider = Provider((context) {
+      return bProvider.of(context) + 1;
+    }, lazy: false);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [aProvider, bProvider, cProvider],
+            child: Builder(
+              builder: (context) {
+                final c = cProvider.of(context);
+                return Text(c.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('3'), findsOneWidget);
+  });
+
+  testWidgets('Mixed Provider and ArgProvider respect order', (tester) async {
+    final numberProvider = Provider((_) => 5, lazy: false);
+    final argProvider = Provider.withArgument(
+      (context, String prefix) {
+        final number = numberProvider.of(context);
+        return '$prefix$number';
+      },
+      lazy: false,
+    );
+    final combineProvider = Provider((context) {
+      final str = argProvider.of(context);
+      return '$str!';
+    }, lazy: false);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [
+              numberProvider, // index 0
+              argProvider('num:'), // index 1
+              combineProvider, // index 2
+            ],
+            child: Builder(
+              builder: (context) {
+                final result = combineProvider.of(context);
+                return Text(result);
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('num:5!'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Throws ProviderForwardReferenceError when ArgProvider '
+      'accesses later Provider', (tester) async {
+    final numberProvider = Provider<int>((_) => 5, lazy: false);
+    final multiplierProvider = Provider.withArgument<int, int>(
+      (context, int multiplier) {
+        final number = numberProvider.of(context); // Forward reference!
+        return number * multiplier;
+      },
+      lazy: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            // Wrong order: multiplierProvider depends on numberProvider
+            // but comes first
+            providers: [multiplierProvider(3), numberProvider],
+            child: Container(),
+          ),
+        ),
+      ),
+    );
+
+    // ArgProvider accessing a regular Provider throws
+    // ProviderForwardReferenceError
+    expect(
+      tester.takeException(),
+      const TypeMatcher<ProviderForwardReferenceError>(),
+    );
+  });
+
+  testWidgets(
+      'Throws ArgProviderForwardReferenceError when accessing '
+      'later ArgProvider', (tester) async {
+    final secondArgProvider = Provider.withArgument<int, int>(
+      (context, int arg) => arg * 2,
+      lazy: false,
+    );
+    final firstArgProvider = Provider.withArgument<int, int>(
+      (context, int arg) {
+        final second = secondArgProvider.of(context); // Forward reference!
+        return arg + second;
+      },
+      lazy: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            // Wrong order: firstArgProvider depends on secondArgProvider
+            // but comes first
+            providers: [firstArgProvider(5), secondArgProvider(3)],
+            child: Container(),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.takeException(),
+      const TypeMatcher<ProviderForwardReferenceError>(),
     );
   });
 }

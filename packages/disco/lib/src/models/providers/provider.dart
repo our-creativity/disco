@@ -36,6 +36,7 @@ class Provider<T extends Object> extends InstantiableProvider {
 
     /// {@macro Provider.lazy}
     bool? lazy,
+    this.debugName,
   })  : _createValue = create,
         _disposeValue = dispose,
         _lazy = lazy ?? DiscoConfig.lazy,
@@ -46,8 +47,9 @@ class Provider<T extends Object> extends InstantiableProvider {
     CreateArgProviderValueFn<T, A> create, {
     DisposeProviderValueFn<T>? dispose,
     bool lazy = true,
+    String? debugName,
   }) =>
-      ArgProvider._(create, dispose: dispose, lazy: lazy);
+      ArgProvider._(create, dispose: dispose, lazy: lazy, debugName: debugName);
 
   /// {@template Provider.lazy}
   /// Makes the creation of the provided value lazy. defaults to true.
@@ -118,4 +120,9 @@ class Provider<T extends Object> extends InstantiableProvider {
 
   /// Returns the type of the value.
   Type get _valueType => T;
+
+  /// {@template Provider.debugName}
+  /// An optional debug name for this provider.
+  /// {@endtemplate}
+  final String? debugName;
 }

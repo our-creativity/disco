@@ -1,3 +1,8 @@
+## 2.0.0
+
+- **FEAT**: Allow providers declared in the same `ProviderScope` to depend on each other, by leveraging the order of declaration. This simplifies the development experience and prevents circular dependencies by design.
+- **FEAT**: Add `debugName` parameter to providers for easier debugging, allowing better identification of providers in error messages and logs.
+
 ## 1.0.3+1
 
 - **CHORE**: Improve documentation.
