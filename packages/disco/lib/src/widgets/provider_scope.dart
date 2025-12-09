@@ -245,172 +245,197 @@ class ProviderScopeState extends State<ProviderScope> {
 
     try {
       if (widget.providers != null) {
-        final allProviders = widget.providers!;
-        // Check for duplicate Providers
-        assert(
-          () {
-            final providerIds = <Provider>[];
-            for (final item in allProviders) {
-              if (item is Provider) {
-                if (providerIds.contains(item)) {
-                  throw MultipleProviderOfSameInstance();
-                }
-                providerIds.add(item);
-              }
-            }
-            return true;
-          }(),
-          '',
-        );
-
-        // Check for duplicate ArgProviders
-        assert(
-          () {
-            final argProviderIds = <ArgProvider>[];
-            for (final item in allProviders) {
-              if (item is InstantiableArgProvider) {
-                if (argProviderIds.contains(item._argProvider)) {
-                  throw MultipleProviderOfSameInstance();
-                }
-                argProviderIds.add(item._argProvider);
-              }
-            }
-            return true;
-          }(),
-          '',
-        );
-
-        // PHASE 1: Register all providers and track indices
-        // This must be done before creating any providers so that
-        // isProviderInScope() works correctly during creation
-        for (var i = 0; i < allProviders.length; i++) {
-          final item = allProviders[i];
-
-          if (item is Provider) {
-            final provider = item;
-            final id = provider;
-
-            // Track original index for ordering validation
-            _providerIndices[id] = i;
-
-            // In this case, the provider put in scope can be the ID itself.
-            allProvidersInScope[id] = provider;
-          } else if (item is InstantiableArgProvider) {
-            final instantiableArgProvider = item;
-            final id = instantiableArgProvider._argProvider;
-
-            // Track original index for ordering validation
-            _argProviderIndices[id] = i;
-
-            final provider = instantiableArgProvider._argProvider
-                ._generateIntermediateProvider(
-              instantiableArgProvider._arg,
-            );
-            allArgProvidersInScope[id] = provider;
-          }
-        }
-
-        // PHASE 2: Create non-lazy providers
-        // Now that all providers are registered, we can create them
-        for (var i = 0; i < allProviders.length; i++) {
-          final item = allProviders[i];
-
-          if (item is Provider) {
-            final provider = item;
-            final id = provider;
-
-            // create non lazy providers.
-            if (!provider._lazy) {
-              _currentlyCreatingProviderIndex = i;
-              createdProviderValues[id] = provider._createValue(context);
-              _currentlyCreatingProviderIndex = null;
-            }
-          } else if (item is InstantiableArgProvider) {
-            final instantiableArgProvider = item;
-            final id = instantiableArgProvider._argProvider;
-
-            // create non lazy providers.
-            if (!instantiableArgProvider._argProvider._lazy) {
-              _currentlyCreatingProviderIndex = i;
-              createdProviderValues[allArgProvidersInScope[id]!] =
-                  allArgProvidersInScope[id]!._createValue(context);
-              _currentlyCreatingProviderIndex = null;
-            }
-          }
-        }
+        _initializeProviders(widget.providers!);
       } else if (widget.overrides != null) {
-        final providerOverrides =
-            widget.overrides!.whereType<ProviderOverride<Object>>().toList();
-
-        assert(
-          () {
-            // check if there are multiple providers of the same type
-            final ids = <Provider>[];
-            for (final override in providerOverrides) {
-              final id = override._provider; // the instance of the provider
-              if (ids.contains(id)) {
-                throw MultipleProviderOverrideOfSameInstance();
-              }
-              ids.add(id);
-            }
-            return true;
-          }(),
-          '',
-        );
-
-        for (final override in providerOverrides) {
-          final id = override._provider;
-
-          allProvidersInScope[id] = override._generateIntermediateProvider();
-
-          // create providers (they are never lazy in the case of overrides)
-          {
-            // create and store the provider
-            createdProviderValues[id] =
-                allProvidersInScope[id]!._createValue(context);
-          }
-        }
-
-        final argProviderOverrides = widget.overrides!
-            .whereType<ArgProviderOverride<Object, dynamic>>()
-            .toList();
-
-        assert(
-          () {
-            // check if there are multiple providers of the same type
-            final ids = <ArgProvider>[];
-            for (final override in argProviderOverrides) {
-              final id = override._argProvider; // the instance of the provider
-              if (ids.contains(id)) {
-                throw MultipleProviderOfSameInstance();
-              }
-              ids.add(id);
-            }
-            return true;
-          }(),
-          '',
-        );
-
-        for (final override in argProviderOverrides) {
-          final id = override._argProvider;
-
-          allArgProvidersInScope[id] = override._generateIntermediateProvider();
-
-          // create providers (they are never lazy in the case of overrides)
-          {
-            // the intermediate ID is a reference to the associated generated
-            // intermediate provider
-            final intermediateId = allArgProvidersInScope[id]!;
-            // create and store the provider
-            createdProviderValues[intermediateId] =
-                allArgProvidersInScope[id]!._createValue(context);
-          }
-        }
+        _initializeOverrides(widget.overrides!);
       }
     } finally {
       _currentlyInitializingScope = null;
       _currentlyCreatingProviderIndex = null;
     }
+  }
+
+  /// Validates that there are no duplicate providers in the list.
+  void _validateProvidersUniqueness(List<InstantiableProvider> allProviders) {
+    // Check for duplicate Providers
+    assert(
+      () {
+        final providerIds = <Provider>[];
+        for (final item in allProviders) {
+          if (item is Provider) {
+            if (providerIds.contains(item)) {
+              throw MultipleProviderOfSameInstance();
+            }
+            providerIds.add(item);
+          }
+        }
+        return true;
+      }(),
+      '',
+    );
+
+    // Check for duplicate ArgProviders
+    assert(
+      () {
+        final argProviderIds = <ArgProvider>[];
+        for (final item in allProviders) {
+          if (item is InstantiableArgProvider) {
+            if (argProviderIds.contains(item._argProvider)) {
+              throw MultipleProviderOfSameInstance();
+            }
+            argProviderIds.add(item._argProvider);
+          }
+        }
+        return true;
+      }(),
+      '',
+    );
+  }
+
+  /// PHASE 1: Registers all providers and tracks their indices.
+  /// This must be done before creating any providers so that
+  /// isProviderInScope() works correctly during creation.
+  void _registerAllProviders(List<InstantiableProvider> allProviders) {
+    for (var i = 0; i < allProviders.length; i++) {
+      final item = allProviders[i];
+
+      if (item is Provider) {
+        final provider = item;
+        final id = provider;
+
+        // Track original index for ordering validation
+        _providerIndices[id] = i;
+
+        // In this case, the provider put in scope can be the ID itself.
+        allProvidersInScope[id] = provider;
+      } else if (item is InstantiableArgProvider) {
+        final instantiableArgProvider = item;
+        final id = instantiableArgProvider._argProvider;
+
+        // Track original index for ordering validation
+        _argProviderIndices[id] = i;
+
+        final provider =
+            instantiableArgProvider._argProvider._generateIntermediateProvider(
+          instantiableArgProvider._arg,
+        );
+        allArgProvidersInScope[id] = provider;
+      }
+    }
+  }
+
+  /// PHASE 2: Creates non-lazy providers.
+  /// Now that all providers are registered, we can create them.
+  void _createNonLazyProviders(List<InstantiableProvider> allProviders) {
+    for (var i = 0; i < allProviders.length; i++) {
+      final item = allProviders[i];
+
+      if (item is Provider) {
+        final provider = item;
+        final id = provider;
+
+        // create non lazy providers.
+        if (!provider._lazy) {
+          _currentlyCreatingProviderIndex = i;
+          createdProviderValues[id] = provider._createValue(context);
+          _currentlyCreatingProviderIndex = null;
+        }
+      } else if (item is InstantiableArgProvider) {
+        final instantiableArgProvider = item;
+        final id = instantiableArgProvider._argProvider;
+
+        // create non lazy providers.
+        if (!instantiableArgProvider._argProvider._lazy) {
+          _currentlyCreatingProviderIndex = i;
+          createdProviderValues[allArgProvidersInScope[id]!] =
+              allArgProvidersInScope[id]!._createValue(context);
+          _currentlyCreatingProviderIndex = null;
+        }
+      }
+    }
+  }
+
+  /// Initializes providers by validating, registering, and creating them.
+  void _initializeProviders(List<InstantiableProvider> allProviders) {
+    _validateProvidersUniqueness(allProviders);
+    _registerAllProviders(allProviders);
+    _createNonLazyProviders(allProviders);
+  }
+
+  /// Processes provider overrides by validating uniqueness and creating them.
+  void _processProviderOverrides(
+    List<ProviderOverride<Object>> providerOverrides,
+  ) {
+    assert(
+      () {
+        // check if there are multiple providers of the same type
+        final ids = <Provider>[];
+        for (final override in providerOverrides) {
+          final id = override._provider; // the instance of the provider
+          if (ids.contains(id)) {
+            throw MultipleProviderOverrideOfSameInstance();
+          }
+          ids.add(id);
+        }
+        return true;
+      }(),
+      '',
+    );
+
+    for (final override in providerOverrides) {
+      final id = override._provider;
+
+      allProvidersInScope[id] = override._generateIntermediateProvider();
+
+      // create providers (they are never lazy in the case of overrides)
+      createdProviderValues[id] =
+          allProvidersInScope[id]!._createValue(context);
+    }
+  }
+
+  /// Processes arg provider overrides by validating uniqueness and creating
+  /// them.
+  void _processArgProviderOverrides(
+    List<ArgProviderOverride<Object, dynamic>> argProviderOverrides,
+  ) {
+    assert(
+      () {
+        // check if there are multiple providers of the same type
+        final ids = <ArgProvider>[];
+        for (final override in argProviderOverrides) {
+          final id = override._argProvider; // the instance of the provider
+          if (ids.contains(id)) {
+            throw MultipleProviderOfSameInstance();
+          }
+          ids.add(id);
+        }
+        return true;
+      }(),
+      '',
+    );
+
+    for (final override in argProviderOverrides) {
+      final id = override._argProvider;
+
+      allArgProvidersInScope[id] = override._generateIntermediateProvider();
+
+      // create providers (they are never lazy in the case of overrides)
+      final intermediateId = allArgProvidersInScope[id]!;
+      createdProviderValues[intermediateId] =
+          allArgProvidersInScope[id]!._createValue(context);
+    }
+  }
+
+  /// Initializes overrides by processing both provider and arg provider
+  /// overrides.
+  void _initializeOverrides(List<Override> overrides) {
+    final providerOverrides =
+        overrides.whereType<ProviderOverride<Object>>().toList();
+    _processProviderOverrides(providerOverrides);
+
+    final argProviderOverrides =
+        overrides.whereType<ArgProviderOverride<Object, dynamic>>().toList();
+    _processArgProviderOverrides(argProviderOverrides);
   }
 
   @override
