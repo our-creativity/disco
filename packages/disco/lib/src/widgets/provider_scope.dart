@@ -650,7 +650,9 @@ class ProviderWithoutScopeError extends Error {
     final name = switch (provider) {
       final Provider p => p._debugName,
       final ArgProvider ap => ap._debugName,
+      // coverage:ignore-start
       _ => throw Exception('Unknown provider type ${provider.runtimeType}'),
+      // coverage:ignore-end
     };
 
     return 'Seems like that you forgot to provide the provider of type $name '
@@ -719,14 +721,18 @@ class ProviderForwardReferenceError extends Error {
     final currentName = switch (currentProvider) {
       final Provider p => p._debugName,
       final ArgProvider ap => ap._debugName,
+      // coverage:ignore-start
       _ =>
         throw Exception('Unknown provider type ${currentProvider.runtimeType}'),
+      // coverage:ignore-end
     };
     final requestedName = switch (requestedProvider) {
       final Provider p => p._debugName,
       final ArgProvider ap => ap._debugName,
+      // coverage:ignore-start
       _ => throw Exception(
           'Unknown provider type ${requestedProvider.runtimeType}'),
+      // coverage:ignore-end
     };
 
     return 'Forward reference detected!\n\n'
