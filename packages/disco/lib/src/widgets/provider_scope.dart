@@ -114,9 +114,9 @@ class ProviderScope extends StatefulWidget {
         final providerId = getProviderId(initializingScope, id);
         final createdProvider =
             initializingScope.createdProviderValues[providerId];
-        // coverage:ignore-start
+// coverage:ignore-start
         if (createdProvider != null) return createdProvider as T;
-        // coverage:ignore-end
+// coverage:ignore-end
 
         // Not created yet - create it now (for lazy providers)
         return createValue(initializingScope, id, context);
@@ -539,7 +539,7 @@ class ProviderScopeState extends State<ProviderScope> {
     );
   }
 
-  // coverage:ignore-start
+// coverage:ignore-start
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
@@ -547,7 +547,7 @@ class ProviderScopeState extends State<ProviderScope> {
       IterableProperty('createdProviderValues', createdProviderValues.values),
     );
   }
-  // coverage:ignore-end
+// coverage:ignore-end
 }
 
 @immutable
@@ -556,12 +556,12 @@ class _InheritedProvider extends InheritedModel<Object> {
 
   final ProviderScopeState state;
 
-  // coverage:ignore-start
+// coverage:ignore-start
   @override
   bool updateShouldNotify(covariant _InheritedProvider oldWidget) {
     return false;
   }
-  // coverage:ignore-end
+// coverage:ignore-end
 
   bool isSupportedAspectWithType(
     Provider? providerId,
@@ -577,7 +577,7 @@ class _InheritedProvider extends InheritedModel<Object> {
     return state.isArgProviderInScope(argProviderId!);
   }
 
-  // coverage:ignore-start
+// coverage:ignore-start
   @override
   bool updateShouldNotifyDependent(
     covariant _InheritedProvider oldWidget,
@@ -585,7 +585,7 @@ class _InheritedProvider extends InheritedModel<Object> {
   ) {
     return false;
   }
-  // coverage:ignore-end
+// coverage:ignore-end
 
   /// The following two methods are taken from [InheritedModel] and modified
   /// in order to find the first [_InheritedProvider] ancestor that contains
@@ -677,9 +677,9 @@ class ProviderWithoutScopeError extends Error {
     final name = switch (provider) {
       final Provider p => p._debugName,
       final ArgProvider ap => ap._debugName,
-      // coverage:ignore-start
+// coverage:ignore-start
       _ => throw Exception('Unknown provider type ${provider.runtimeType}'),
-      // coverage:ignore-end
+// coverage:ignore-end
     };
 
     return 'Seems like that you forgot to provide the provider of type $name '
@@ -748,18 +748,18 @@ class ProviderForwardReferenceError extends Error {
     final currentName = switch (currentProvider) {
       final Provider p => p._debugName,
       final ArgProvider ap => ap._debugName,
-      // coverage:ignore-start
+// coverage:ignore-start
       _ =>
         throw Exception('Unknown provider type ${currentProvider.runtimeType}'),
-      // coverage:ignore-end
+// coverage:ignore-end
     };
     final requestedName = switch (requestedProvider) {
       final Provider p => p._debugName,
       final ArgProvider ap => ap._debugName,
-      // coverage:ignore-start
+// coverage:ignore-start
       _ => throw Exception(
           'Unknown provider type ${requestedProvider.runtimeType}'),
-      // coverage:ignore-end
+// coverage:ignore-end
     };
 
     return 'Forward reference detected!\n\n'
