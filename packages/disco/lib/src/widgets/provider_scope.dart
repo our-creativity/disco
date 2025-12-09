@@ -228,6 +228,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// The provider object currently being created during initialization.
   /// Null when not initializing. Used for error reporting.
+  /// Can be either a Provider or ArgProvider instance.
   Object? _currentlyCreatingProvider;
 
   @override
