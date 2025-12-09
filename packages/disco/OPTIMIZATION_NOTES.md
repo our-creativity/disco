@@ -219,10 +219,11 @@ void _registerAllProviders(List<InstantiableProvider> allProviders) {
     final item = allProviders[i];
     
     if (item is Provider) {
-      // Check if provider closure references other providers
-      if (_providerHasDependencies(item)) {
-        _hasDependencies = true;
-      }
+      // NOTE: Dependency detection is complex and would require either:
+      // 1. Static analysis of provider closures (compile-time)
+      // 2. Runtime tracking during first access (lazy detection)
+      // 3. Explicit developer annotation (e.g., @DependsOn(['otherProvider']))
+      // This is pseudocode showing the concept, not a complete implementation.
       
       if (_hasDependencies) {
         _providerIndices[item] = i;
@@ -360,11 +361,30 @@ Future<void> _createNonLazyProvidersParallel(
 
 **API Impact**: Would require making ProviderScope initialization async:
 ```dart
-await ProviderScope(
-  providers: expensiveProviders,
-  child: MyApp(),
-);
+// This API is NOT feasible in Flutter's synchronous widget system!
+// Widgets cannot be awaited, and build methods are synchronous.
+// 
+// Alternative approaches:
+// 1. Separate initialization phase:
+//    FutureBuilder(
+//      future: preloadProviders(expensiveProviders),
+//      builder: (context, snapshot) {
+//        if (!snapshot.hasData) return LoadingWidget();
+//        return ProviderScope(providers: snapshot.data, child: MyApp());
+//      }
+//    )
+//
+// 2. Callback-based:
+//    ProviderScope(
+//      providers: expensiveProviders,
+//      onInitialized: () => print('Ready!'),
+//      child: MyApp(),
+//    )
+//
+// 3. Keep synchronous API, do async work in provider creation functions
 ```
+
+**Conclusion**: Parallel initialization is theoretically possible but requires careful API design to work within Flutter's synchronous widget constraints. Most practical use cases would be better served by making individual provider creation functions async rather than parallelizing the ProviderScope itself.
 
 ### Not Recommended
 

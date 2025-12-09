@@ -51,20 +51,33 @@ jobs:
           # Run benchmark and capture output
           flutter test benchmark/provider_benchmark.dart 2>&1 | tee benchmark_output.txt
           
-          # Extract benchmark results and add to table
-          grep "Create 100 simple eager providers:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Create 100 simple eager providers | \1 |/' >> benchmark_results.md || echo "| Create 100 simple eager providers | N/A |" >> benchmark_results.md
-          grep "Create 100 simple lazy providers:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Create 100 simple lazy providers | \1 |/' >> benchmark_results.md || echo "| Create 100 simple lazy providers | N/A |" >> benchmark_results.md
-          grep "Create 50 providers with dependencies:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Create 50 providers with dependencies | \1 |/' >> benchmark_results.md || echo "| Create 50 providers with dependencies | N/A |" >> benchmark_results.md
-          grep "Retrieve 100 lazy provider values:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Retrieve 100 lazy provider values | \1 |/' >> benchmark_results.md || echo "| Retrieve 100 lazy provider values | N/A |" >> benchmark_results.md
-          grep "Create 100 ArgProviders:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Create 100 ArgProviders | \1 |/' >> benchmark_results.md || echo "| Create 100 ArgProviders | N/A |" >> benchmark_results.md
-          grep "Access 100 providers in nested scopes:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Access 100 providers in nested scopes | \1 |/' >> benchmark_results.md || echo "| Access 100 providers in nested scopes | N/A |" >> benchmark_results.md
-          grep "Complex dependency chain with 30 providers:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Complex dependency chain (30 providers) | \1 |/' >> benchmark_results.md || echo "| Complex dependency chain (30 providers) | N/A |" >> benchmark_results.md
-          grep "Mixed lazy and eager providers" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Mixed lazy and eager (100 total) | \1 |/' >> benchmark_results.md || echo "| Mixed lazy and eager (100 total) | N/A |" >> benchmark_results.md
-          grep "ArgProviders with dependencies" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| ArgProviders with dependencies (50) | \1 |/' >> benchmark_results.md || echo "| ArgProviders with dependencies (50) | N/A |" >> benchmark_results.md
-          grep "Large scale - 500 providers:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Large scale (500 providers) | \1 |/' >> benchmark_results.md || echo "| Large scale (500 providers) | N/A |" >> benchmark_results.md
-          grep "Deep dependency chain" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Deep dependency chain (100 levels) | \1 |/' >> benchmark_results.md || echo "| Deep dependency chain (100 levels) | N/A |" >> benchmark_results.md
-          grep "Wide dependency tree" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Wide dependency tree (100 dependents) | \1 |/' >> benchmark_results.md || echo "| Wide dependency tree (100 dependents) | N/A |" >> benchmark_results.md
-          grep "Multiple nested scopes" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Multiple nested scopes (5 levels) | \1 |/' >> benchmark_results.md || echo "| Multiple nested scopes (5 levels) | N/A |" >> benchmark_results.md
+          # Define benchmark patterns and labels
+          declare -a patterns=(
+            "Create 100 simple eager providers:|Create 100 simple eager providers"
+            "Create 100 simple lazy providers:|Create 100 simple lazy providers"
+            "Create 50 providers with dependencies:|Create 50 providers with dependencies"
+            "Retrieve 100 lazy provider values:|Retrieve 100 lazy provider values"
+            "Create 100 ArgProviders:|Create 100 ArgProviders"
+            "Access 100 providers in nested scopes:|Access 100 providers in nested scopes"
+            "Complex dependency chain with 30 providers:|Complex dependency chain (30 providers)"
+            "Mixed lazy and eager providers|Mixed lazy and eager (100 total)"
+            "ArgProviders with dependencies|ArgProviders with dependencies (50)"
+            "Large scale - 500 providers:|Large scale (500 providers)"
+            "Deep dependency chain|Deep dependency chain (100 levels)"
+            "Wide dependency tree|Wide dependency tree (100 dependents)"
+            "Multiple nested scopes|Multiple nested scopes (5 levels)"
+          )
+          
+          # Extract benchmark results using loop
+          for pattern_label in "${patterns[@]}"; do
+            IFS='|' read -r pattern label <<< "$pattern_label"
+            if grep -q "$pattern" benchmark_output.txt; then
+              time=$(grep "$pattern" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/\1/')
+              echo "| $label | $time |" >> benchmark_results.md
+            else
+              echo "| $label | N/A |" >> benchmark_results.md
+            fi
+          done
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
