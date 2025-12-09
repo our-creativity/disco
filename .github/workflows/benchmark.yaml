@@ -34,21 +34,25 @@ jobs:
         run: flutter pub get
         working-directory: packages/disco
 
-      - name: Run benchmarks
+      - name: Run benchmarks (Debug Mode - Worst Case)
         working-directory: packages/disco
         run: |
-          echo "# Provider Benchmark Results" > benchmark_results.md
+          echo "# Provider Benchmark Results (Debug Mode)" > benchmark_results.md
           echo "" >> benchmark_results.md
           echo "**Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> benchmark_results.md
+          echo "**Mode**: Debug (worst-case with all validation)" >> benchmark_results.md
           echo "**Flutter**: $(flutter --version | head -n 1)" >> benchmark_results.md
           echo "**Dart**: $(dart --version | head -n 1)" >> benchmark_results.md
+          echo "" >> benchmark_results.md
+          echo "> Note: Benchmarks run in debug mode to measure worst-case performance." >> benchmark_results.md
+          echo "> Release mode will be significantly faster (zero validation overhead)." >> benchmark_results.md
           echo "" >> benchmark_results.md
           echo "## Results" >> benchmark_results.md
           echo "" >> benchmark_results.md
           echo "| Benchmark | Time (ms) |" >> benchmark_results.md
           echo "|-----------|-----------|" >> benchmark_results.md
           
-          # Run benchmark and capture output
+          # Run benchmark in debug mode (default for flutter test)
           flutter test benchmark/provider_benchmark.dart 2>&1 | tee benchmark_output.txt
           
           # Define benchmark patterns and labels

@@ -4,12 +4,16 @@ This directory contains comprehensive benchmarks for testing provider performanc
 
 ## Running the Benchmarks
 
-To run all benchmarks:
+To run all benchmarks (debug mode - worst case):
 
 ```bash
 cd packages/disco
 flutter test benchmark/provider_benchmark.dart
 ```
+
+**Important**: Benchmarks run in **debug mode** by default, which measures the **worst-case performance** including all validation overhead (forward reference detection, index tracking, etc.). 
+
+**Release mode** will be significantly faster with zero validation overhead. The debug mode benchmarks help ensure that even with full validation enabled, performance remains acceptable during development.
 
 ## Benchmark Scenarios
 
@@ -74,7 +78,11 @@ flutter test benchmark/provider_benchmark.dart
 
 ### Latest Benchmark Results
 
-The table below shows the most recent benchmark results from the CI pipeline. Results will vary based on:
+The table below shows the most recent benchmark results from the CI pipeline. 
+
+**Mode**: Debug mode (worst-case with all validation overhead)
+
+Results will vary based on:
 - CPU performance
 - Available memory
 - Flutter version
@@ -96,8 +104,11 @@ The table below shows the most recent benchmark results from the CI pipeline. Re
 | Wide dependency tree (100 dependents) | _See CI_ | Maximum breadth stress test |
 | Multiple nested scopes (5 levels) | _See CI_ | Deep nesting performance |
 
-> **Note**: Benchmark results are automatically updated by the CI pipeline on each PR and push to main/dev branches.
-> View the latest results in the workflow artifacts or PR comments.
+> **Note**: 
+> - Benchmark results are automatically updated by the CI pipeline on each PR and push to main/dev branches
+> - Benchmarks run in **debug mode** to measure worst-case performance with all validation enabled
+> - **Release mode performance** will be significantly better (zero validation overhead)
+> - View the latest results in the workflow artifacts or PR comments
 
 ### Running Benchmarks Locally
 
@@ -108,7 +119,24 @@ cd packages/disco
 flutter test benchmark/provider_benchmark.dart
 ```
 
-Compare your results with the CI benchmarks to understand performance on different hardware.
+This runs in debug mode by default (worst-case scenario). Compare your results with the CI benchmarks to understand performance on different hardware.
+
+### Debug Mode vs Release Mode Performance
+
+The benchmarks intentionally run in **debug mode** to measure the worst-case scenario:
+
+- **Debug Mode** (Benchmarked): 
+  - All validation enabled (forward reference detection, duplicate checking)
+  - Index tracking and error reporting overhead
+  - Represents developer experience during development
+  
+- **Release Mode** (Production):
+  - Zero validation overhead (forward reference detection disabled)
+  - No index tracking or HashMap creation
+  - ~10-20% faster than debug mode benchmarks
+  - True production performance
+
+This approach ensures that even with full validation, performance remains acceptable during development.
 
 ## Automated Benchmarking
 
