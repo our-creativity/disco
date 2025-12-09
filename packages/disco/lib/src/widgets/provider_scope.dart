@@ -243,10 +243,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
     try {
       if (widget.providers != null) {
-        // Providers and ArgProviders logic ------------------------------------
-
         final allProviders = widget.providers!;
-
         // Check for duplicate Providers
         assert(
           () {
@@ -282,7 +279,7 @@ class ProviderScopeState extends State<ProviderScope> {
         );
 
         // PHASE 1: Register all providers and track indices
-        // This must be done BEFORE creating any providers so that
+        // This must be done before creating any providers so that
         // isProviderInScope() works correctly during creation
         for (var i = 0; i < allProviders.length; i++) {
           final item = allProviders[i];
@@ -291,7 +288,7 @@ class ProviderScopeState extends State<ProviderScope> {
             final provider = item;
             final id = provider;
 
-            // Track ORIGINAL index for ordering validation
+            // Track original index for ordering validation
             _providerIndices[id] = i;
 
             // In this case, the provider put in scope can be the ID itself.
@@ -300,7 +297,7 @@ class ProviderScopeState extends State<ProviderScope> {
             final instantiableArgProvider = item;
             final id = instantiableArgProvider._argProvider;
 
-            // Track ORIGINAL index for ordering validation
+            // Track original index for ordering validation
             _argProviderIndices[id] = i;
 
             final provider = instantiableArgProvider._argProvider
@@ -409,7 +406,6 @@ class ProviderScopeState extends State<ProviderScope> {
         }
       }
     } finally {
-      // CRITICAL: Always clear the initialization context, even if error occurs
       _currentlyInitializingScope = null;
       _currentlyCreatingProviderIndex = null;
     }
