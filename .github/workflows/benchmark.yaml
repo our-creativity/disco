@@ -1,0 +1,91 @@
+name: Provider Benchmarks
+
+on:
+  pull_request:
+    paths:
+      - 'packages/disco/lib/**'
+      - 'packages/disco/benchmark/**'
+      - '.github/workflows/benchmark.yaml'
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - 'packages/disco/lib/**'
+      - 'packages/disco/benchmark/**'
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Run Provider Benchmarks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.18.0
+        with:
+          channel: "stable"
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: packages/disco
+
+      - name: Run benchmarks
+        working-directory: packages/disco
+        run: |
+          echo "# Provider Benchmark Results" > benchmark_results.md
+          echo "" >> benchmark_results.md
+          echo "**Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> benchmark_results.md
+          echo "**Flutter**: $(flutter --version | head -n 1)" >> benchmark_results.md
+          echo "**Dart**: $(dart --version | head -n 1)" >> benchmark_results.md
+          echo "" >> benchmark_results.md
+          echo "## Results" >> benchmark_results.md
+          echo "" >> benchmark_results.md
+          echo "| Benchmark | Time (ms) |" >> benchmark_results.md
+          echo "|-----------|-----------|" >> benchmark_results.md
+          
+          # Run benchmark and capture output
+          flutter test benchmark/provider_benchmark.dart 2>&1 | tee benchmark_output.txt
+          
+          # Extract benchmark results and add to table
+          grep "Create 100 simple eager providers:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Create 100 simple eager providers | \1 |/' >> benchmark_results.md || echo "| Create 100 simple eager providers | N/A |" >> benchmark_results.md
+          grep "Create 100 simple lazy providers:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Create 100 simple lazy providers | \1 |/' >> benchmark_results.md || echo "| Create 100 simple lazy providers | N/A |" >> benchmark_results.md
+          grep "Create 50 providers with dependencies:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Create 50 providers with dependencies | \1 |/' >> benchmark_results.md || echo "| Create 50 providers with dependencies | N/A |" >> benchmark_results.md
+          grep "Retrieve 100 lazy provider values:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Retrieve 100 lazy provider values | \1 |/' >> benchmark_results.md || echo "| Retrieve 100 lazy provider values | N/A |" >> benchmark_results.md
+          grep "Create 100 ArgProviders:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Create 100 ArgProviders | \1 |/' >> benchmark_results.md || echo "| Create 100 ArgProviders | N/A |" >> benchmark_results.md
+          grep "Access 100 providers in nested scopes:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Access 100 providers in nested scopes | \1 |/' >> benchmark_results.md || echo "| Access 100 providers in nested scopes | N/A |" >> benchmark_results.md
+          grep "Complex dependency chain with 30 providers:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Complex dependency chain (30 providers) | \1 |/' >> benchmark_results.md || echo "| Complex dependency chain (30 providers) | N/A |" >> benchmark_results.md
+          grep "Mixed lazy and eager providers" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Mixed lazy and eager (100 total) | \1 |/' >> benchmark_results.md || echo "| Mixed lazy and eager (100 total) | N/A |" >> benchmark_results.md
+          grep "ArgProviders with dependencies" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| ArgProviders with dependencies (50) | \1 |/' >> benchmark_results.md || echo "| ArgProviders with dependencies (50) | N/A |" >> benchmark_results.md
+          grep "Large scale - 500 providers:" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Large scale (500 providers) | \1 |/' >> benchmark_results.md || echo "| Large scale (500 providers) | N/A |" >> benchmark_results.md
+          grep "Deep dependency chain" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Deep dependency chain (100 levels) | \1 |/' >> benchmark_results.md || echo "| Deep dependency chain (100 levels) | N/A |" >> benchmark_results.md
+          grep "Wide dependency tree" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Wide dependency tree (100 dependents) | \1 |/' >> benchmark_results.md || echo "| Wide dependency tree (100 dependents) | N/A |" >> benchmark_results.md
+          grep "Multiple nested scopes" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/| Multiple nested scopes (5 levels) | \1 |/' >> benchmark_results.md || echo "| Multiple nested scopes (5 levels) | N/A |" >> benchmark_results.md
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: packages/disco/benchmark_results.md
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = fs.readFileSync('packages/disco/benchmark_results.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: results
+            });
+
+      - name: Display results
+        run: cat packages/disco/benchmark_results.md

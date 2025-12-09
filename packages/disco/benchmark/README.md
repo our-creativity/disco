@@ -72,11 +72,63 @@ flutter test benchmark/provider_benchmark.dart
 
 ## Baseline Results
 
-Run the benchmarks to establish baseline performance on your system. Results will vary based on:
+### Latest Benchmark Results
+
+The table below shows the most recent benchmark results from the CI pipeline. Results will vary based on:
 - CPU performance
 - Available memory
 - Flutter version
 - Dart VM optimizations
+
+| Benchmark | Time (ms) | Description |
+|-----------|-----------|-------------|
+| Create 100 simple eager providers | _See CI_ | Non-lazy provider initialization |
+| Create 100 simple lazy providers | _See CI_ | Lazy provider registration only |
+| Create 50 providers with dependencies | _See CI_ | Chain dependency resolution |
+| Retrieve 100 lazy provider values | _See CI_ | Lazy initialization on access |
+| Create 100 ArgProviders | _See CI_ | Argumented provider performance |
+| Access 100 providers in nested scopes | _See CI_ | Cross-scope lookup performance |
+| Complex dependency chain (30 providers) | _See CI_ | Multi-level dependency trees |
+| Mixed lazy and eager (100 total) | _See CI_ | 50/50 split performance |
+| ArgProviders with dependencies (50) | _See CI_ | ArgProvider dependency resolution |
+| Large scale (500 providers) | _See CI_ | Scalability test |
+| Deep dependency chain (100 levels) | _See CI_ | Maximum depth stress test |
+| Wide dependency tree (100 dependents) | _See CI_ | Maximum breadth stress test |
+| Multiple nested scopes (5 levels) | _See CI_ | Deep nesting performance |
+
+> **Note**: Benchmark results are automatically updated by the CI pipeline on each PR and push to main/dev branches.
+> View the latest results in the workflow artifacts or PR comments.
+
+### Running Benchmarks Locally
+
+To get baseline numbers on your local machine:
+
+```bash
+cd packages/disco
+flutter test benchmark/provider_benchmark.dart
+```
+
+Compare your results with the CI benchmarks to understand performance on different hardware.
+
+## Automated Benchmarking
+
+A GitHub Actions workflow (`benchmark.yaml`) automatically runs benchmarks on:
+- Every pull request that modifies provider code
+- Pushes to `main` and `dev` branches
+- Manual workflow dispatch
+
+The workflow:
+1. Runs all benchmark tests
+2. Generates a markdown table with results
+3. Posts results as a PR comment (for pull requests)
+4. Uploads results as an artifact
+
+### Comparing Performance Between PRs
+
+1. Check the PR comment for benchmark results
+2. Compare with previous PR or main branch results
+3. Look for regressions (>10% slower) or improvements (>10% faster)
+4. Investigate significant changes by profiling specific benchmarks
 
 ## Contributing
 
