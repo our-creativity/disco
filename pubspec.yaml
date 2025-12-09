@@ -5,6 +5,8 @@ environment:
 workspace:
   - packages/disco
   - packages/disco/example
+  - packages/disco_lint
+  - packages/disco_lint/example
   - examples/auto_route
   - examples/bloc
   - examples/solidart

@@ -11,18 +11,13 @@
 # (the recommended set includes the core lints).
 # The core lints are also what is used by pub.dev for scoring packages.
 
-include: package:very_good_analysis/analysis_options.yaml
+include: package:lints/recommended.yaml
 
 # Uncomment the following section to specify additional rules.
 
-linter:
-  rules:
-    # The providers are used as keys. If you instantiate providers with const,
-    # providers with the same signature will end up having the same
-    # hash code, which is not desired (it will no longer be possible to differentiate
-    # between them). Therefore, no const constructors should be allowed.
-    prefer_const_constructors_in_immutables: false
-    package_names: false
+# linter:
+#   rules:
+#     - camel_case_types
 
 # analyzer:
 #   exclude:
@@ -33,8 +28,3 @@ linter:
 
 # For additional information about configuring this file, see
 # https://dart.dev/guides/language/analysis-options
-
-
-plugins:
-  disco_lint:
-    path: packages/disco_lint

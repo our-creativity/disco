@@ -9,16 +9,16 @@ environment:
 resolution: workspace
 
 dependencies:
-  auto_route: ^9.3.0+1
+  auto_route: ^11.0.0
   disco:
     path: ../../packages/disco
   flutter:
     sdk: flutter
 
 dev_dependencies:
-  auto_route_generator: ^9.3.1
-  build_runner: ^2.4.14
-  very_good_analysis: ^9.0.0
+  auto_route_generator: ^10.4.0
+  build_runner: ^2.10.4
+  very_good_analysis: ^10.0.0
 
 flutter:
   uses-material-design: true
