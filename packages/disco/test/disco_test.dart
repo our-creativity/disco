@@ -514,6 +514,62 @@ void main() {
     expect(number3Finder(1, 2, 6), findsOneWidget);
   });
 
+  testWidgets(
+      'ProviderScopePortal with lazy providers accessing '
+      'same-scope providers', (tester) async {
+    // This test covers the ProviderScopePortal path where lazy providers
+    // access other providers in the same scope, testing the cached value
+    // return and portal context navigation.
+    final baseProvider = Provider((_) => 10);
+    final doubleProvider = Provider((context) {
+      final base = baseProvider.of(context);
+      return base * 2;
+    });
+
+    Future<void> showNumberDialog({required BuildContext context}) {
+      return showDialog(
+        context: context,
+        builder: (dialogContext) {
+          return ProviderScopePortal(
+            mainContext: context,
+            child: Builder(
+              builder: (portalContext) {
+                final double = doubleProvider.of(portalContext);
+                return Text(double.toString());
+              },
+            ),
+          );
+        },
+      );
+    }
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [baseProvider, doubleProvider],
+            child: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    showNumberDialog(context: context);
+                  },
+                  child: const Text('show dialog'),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final buttonFinder = find.text('show dialog');
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.text('20'), findsOneWidget);
+  });
+
   testWidgets('Test key change in ProviderScope (with Provider)',
       (tester) async {
     var count = 0;
@@ -856,7 +912,7 @@ void main() {
   });
 
   testWidgets('Lazy provider can access earlier lazy provider', (tester) async {
-    final numberProvider = Provider((_) => 5); // lazy by default
+    final numberProvider = Provider((_) => 5);
     final doubleProvider = Provider((context) {
       final number = numberProvider.of(context);
       return number * 2;
@@ -883,7 +939,7 @@ void main() {
 
   testWidgets('Non-lazy provider can access lazy earlier provider',
       (tester) async {
-    final numberProvider = Provider((_) => 5); // lazy
+    final numberProvider = Provider((_) => 5);
     final doubleProvider = Provider((context) {
       final number = numberProvider.of(context);
       return number * 2;
@@ -941,12 +997,10 @@ void main() {
 
   testWidgets('Nested provider dependencies work (A→B→C)', (tester) async {
     final aProvider = Provider((_) => 1, lazy: false);
-    final bProvider = Provider((context) {
-      return aProvider.of(context) + 1;
-    }, lazy: false);
-    final cProvider = Provider((context) {
-      return bProvider.of(context) + 1;
-    }, lazy: false);
+    final bProvider =
+        Provider((context) => aProvider.of(context) + 1, lazy: false);
+    final cProvider =
+        Provider((context) => bProvider.of(context) + 1, lazy: false);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -965,6 +1019,51 @@ void main() {
     );
 
     expect(find.text('3'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Multiple lazy providers accessing same earlier provider '
+      'reuses created value', (tester) async {
+    // This test ensures that when provider A is created lazily by provider B,
+    // and then provider C also accesses provider A, the already-created value
+    // is returned (testing the cached value path in same-scope access).
+    var creationCount = 0;
+    final aProvider = Provider((_) {
+      creationCount++;
+      return 1;
+    });
+
+    final bProvider = Provider((context) {
+      return aProvider.of(context) + 1;
+    });
+
+    final cProvider = Provider((context) {
+      return aProvider.of(context) + 2;
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [aProvider, bProvider, cProvider],
+            child: Builder(
+              builder: (context) {
+                // Access B first, which will create A
+                final b = bProvider.of(context);
+                // Then access C, which should reuse A
+                final c = cProvider.of(context);
+                return Text('$b,$c');
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Verify both providers work
+    expect(find.text('2,3'), findsOneWidget);
+    // Verify A was only created once (not twice)
+    expect(creationCount, 1);
   });
 
   testWidgets('Mixed Provider and ArgProvider respect order', (tester) async {
@@ -1035,6 +1134,56 @@ void main() {
       tester.takeException(),
       const TypeMatcher<ProviderForwardReferenceError>(),
     );
+  });
+
+  testWidgets(
+      'Multiple lazy ArgProviders accessing same earlier provider '
+      'reuses created value', (tester) async {
+    // Similar to the Provider test, but for ArgProvider to ensure the
+    // cached value path works for ArgProviders too.
+    var creationCount = 0;
+    final baseProvider = Provider.withArgument<int, int>((_, int arg) {
+      creationCount++;
+      return arg;
+    });
+
+    final doubleProvider = Provider.withArgument<int, int>((context, int arg) {
+      final base = baseProvider.of(context);
+      return base * 2;
+    });
+
+    final tripleProvider = Provider.withArgument<int, int>((context, int arg) {
+      final base = baseProvider.of(context);
+      return base * 3;
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [
+              baseProvider(5),
+              doubleProvider(0),
+              tripleProvider(0),
+            ],
+            child: Builder(
+              builder: (context) {
+                // Access double first, which will create base
+                final double = doubleProvider.of(context);
+                // Then access triple, which should reuse base
+                final triple = tripleProvider.of(context);
+                return Text('$double,$triple');
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Verify both providers work
+    expect(find.text('10,15'), findsOneWidget);
+    // Verify base was only created once (not twice)
+    expect(creationCount, 1);
   });
 
   testWidgets(
