@@ -82,8 +82,10 @@ class ProviderScope extends StatefulWidget {
         final currentIndex = initializingScope._currentlyCreatingProviderIndex;
 
         // If we're currently creating a provider, validate it's not a
-        // forward ref
-        if (currentIndex != null && requestedIndex != null) {
+        // forward ref (debug mode only)
+        if (kDebugMode &&
+            currentIndex != null &&
+            requestedIndex != null) {
           if (requestedIndex >= currentIndex) {
             // Forward reference detected!
             // We already have the provider objects, no map lookup needed (O(1))
@@ -150,7 +152,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isProviderInScope(id),
-      getIndex: (scope, id) => scope._providerIndices[id],
+      getIndex: (scope, id) => kDebugMode ? scope._providerIndices?[id] : null,
       getProviderId: (scope, id) => id,
       findState: (context, id) => _findState<T>(context, id: id),
       createValue: (scope, id, context) =>
@@ -182,7 +184,8 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isArgProviderInScope(id),
-      getIndex: (scope, id) => scope._argProviderIndices[id],
+      getIndex: (scope, id) =>
+          kDebugMode ? scope._argProviderIndices?[id] : null,
       getProviderId: (scope, id) => scope.allArgProvidersInScope[id],
       findState: (context, id) =>
           _findStateForArgProvider<T, A>(context, id: id),
@@ -216,19 +219,23 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Map each provider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
-  final _providerIndices = HashMap<Provider, int>();
+  /// Only populated in debug mode for forward reference detection.
+  final _providerIndices = kDebugMode ? HashMap<Provider, int>() : null;
 
   /// Map each ArgProvider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
-  final _argProviderIndices = HashMap<ArgProvider, int>();
+  /// Only populated in debug mode for forward reference detection.
+  final _argProviderIndices = kDebugMode ? HashMap<ArgProvider, int>() : null;
 
   /// The index of the provider currently being created during initialization.
   /// Null when not initializing. Used to detect forward/circular references.
+  /// Only tracked in debug mode.
   int? _currentlyCreatingProviderIndex;
 
   /// The provider object currently being created during initialization.
   /// Null when not initializing. Used for error reporting.
   /// Can be either a Provider or ArgProvider instance.
+  /// Only tracked in debug mode.
   Object? _currentlyCreatingProvider;
 
   @override
@@ -246,8 +253,10 @@ class ProviderScopeState extends State<ProviderScope> {
       }
     } finally {
       _currentlyInitializingScope = null;
-      _currentlyCreatingProviderIndex = null;
-      _currentlyCreatingProvider = null;
+      if (kDebugMode) {
+        _currentlyCreatingProviderIndex = null;
+        _currentlyCreatingProvider = null;
+      }
     }
   }
 
@@ -287,8 +296,10 @@ class ProviderScopeState extends State<ProviderScope> {
         final provider = item;
         final id = provider;
 
-        // Track original index for ordering validation
-        _providerIndices[id] = i;
+        // Track original index for ordering validation (debug mode only)
+        if (kDebugMode) {
+          _providerIndices![id] = i;
+        }
 
         // In this case, the provider put in scope can be the ID itself.
         allProvidersInScope[id] = provider;
@@ -296,8 +307,10 @@ class ProviderScopeState extends State<ProviderScope> {
         final instantiableArgProvider = item;
         final id = instantiableArgProvider._argProvider;
 
-        // Track original index for ordering validation
-        _argProviderIndices[id] = i;
+        // Track original index for ordering validation (debug mode only)
+        if (kDebugMode) {
+          _argProviderIndices![id] = i;
+        }
 
         final provider =
             instantiableArgProvider._argProvider._generateIntermediateProvider(
@@ -320,11 +333,15 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // create non lazy providers.
         if (!provider._lazy) {
-          _currentlyCreatingProviderIndex = i;
-          _currentlyCreatingProvider = id;
+          if (kDebugMode) {
+            _currentlyCreatingProviderIndex = i;
+            _currentlyCreatingProvider = id;
+          }
           createdProviderValues[id] = provider._createValue(context);
-          _currentlyCreatingProviderIndex = null;
-          _currentlyCreatingProvider = null;
+          if (kDebugMode) {
+            _currentlyCreatingProviderIndex = null;
+            _currentlyCreatingProvider = null;
+          }
         }
       } else if (item is InstantiableArgProvider) {
         final instantiableArgProvider = item;
@@ -332,12 +349,16 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // create non lazy providers.
         if (!instantiableArgProvider._argProvider._lazy) {
-          _currentlyCreatingProviderIndex = i;
-          _currentlyCreatingProvider = id;
+          if (kDebugMode) {
+            _currentlyCreatingProviderIndex = i;
+            _currentlyCreatingProvider = id;
+          }
           createdProviderValues[allArgProvidersInScope[id]!] =
               allArgProvidersInScope[id]!._createValue(context);
-          _currentlyCreatingProviderIndex = null;
-          _currentlyCreatingProvider = null;
+          if (kDebugMode) {
+            _currentlyCreatingProviderIndex = null;
+            _currentlyCreatingProvider = null;
+          }
         }
       }
     }
@@ -453,12 +474,14 @@ class ProviderScopeState extends State<ProviderScope> {
 
     // Support same-scope access for lazy providers
     final savedScope = _currentlyInitializingScope;
-    final savedIndex = _currentlyCreatingProviderIndex;
-    final savedProvider = _currentlyCreatingProvider;
+    final savedIndex = kDebugMode ? _currentlyCreatingProviderIndex : null;
+    final savedProvider = kDebugMode ? _currentlyCreatingProvider : null;
     try {
       _currentlyInitializingScope = this;
-      _currentlyCreatingProviderIndex = _providerIndices[id];
-      _currentlyCreatingProvider = id;
+      if (kDebugMode) {
+        _currentlyCreatingProviderIndex = _providerIndices![id];
+        _currentlyCreatingProvider = id;
+      }
 
       // create and return its value
       final value = provider._createValue(context);
@@ -467,8 +490,10 @@ class ProviderScopeState extends State<ProviderScope> {
       return value;
     } finally {
       _currentlyInitializingScope = savedScope;
-      _currentlyCreatingProviderIndex = savedIndex;
-      _currentlyCreatingProvider = savedProvider;
+      if (kDebugMode) {
+        _currentlyCreatingProviderIndex = savedIndex;
+        _currentlyCreatingProvider = savedProvider;
+      }
     }
   }
 
@@ -498,12 +523,14 @@ class ProviderScopeState extends State<ProviderScope> {
 
     // Support same-scope access for lazy providers
     final savedScope = _currentlyInitializingScope;
-    final savedIndex = _currentlyCreatingProviderIndex;
-    final savedProvider = _currentlyCreatingProvider;
+    final savedIndex = kDebugMode ? _currentlyCreatingProviderIndex : null;
+    final savedProvider = kDebugMode ? _currentlyCreatingProvider : null;
     try {
       _currentlyInitializingScope = this;
-      _currentlyCreatingProviderIndex = _argProviderIndices[id];
-      _currentlyCreatingProvider = id;
+      if (kDebugMode) {
+        _currentlyCreatingProviderIndex = _argProviderIndices![id];
+        _currentlyCreatingProvider = id;
+      }
 
       // create and return its value
       final value = provider._createValue(context);
@@ -512,8 +539,10 @@ class ProviderScopeState extends State<ProviderScope> {
       return value;
     } finally {
       _currentlyInitializingScope = savedScope;
-      _currentlyCreatingProviderIndex = savedIndex;
-      _currentlyCreatingProvider = savedProvider;
+      if (kDebugMode) {
+        _currentlyCreatingProviderIndex = savedIndex;
+        _currentlyCreatingProvider = savedProvider;
+      }
     }
   }
 
