@@ -220,12 +220,14 @@ class ProviderScopeState extends State<ProviderScope> {
   /// Map each provider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
   /// Only populated in debug mode for forward reference detection.
-  final _providerIndices = kDebugMode ? HashMap<Provider, int>() : null;
+  final HashMap<Provider, int>? _providerIndices =
+      kDebugMode ? HashMap<Provider, int>() : null;
 
   /// Map each ArgProvider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
   /// Only populated in debug mode for forward reference detection.
-  final _argProviderIndices = kDebugMode ? HashMap<ArgProvider, int>() : null;
+  final HashMap<ArgProvider, int>? _argProviderIndices =
+      kDebugMode ? HashMap<ArgProvider, int>() : null;
 
   /// The index of the provider currently being created during initialization.
   /// Null when not initializing. Used to detect forward/circular references.
@@ -298,6 +300,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // Track original index for ordering validation (debug mode only)
         if (kDebugMode) {
+          assert(_providerIndices != null, 'Index map should be initialized');
           _providerIndices![id] = i;
         }
 
@@ -309,6 +312,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // Track original index for ordering validation (debug mode only)
         if (kDebugMode) {
+          assert(_argProviderIndices != null, 'Index map should be initialized');
           _argProviderIndices![id] = i;
         }
 
@@ -479,6 +483,7 @@ class ProviderScopeState extends State<ProviderScope> {
     try {
       _currentlyInitializingScope = this;
       if (kDebugMode) {
+        assert(_providerIndices != null, 'Index map should be initialized');
         _currentlyCreatingProviderIndex = _providerIndices![id];
         _currentlyCreatingProvider = id;
       }
@@ -528,6 +533,8 @@ class ProviderScopeState extends State<ProviderScope> {
     try {
       _currentlyInitializingScope = this;
       if (kDebugMode) {
+        assert(
+            _argProviderIndices != null, 'Index map should be initialized');
         _currentlyCreatingProviderIndex = _argProviderIndices![id];
         _currentlyCreatingProvider = id;
       }
