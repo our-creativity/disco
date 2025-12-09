@@ -169,7 +169,7 @@ void main() {
   });
 
   testWidgets(
-      '''Test ProviderScope throws ArgProviderWithoutScopeError for a not found ArgProvider''',
+      '''Test ProviderScope throws ProviderWithoutScopeError for a not found ArgProvider''',
       (tester) async {
     final numberProvider = Provider.withArgument((context, int arg) => arg);
 
