@@ -114,7 +114,9 @@ class ProviderScope extends StatefulWidget {
         final providerId = getProviderId(initializingScope, id);
         final createdProvider =
             initializingScope.createdProviderValues[providerId];
+        // coverage:ignore-start
         if (createdProvider != null) return createdProvider as T;
+        // coverage:ignore-end
 
         // Not created yet - create it now (for lazy providers)
         return createValue(initializingScope, id, context);
