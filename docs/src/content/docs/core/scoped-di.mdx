@@ -65,17 +65,14 @@ runApp(
   MaterialApp(
     home: Scaffold(
       body: ProviderScope(
-        providers: [numberProvider],
-        child: ProviderScope(
-          providers: [doubleNumberPlusArgProvider(10)],
-          child: Builder(
+        providers: [numberProvider, doubleNumberPlusArgProvider],
+        child: Builder(
             builder: (context) {
               final number = numberProvider.of(context);
               final doubleNumberPlusArg = doubleNumberPlusArgProvider.of(context);
               return Text('$number $doubleNumberPlusArg');
             },
           ),
-        ),
       ),
     ),
   ),
@@ -86,15 +83,27 @@ The solution is "5 20".
 
 ## Scoping correctly with context
 
-Some providers might have a dependency on other providers. It is important that the other providers are provided in `ProviderScope`s that are ancestors to the `ProviderScope` providing the dependent provider.
+Some providers might have a dependency on other providers, to handle such cases, you can:
+1. Access another provider if it is declared in an ancestor `ProviderScope`.
+2. Declare the dependent provider after the provider it depends on, within the same `ProviderScope`. The order of declaration matters here otherwise a `ProviderForwardReferenceError` will be thrown at runtime.
 
 ### Wrong example
 
-The scope containing `doubleNumberPlusArgProvider` needs to be a descendant of the one containing `numberProvider`.
-This is because `doubleNumberPlusArgProvider` uses the context to find the value of `numberProvider`. The following will thus **not** work:
+The provider `doubleNumberPlusArgProvider` depends on `numberProvider`. Therefore, when scoping them both in the same `ProviderScope`, `numberProvider` must be declared first.
 
-```dart
-// bad example
+```dart title="Wrong example"
+ProviderScope(
+  providers: [
+    doubleNumberPlusArgProvider(10),
+    numberProvider,
+  ],
+  child: // ...
+)
+```
+
+to make it work, just swap the order of declaration:
+
+```dart title="Correct example"
 ProviderScope(
   providers: [
     numberProvider,
@@ -103,8 +112,6 @@ ProviderScope(
   child: // ...
 )
 ```
-
-Placing the `ProviderScope` containing `doubleNumberPlusArgProvider` above the one containing `numberProvider` would also not work. It needs to be like in the full example above.
 
 ## Graphical representation
 
