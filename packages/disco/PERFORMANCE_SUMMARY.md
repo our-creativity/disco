@@ -33,6 +33,7 @@ This PR addresses the question: "Can the implementation be improved by avoiding 
 | Duplicate detection | O(n²) | O(n) | **Quadratic → Linear** |
 | Validation passes | 2 loops | 1 loop | **50% fewer iterations** |
 | Forward ref errors | O(n) | O(1) | **Linear → Constant** |
+| Release mode overhead | Always tracked | None | **Zero cost in production** |
 
 ## Changes Made
 
@@ -63,15 +64,22 @@ if (!providerIds.add(item)) { // O(1) lookup and insert
 **After:** Combined into single loop with if-else  
 **Impact:** 50% reduction in iteration overhead
 
-### 3. Reverse Index Map (Lines 227-231, 89-103)
+### 3. Debug-Only Forward Reference Detection
 
-**Added:**
-```dart
-final _indexToProvider = HashMap<int, Object>();
-```
+**Before:** Index tracking and validation always enabled  
+**After:** Wrapped in `kDebugMode` checks  
+**Impact:** 
+- Release mode: Zero overhead - no HashMaps created, no index tracking
+- Debug mode: Full validation with helpful error messages
+- Saves 2 HashMaps + index tracking variables in production
 
-**Purpose:** O(1) lookup for error reporting instead of O(n) search  
-**Memory:** Cleared after initialization to avoid overhead
+**Memory saved in release mode:**
+- `_providerIndices` HashMap: ~(8 bytes per provider)
+- `_argProviderIndices` HashMap: ~(8 bytes per arg provider)
+- `_currentlyCreatingProviderIndex`: 8 bytes
+- `_currentlyCreatingProvider`: 8 bytes
+
+For an app with 100 providers, this saves ~800 bytes + HashMap overhead during initialization.
 
 ## Benchmark Suite
 

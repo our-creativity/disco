@@ -160,10 +160,32 @@ See `benchmark/provider_benchmark.dart` for comprehensive performance tests cove
 
 ### Performance Best Practices
 
-1. **Order matters**: Place providers with dependencies AFTER their dependents
+1. **Order matters**: Place providers with dependencies AFTER their dependents (validated in debug mode)
 2. **Avoid deep nesting**: Keep scope hierarchy as flat as reasonable
 3. **Use debugName**: Makes error messages more helpful without performance cost
 4. **Batch provider declarations**: Minimize the number of ProviderScope widgets
+5. **Test in debug mode**: Forward reference errors are only caught in debug mode, so test thoroughly before release
+
+## Production Performance
+
+### Debug Mode vs Release Mode
+
+The implementation automatically optimizes for production:
+
+**Debug Mode:**
+- Full validation including forward reference detection
+- Index tracking for helpful error messages
+- Duplicate provider detection
+- ~800 bytes overhead per 100 providers for tracking
+
+**Release Mode:**
+- Zero overhead from forward reference detection
+- No index HashMaps created
+- No index tracking variables
+- Duplicate validation still runs (wrapped in assert)
+- Production apps run at maximum speed
+
+This follows Flutter's best practice of "zero cost abstractions" - developer ergonomics in debug mode, maximum performance in release mode.
 
 ## Further Optimization Opportunities
 
