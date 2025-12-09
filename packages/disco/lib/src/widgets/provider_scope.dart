@@ -731,7 +731,7 @@ class ProviderForwardReferenceError extends Error {
 
     return 'Forward reference detected!\n\n'
         '`$currentName` (at index $currentIndex) '
-        'tried to access `$requestedName (at index $requestedIndex).\n\n'
+        'tried to access `$requestedName` (at index $requestedIndex).\n\n'
         'Providers in a ProviderScope can only access providers defined '
         'EARLIER in the providers list (with a lower index). This prevents '
         'circular dependencies.\n\n'

@@ -1187,7 +1187,7 @@ void main() {
   });
 
   testWidgets(
-      'Throws ArgProviderForwardReferenceError when accessing '
+      'Throws ProviderForwardReferenceError when accessing '
       'later ArgProvider', (tester) async {
     final secondArgProvider = Provider.withArgument<int, int>(
       (context, int arg) => arg * 2,
