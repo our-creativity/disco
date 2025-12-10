@@ -151,7 +151,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isProviderInScope(id),
-      getIndex: (scope, id) => kDebugMode ? scope._providerIndices[id] : null,
+      getIndex: (scope, id) => scope._providerIndices?[id],
       getProviderId: (scope, id) => id,
       findState: (context, id) => _findState<T>(context, id: id),
       createValue: (scope, id, context) =>
@@ -183,7 +183,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isArgProviderInScope(id),
-      getIndex: (scope, id) => kDebugMode ? scope._argProviderIndices[id] : null,
+      getIndex: (scope, id) => scope._argProviderIndices?[id],
       getProviderId: (scope, id) => scope.allArgProvidersInScope[id],
       findState: (context, id) =>
           _findStateForArgProvider<T, A>(context, id: id),
@@ -219,13 +219,13 @@ class ProviderScopeState extends State<ProviderScope> {
   /// Used to enforce ordering constraints during same-scope access.
   /// Only populated in debug mode for forward reference detection.
   final HashMap<Provider, int> _providerIndices =
-      kDebugMode ? HashMap<Provider, int>() : HashMap<Provider, int>();
+      HashMap<Provider, int>();
 
   /// Map each ArgProvider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
   /// Only populated in debug mode for forward reference detection.
   final HashMap<ArgProvider, int> _argProviderIndices =
-      kDebugMode ? HashMap<ArgProvider, int>() : HashMap<ArgProvider, int>();
+      HashMap<ArgProvider, int>();
 
   /// The index of the provider currently being created during initialization.
   /// Null when not initializing. Used to detect forward/circular references.
@@ -261,7 +261,6 @@ class ProviderScopeState extends State<ProviderScope> {
   }
 
   /// Validates that there are no duplicate providers in the list.
-  /// Optimized to use Sets for O(1) lookup and single-pass validation.
   void _validateProvidersUniqueness(List<InstantiableProvider> allProviders) {
     assert(
       () {
