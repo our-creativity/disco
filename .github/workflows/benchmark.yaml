@@ -72,12 +72,12 @@ jobs:
             "Create 100 ArgProviders:|Create 100 ArgProviders"
             "Access 100 providers in nested scopes:|Access 100 providers in nested scopes"
             "Complex dependency chain with 30 providers:|Complex dependency chain (30 providers)"
-            "Mixed lazy and eager providers|Mixed lazy and eager (100 total)"
-            "ArgProviders with dependencies|ArgProviders with dependencies (50)"
+            "Mixed lazy and eager providers (100 total):|Mixed lazy and eager (100 total)"
+            "ArgProviders with dependencies (50):|ArgProviders with dependencies (50)"
             "Large scale - 500 providers:|Large scale (500 providers)"
-            "Deep dependency chain|Deep dependency chain (100 levels)"
-            "Wide dependency tree|Wide dependency tree (100 dependents)"
-            "Multiple nested scopes|Multiple nested scopes (5 levels)"
+            "Deep dependency chain (100 levels):|Deep dependency chain (100 levels)"
+            "Wide dependency tree (base + 100 dependents):|Wide dependency tree (100 dependents)"
+            "Multiple nested scopes (5 levels, 20 providers each):|Multiple nested scopes (5 levels)"
           )
           
           # Extract benchmark results using loop
