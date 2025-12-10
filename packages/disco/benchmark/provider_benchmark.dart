@@ -20,13 +20,10 @@ final Map<String, int> _benchmarkResults = {};
 
 void main() {
   // Write results to file after all tests complete
-  tearDownAll(() {
-    _writeBenchmarkResults();
-  });
+  tearDownAll(_writeBenchmarkResults);
 
   group('Provider Benchmark', () {
-    testWidgets('Benchmark: Create 100 simple eager providers',
-        (tester) async {
+    testWidgets('Benchmark: Create 100 simple eager providers', (tester) async {
       final stopwatch = Stopwatch()..start();
 
       final providers = List.generate(
@@ -190,8 +187,7 @@ void main() {
       print('Create 100 ArgProviders: ${time}ms');
     });
 
-    testWidgets('Benchmark: Access providers in nested scopes',
-        (tester) async {
+    testWidgets('Benchmark: Access providers in nested scopes', (tester) async {
       final outerProviders = List.generate(
         50,
         (i) => Provider(
@@ -560,21 +556,25 @@ void main() {
 /// Writes benchmark results to a markdown file
 void _writeBenchmarkResults() {
   final buffer = StringBuffer();
-  
+
   buffer.writeln('# Provider Benchmark Results (Debug Mode)');
   buffer.writeln();
-  buffer.writeln('**Date**: ${DateTime.now().toUtc().toString().split('.')[0]} UTC');
+  buffer.writeln(
+      '**Date**: ${DateTime.now().toUtc().toString().split('.')[0]} UTC');
   buffer.writeln('**Mode**: Debug (worst-case with all validation)');
-  buffer.writeln('**Flutter**: Flutter ${kDebugMode ? 'Debug' : 'Release'} Mode');
+  buffer
+      .writeln('**Flutter**: Flutter ${kDebugMode ? 'Debug' : 'Release'} Mode');
   buffer.writeln();
-  buffer.writeln('> Note: Benchmarks run in debug mode to measure worst-case performance.');
-  buffer.writeln('> Release mode will be significantly faster (zero validation overhead).');
+  buffer.writeln(
+      '> Note: Benchmarks run in debug mode to measure worst-case performance.');
+  buffer.writeln(
+      '> Release mode will be significantly faster (zero validation overhead).');
   buffer.writeln();
   buffer.writeln('## Results');
   buffer.writeln();
   buffer.writeln('| Benchmark | Time (ms) |');
   buffer.writeln('|-----------|-----------|');
-  
+
   // Write results in the expected order
   final orderedKeys = [
     'Create 100 simple eager providers',
@@ -591,12 +591,12 @@ void _writeBenchmarkResults() {
     'Wide dependency tree (100 dependents)',
     'Multiple nested scopes (5 levels)',
   ];
-  
+
   for (final key in orderedKeys) {
     final time = _benchmarkResults[key];
     buffer.writeln('| $key | ${time ?? 'N/A'} |');
   }
-  
+
   // Write to file
   final file = File('benchmark_results.md');
   file.writeAsStringSync(buffer.toString());

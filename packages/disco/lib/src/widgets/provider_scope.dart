@@ -83,13 +83,12 @@ class ProviderScope extends StatefulWidget {
 
         // If we're currently creating a provider, validate it's not a
         // forward ref (debug mode only)
-        if (kDebugMode &&
-            currentIndex != null &&
-            requestedIndex != null) {
+        if (kDebugMode && currentIndex != null && requestedIndex != null) {
           if (requestedIndex >= currentIndex) {
             // Forward reference detected!
             // We already have the provider objects, no map lookup needed (O(1))
-            final currentProvider = initializingScope._currentlyCreatingProvider;
+            final currentProvider =
+                initializingScope._currentlyCreatingProvider;
             assert(
               currentProvider != null,
               'Current provider should be set during initialization',
@@ -152,7 +151,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isProviderInScope(id),
-      getIndex: (scope, id) => (kDebugMode ? scope._providerIndices?[id] : null),
+      getIndex: (scope, id) => scope._providerIndices?[id],
       getProviderId: (scope, id) => id,
       findState: (context, id) => _findState<T>(context, id: id),
       createValue: (scope, id, context) =>
@@ -184,8 +183,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isArgProviderInScope(id),
-      getIndex: (scope, id) =>
-          (kDebugMode ? scope._argProviderIndices?[id] : null),
+      getIndex: (scope, id) => scope._argProviderIndices?[id],
       getProviderId: (scope, id) => scope.allArgProvidersInScope[id],
       findState: (context, id) =>
           _findStateForArgProvider<T, A>(context, id: id),
@@ -312,7 +310,8 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // Track original index for ordering validation (debug mode only)
         if (kDebugMode) {
-          assert(_argProviderIndices != null, 'Index map should be initialized');
+          assert(
+              _argProviderIndices != null, 'Index map should be initialized');
           _argProviderIndices![id] = i;
         }
 
@@ -533,8 +532,7 @@ class ProviderScopeState extends State<ProviderScope> {
     try {
       _currentlyInitializingScope = this;
       if (kDebugMode) {
-        assert(
-            _argProviderIndices != null, 'Index map should be initialized');
+        assert(_argProviderIndices != null, 'Index map should be initialized');
         _currentlyCreatingProviderIndex = _argProviderIndices![id];
         _currentlyCreatingProvider = id;
       }
