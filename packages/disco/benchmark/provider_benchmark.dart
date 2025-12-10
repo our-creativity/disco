@@ -1,6 +1,8 @@
 // ignore_for_file: avoid_print
 
+import 'dart:io';
 import 'package:disco/disco.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,7 +14,16 @@ import 'package:flutter_test/flutter_test.dart';
 /// - Retrieving provider values
 /// - ArgProviders performance
 /// - Nested scope performance
+
+// Global map to store benchmark results
+final Map<String, int> _benchmarkResults = {};
+
 void main() {
+  // Write results to file after all tests complete
+  tearDownAll(() {
+    _writeBenchmarkResults();
+  });
+
   group('Provider Benchmark', () {
     testWidgets('Benchmark: Create 100 simple eager providers',
         (tester) async {
@@ -37,8 +48,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'Create 100 simple eager providers: ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Create 100 simple eager providers'] = time;
+      print('Create 100 simple eager providers: ${time}ms');
     });
 
     testWidgets('Benchmark: Create 100 simple lazy providers', (tester) async {
@@ -63,8 +75,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'Create 100 simple lazy providers: ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Create 100 simple lazy providers'] = time;
+      print('Create 100 simple lazy providers: ${time}ms');
     });
 
     testWidgets('Benchmark: Create 50 providers with dependencies',
@@ -107,8 +120,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'Create 50 providers with dependencies: ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Create 50 providers with dependencies'] = time;
+      print('Create 50 providers with dependencies: ${time}ms');
     });
 
     testWidgets('Benchmark: Retrieve 100 lazy provider values', (tester) async {
@@ -135,8 +149,9 @@ void main() {
                 }
 
                 stopwatch.stop();
-                print(
-                    'Retrieve 100 lazy provider values: ${stopwatch.elapsedMilliseconds}ms');
+                final time = stopwatch.elapsedMilliseconds;
+                _benchmarkResults['Retrieve 100 lazy provider values'] = time;
+                print('Retrieve 100 lazy provider values: ${time}ms');
 
                 return Container();
               },
@@ -170,7 +185,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print('Create 100 ArgProviders: ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Create 100 ArgProviders'] = time;
+      print('Create 100 ArgProviders: ${time}ms');
     });
 
     testWidgets('Benchmark: Access providers in nested scopes',
@@ -220,8 +237,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'Access 100 providers in nested scopes: ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Access 100 providers in nested scopes'] = time;
+      print('Access 100 providers in nested scopes: ${time}ms');
     });
 
     testWidgets('Benchmark: Complex dependency chain with 30 providers',
@@ -282,8 +300,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'Complex dependency chain with 30 providers: ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Complex dependency chain (30 providers)'] = time;
+      print('Complex dependency chain with 30 providers: ${time}ms');
     });
 
     testWidgets('Benchmark: Mixed lazy and eager providers (100 total)',
@@ -324,8 +343,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'Mixed lazy and eager providers (100 total): ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Mixed lazy and eager (100 total)'] = time;
+      print('Mixed lazy and eager providers (100 total): ${time}ms');
     });
 
     testWidgets('Benchmark: ArgProviders with dependencies', (tester) async {
@@ -364,8 +384,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'ArgProviders with dependencies (50): ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['ArgProviders with dependencies (50)'] = time;
+      print('ArgProviders with dependencies (50): ${time}ms');
     });
 
     testWidgets('Benchmark: Large scale - 500 providers', (tester) async {
@@ -390,7 +411,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print('Large scale - 500 providers: ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Large scale (500 providers)'] = time;
+      print('Large scale - 500 providers: ${time}ms');
     });
   });
 
@@ -431,8 +454,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'Deep dependency chain (100 levels): ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Deep dependency chain (100 levels)'] = time;
+      print('Deep dependency chain (100 levels): ${time}ms');
 
       // Verify the final value is correct
       await tester.pumpWidget(
@@ -487,8 +511,9 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'Wide dependency tree (base + 100 dependents): ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Wide dependency tree (100 dependents)'] = time;
+      print('Wide dependency tree (base + 100 dependents): ${time}ms');
     });
 
     testWidgets('Stress: Multiple nested scopes (5 levels)', (tester) async {
@@ -525,8 +550,55 @@ void main() {
       );
 
       stopwatch.stop();
-      print(
-          'Multiple nested scopes (5 levels, 20 providers each): ${stopwatch.elapsedMilliseconds}ms');
+      final time = stopwatch.elapsedMilliseconds;
+      _benchmarkResults['Multiple nested scopes (5 levels)'] = time;
+      print('Multiple nested scopes (5 levels, 20 providers each): ${time}ms');
     });
   });
+}
+
+/// Writes benchmark results to a markdown file
+void _writeBenchmarkResults() {
+  final buffer = StringBuffer();
+  
+  buffer.writeln('# Provider Benchmark Results (Debug Mode)');
+  buffer.writeln();
+  buffer.writeln('**Date**: ${DateTime.now().toUtc().toString().split('.')[0]} UTC');
+  buffer.writeln('**Mode**: Debug (worst-case with all validation)');
+  buffer.writeln('**Flutter**: Flutter ${kDebugMode ? 'Debug' : 'Release'} Mode');
+  buffer.writeln();
+  buffer.writeln('> Note: Benchmarks run in debug mode to measure worst-case performance.');
+  buffer.writeln('> Release mode will be significantly faster (zero validation overhead).');
+  buffer.writeln();
+  buffer.writeln('## Results');
+  buffer.writeln();
+  buffer.writeln('| Benchmark | Time (ms) |');
+  buffer.writeln('|-----------|-----------|');
+  
+  // Write results in the expected order
+  final orderedKeys = [
+    'Create 100 simple eager providers',
+    'Create 100 simple lazy providers',
+    'Create 50 providers with dependencies',
+    'Retrieve 100 lazy provider values',
+    'Create 100 ArgProviders',
+    'Access 100 providers in nested scopes',
+    'Complex dependency chain (30 providers)',
+    'Mixed lazy and eager (100 total)',
+    'ArgProviders with dependencies (50)',
+    'Large scale (500 providers)',
+    'Deep dependency chain (100 levels)',
+    'Wide dependency tree (100 dependents)',
+    'Multiple nested scopes (5 levels)',
+  ];
+  
+  for (final key in orderedKeys) {
+    final time = _benchmarkResults[key];
+    buffer.writeln('| $key | ${time ?? 'N/A'} |');
+  }
+  
+  // Write to file
+  final file = File('benchmark_results.md');
+  file.writeAsStringSync(buffer.toString());
+  print('\n✓ Benchmark results written to: ${file.absolute.path}');
 }

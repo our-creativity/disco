@@ -40,61 +40,9 @@ jobs:
       - name: Run benchmarks (Debug Mode - Worst Case)
         working-directory: packages/disco
         run: |
-          echo "# Provider Benchmark Results (Debug Mode)" > benchmark_results.md
-          echo "" >> benchmark_results.md
-          echo "**Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> benchmark_results.md
-          echo "**Mode**: Debug (worst-case with all validation)" >> benchmark_results.md
-          echo "**Flutter**: $(flutter --version | head -n 1)" >> benchmark_results.md
-          echo "**Dart**: $(dart --version | head -n 1)" >> benchmark_results.md
-          echo "" >> benchmark_results.md
-          echo "> Note: Benchmarks run in debug mode to measure worst-case performance." >> benchmark_results.md
-          echo "> Release mode will be significantly faster (zero validation overhead)." >> benchmark_results.md
-          echo "" >> benchmark_results.md
-          echo "## Results" >> benchmark_results.md
-          echo "" >> benchmark_results.md
-          echo "| Benchmark | Time (ms) |" >> benchmark_results.md
-          echo "|-----------|-----------|" >> benchmark_results.md
-          
           # Run benchmark in debug mode (default for flutter test)
-          flutter test benchmark/provider_benchmark.dart 2>&1 | tee benchmark_output.txt
-          
-          # Debug: Show what patterns we're looking for
-          echo "=== Benchmark Output Preview ==="
-          head -50 benchmark_output.txt
-          echo "=== End Preview ==="
-          
-          # Define benchmark patterns and labels
-          declare -a patterns=(
-            "Create 100 simple eager providers:|Create 100 simple eager providers"
-            "Create 100 simple lazy providers:|Create 100 simple lazy providers"
-            "Create 50 providers with dependencies:|Create 50 providers with dependencies"
-            "Retrieve 100 lazy provider values:|Retrieve 100 lazy provider values"
-            "Create 100 ArgProviders:|Create 100 ArgProviders"
-            "Access 100 providers in nested scopes:|Access 100 providers in nested scopes"
-            "Complex dependency chain with 30 providers:|Complex dependency chain (30 providers)"
-            "Mixed lazy and eager providers (100 total):|Mixed lazy and eager (100 total)"
-            "ArgProviders with dependencies (50):|ArgProviders with dependencies (50)"
-            "Large scale - 500 providers:|Large scale (500 providers)"
-            "Deep dependency chain (100 levels):|Deep dependency chain (100 levels)"
-            "Wide dependency tree (base + 100 dependents):|Wide dependency tree (100 dependents)"
-            "Multiple nested scopes (5 levels, 20 providers each):|Multiple nested scopes (5 levels)"
-          )
-          
-          # Extract benchmark results using loop
-          for pattern_label in "${patterns[@]}"; do
-            IFS='|' read -r pattern label <<< "$pattern_label"
-            if grep -q "$pattern" benchmark_output.txt; then
-              # Extract time value - match numbers before 'ms'
-              time=$(grep "$pattern" benchmark_output.txt | sed -E 's/.*[: ]([0-9]+)ms.*/\1/' | head -1)
-              if [ -n "$time" ] && [ "$time" != "" ]; then
-                echo "| $label | $time |" >> benchmark_results.md
-              else
-                echo "| $label | N/A |" >> benchmark_results.md
-              fi
-            else
-              echo "| $label | N/A |" >> benchmark_results.md
-            fi
-          done
+          # The benchmark will generate benchmark_results.md automatically
+          flutter test benchmark/provider_benchmark.dart
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
