@@ -164,7 +164,7 @@ void main() {
     testWidgets('Benchmark: Create 100 ArgProviders', (tester) async {
       final argProviders = List.generate(
         100,
-        (i) => ArgProvider<String, int>(
+        (i) => Provider.withArgument<String, int>(
           (_, arg) => 'Value$i-$arg',
           lazy: false,
           debugName: 'argProvider$i',
@@ -361,7 +361,7 @@ void main() {
 
       // ArgProviders that depend on base
       for (var i = 0; i < 50; i++) {
-        final argProvider = ArgProvider<int, int>(
+        final argProvider = Provider.withArgument<int, int>(
           (context, arg) {
             final base = baseProvider.of(context);
             return base + arg + i;
