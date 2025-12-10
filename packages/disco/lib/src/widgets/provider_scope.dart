@@ -152,7 +152,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isProviderInScope(id),
-      getIndex: (scope, id) => (kDebugMode ? scope._providerIndices?[id] : null),
+      getIndex: (scope, id) => scope._providerIndices?[id],
       getProviderId: (scope, id) => id,
       findState: (context, id) => _findState<T>(context, id: id),
       createValue: (scope, id, context) =>
@@ -184,8 +184,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isArgProviderInScope(id),
-      getIndex: (scope, id) =>
-          (kDebugMode ? scope._argProviderIndices?[id] : null),
+      getIndex: (scope, id) => scope._argProviderIndices?[id],
       getProviderId: (scope, id) => scope.allArgProvidersInScope[id],
       findState: (context, id) =>
           _findStateForArgProvider<T, A>(context, id: id),
