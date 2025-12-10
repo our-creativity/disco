@@ -88,7 +88,6 @@ class ProviderScope extends StatefulWidget {
             requestedIndex != null) {
           if (requestedIndex >= currentIndex) {
             // Forward reference detected!
-            // We already have the provider objects, no map lookup needed (O(1))
             final currentProvider = initializingScope._currentlyCreatingProvider;
             assert(
               currentProvider != null,
@@ -152,7 +151,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isProviderInScope(id),
-      getIndex: (scope, id) => scope._providerIndices?[id],
+      getIndex: (scope, id) => kDebugMode ? scope._providerIndices[id] : null,
       getProviderId: (scope, id) => id,
       findState: (context, id) => _findState<T>(context, id: id),
       createValue: (scope, id, context) =>
@@ -184,7 +183,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isArgProviderInScope(id),
-      getIndex: (scope, id) => scope._argProviderIndices?[id],
+      getIndex: (scope, id) => kDebugMode ? scope._argProviderIndices[id] : null,
       getProviderId: (scope, id) => scope.allArgProvidersInScope[id],
       findState: (context, id) =>
           _findStateForArgProvider<T, A>(context, id: id),
@@ -219,14 +218,14 @@ class ProviderScopeState extends State<ProviderScope> {
   /// Map each provider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
   /// Only populated in debug mode for forward reference detection.
-  final HashMap<Provider, int>? _providerIndices =
-      kDebugMode ? HashMap<Provider, int>() : null;
+  final HashMap<Provider, int> _providerIndices =
+      kDebugMode ? HashMap<Provider, int>() : HashMap<Provider, int>();
 
   /// Map each ArgProvider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
   /// Only populated in debug mode for forward reference detection.
-  final HashMap<ArgProvider, int>? _argProviderIndices =
-      kDebugMode ? HashMap<ArgProvider, int>() : null;
+  final HashMap<ArgProvider, int> _argProviderIndices =
+      kDebugMode ? HashMap<ArgProvider, int>() : HashMap<ArgProvider, int>();
 
   /// The index of the provider currently being created during initialization.
   /// Null when not initializing. Used to detect forward/circular references.
@@ -299,8 +298,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // Track original index for ordering validation (debug mode only)
         if (kDebugMode) {
-          assert(_providerIndices != null, 'Index map should be initialized');
-          _providerIndices![id] = i;
+          _providerIndices[id] = i;
         }
 
         // In this case, the provider put in scope can be the ID itself.
@@ -311,8 +309,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // Track original index for ordering validation (debug mode only)
         if (kDebugMode) {
-          assert(_argProviderIndices != null, 'Index map should be initialized');
-          _argProviderIndices![id] = i;
+          _argProviderIndices[id] = i;
         }
 
         final provider =
@@ -532,9 +529,7 @@ class ProviderScopeState extends State<ProviderScope> {
     try {
       _currentlyInitializingScope = this;
       if (kDebugMode) {
-        assert(
-            _argProviderIndices != null, 'Index map should be initialized');
-        _currentlyCreatingProviderIndex = _argProviderIndices![id];
+        _currentlyCreatingProviderIndex = _argProviderIndices[id];
         _currentlyCreatingProvider = id;
       }
 
