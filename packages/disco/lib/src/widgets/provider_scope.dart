@@ -82,29 +82,20 @@ class ProviderScope extends StatefulWidget {
         final currentIndex = initializingScope._currentlyCreatingProviderIndex;
 
         // If we're currently creating a provider, validate it's not a
-        // forward ref
-        if (currentIndex != null && requestedIndex != null) {
+        // forward ref (debug mode only)
+        if (kDebugMode &&
+            currentIndex != null &&
+            requestedIndex != null) {
           if (requestedIndex >= currentIndex) {
             // Forward reference detected!
-            // Find the current provider being created - could be a Provider
-            // or an ArgProvider
-            final currentProvider = initializingScope.allProvidersInScope.keys
-                    .cast<Provider?>()
-                    .firstWhere(
-                      (p) =>
-                          p != null &&
-                          initializingScope._providerIndices[p] == currentIndex,
-                      orElse: () => null,
-                    ) ??
-                // If not found in regular providers, it must be an ArgProvider
-                // accessing a regular Provider
-                initializingScope.allArgProvidersInScope.keys.firstWhere((ap) =>
-                    initializingScope._argProviderIndices[ap] == currentIndex);
+            final currentProvider = initializingScope._currentlyCreatingProvider;
+            assert(
+              currentProvider != null,
+              'Current provider should be set during initialization',
+            );
             throw ProviderForwardReferenceError(
               requestedProvider: id,
-              requestedIndex: requestedIndex,
-              currentIndex: currentIndex,
-              currentProvider: currentProvider,
+              currentProvider: currentProvider!,
             );
           }
         }
@@ -160,7 +151,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isProviderInScope(id),
-      getIndex: (scope, id) => scope._providerIndices[id],
+      getIndex: (scope, id) => scope._providerIndices?[id],
       getProviderId: (scope, id) => id,
       findState: (context, id) => _findState<T>(context, id: id),
       createValue: (scope, id, context) =>
@@ -192,7 +183,7 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       isInScope: (scope, id) => scope.isArgProviderInScope(id),
-      getIndex: (scope, id) => scope._argProviderIndices[id],
+      getIndex: (scope, id) => scope._argProviderIndices?[id],
       getProviderId: (scope, id) => scope.allArgProvidersInScope[id],
       findState: (context, id) =>
           _findStateForArgProvider<T, A>(context, id: id),
@@ -226,15 +217,26 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Map each provider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
-  final _providerIndices = HashMap<Provider, int>();
+  /// Only populated in debug mode for forward reference detection.
+  final HashMap<Provider, int> _providerIndices =
+      HashMap<Provider, int>();
 
   /// Map each ArgProvider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
-  final _argProviderIndices = HashMap<ArgProvider, int>();
+  /// Only populated in debug mode for forward reference detection.
+  final HashMap<ArgProvider, int> _argProviderIndices =
+      HashMap<ArgProvider, int>();
 
   /// The index of the provider currently being created during initialization.
   /// Null when not initializing. Used to detect forward/circular references.
+  /// Only tracked in debug mode.
   int? _currentlyCreatingProviderIndex;
+
+  /// The provider object currently being created during initialization.
+  /// Null when not initializing. Used for error reporting.
+  /// Can be either a Provider or ArgProvider instance.
+  /// Only tracked in debug mode.
+  Object? _currentlyCreatingProvider;
 
   @override
   void initState() {
@@ -251,39 +253,29 @@ class ProviderScopeState extends State<ProviderScope> {
       }
     } finally {
       _currentlyInitializingScope = null;
-      _currentlyCreatingProviderIndex = null;
+      if (kDebugMode) {
+        _currentlyCreatingProviderIndex = null;
+        _currentlyCreatingProvider = null;
+      }
     }
   }
 
   /// Validates that there are no duplicate providers in the list.
   void _validateProvidersUniqueness(List<InstantiableProvider> allProviders) {
-    // Check for duplicate Providers
     assert(
       () {
-        final providerIds = <Provider>[];
+        final providerIds = <Provider>{};
+        final argProviderIds = <ArgProvider>{};
+
         for (final item in allProviders) {
           if (item is Provider) {
-            if (providerIds.contains(item)) {
+            if (!providerIds.add(item)) {
               throw MultipleProviderOfSameInstance();
             }
-            providerIds.add(item);
-          }
-        }
-        return true;
-      }(),
-      '',
-    );
-
-    // Check for duplicate ArgProviders
-    assert(
-      () {
-        final argProviderIds = <ArgProvider>[];
-        for (final item in allProviders) {
-          if (item is InstantiableArgProvider) {
-            if (argProviderIds.contains(item._argProvider)) {
+          } else if (item is InstantiableArgProvider) {
+            if (!argProviderIds.add(item._argProvider)) {
               throw MultipleProviderOfSameInstance();
             }
-            argProviderIds.add(item._argProvider);
           }
         }
         return true;
@@ -303,8 +295,10 @@ class ProviderScopeState extends State<ProviderScope> {
         final provider = item;
         final id = provider;
 
-        // Track original index for ordering validation
-        _providerIndices[id] = i;
+        // Track original index for ordering validation (debug mode only)
+        if (kDebugMode) {
+          _providerIndices[id] = i;
+        }
 
         // In this case, the provider put in scope can be the ID itself.
         allProvidersInScope[id] = provider;
@@ -312,8 +306,10 @@ class ProviderScopeState extends State<ProviderScope> {
         final instantiableArgProvider = item;
         final id = instantiableArgProvider._argProvider;
 
-        // Track original index for ordering validation
-        _argProviderIndices[id] = i;
+        // Track original index for ordering validation (debug mode only)
+        if (kDebugMode) {
+          _argProviderIndices[id] = i;
+        }
 
         final provider =
             instantiableArgProvider._argProvider._generateIntermediateProvider(
@@ -336,9 +332,15 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // create non lazy providers.
         if (!provider._lazy) {
-          _currentlyCreatingProviderIndex = i;
+          if (kDebugMode) {
+            _currentlyCreatingProviderIndex = i;
+            _currentlyCreatingProvider = id;
+          }
           createdProviderValues[id] = provider._createValue(context);
-          _currentlyCreatingProviderIndex = null;
+          if (kDebugMode) {
+            _currentlyCreatingProviderIndex = null;
+            _currentlyCreatingProvider = null;
+          }
         }
       } else if (item is InstantiableArgProvider) {
         final instantiableArgProvider = item;
@@ -346,10 +348,16 @@ class ProviderScopeState extends State<ProviderScope> {
 
         // create non lazy providers.
         if (!instantiableArgProvider._argProvider._lazy) {
-          _currentlyCreatingProviderIndex = i;
+          if (kDebugMode) {
+            _currentlyCreatingProviderIndex = i;
+            _currentlyCreatingProvider = id;
+          }
           createdProviderValues[allArgProvidersInScope[id]!] =
               allArgProvidersInScope[id]!._createValue(context);
-          _currentlyCreatingProviderIndex = null;
+          if (kDebugMode) {
+            _currentlyCreatingProviderIndex = null;
+            _currentlyCreatingProvider = null;
+          }
         }
       }
     }
@@ -465,10 +473,15 @@ class ProviderScopeState extends State<ProviderScope> {
 
     // Support same-scope access for lazy providers
     final savedScope = _currentlyInitializingScope;
-    final savedIndex = _currentlyCreatingProviderIndex;
+    final savedIndex = kDebugMode ? _currentlyCreatingProviderIndex : null;
+    final savedProvider = kDebugMode ? _currentlyCreatingProvider : null;
     try {
       _currentlyInitializingScope = this;
-      _currentlyCreatingProviderIndex = _providerIndices[id];
+      if (kDebugMode) {
+        assert(_providerIndices != null, 'Index map should be initialized');
+        _currentlyCreatingProviderIndex = _providerIndices![id];
+        _currentlyCreatingProvider = id;
+      }
 
       // create and return its value
       final value = provider._createValue(context);
@@ -477,7 +490,10 @@ class ProviderScopeState extends State<ProviderScope> {
       return value;
     } finally {
       _currentlyInitializingScope = savedScope;
-      _currentlyCreatingProviderIndex = savedIndex;
+      if (kDebugMode) {
+        _currentlyCreatingProviderIndex = savedIndex;
+        _currentlyCreatingProvider = savedProvider;
+      }
     }
   }
 
@@ -507,10 +523,14 @@ class ProviderScopeState extends State<ProviderScope> {
 
     // Support same-scope access for lazy providers
     final savedScope = _currentlyInitializingScope;
-    final savedIndex = _currentlyCreatingProviderIndex;
+    final savedIndex = kDebugMode ? _currentlyCreatingProviderIndex : null;
+    final savedProvider = kDebugMode ? _currentlyCreatingProvider : null;
     try {
       _currentlyInitializingScope = this;
-      _currentlyCreatingProviderIndex = _argProviderIndices[id];
+      if (kDebugMode) {
+        _currentlyCreatingProviderIndex = _argProviderIndices[id];
+        _currentlyCreatingProvider = id;
+      }
 
       // create and return its value
       final value = provider._createValue(context);
@@ -519,7 +539,10 @@ class ProviderScopeState extends State<ProviderScope> {
       return value;
     } finally {
       _currentlyInitializingScope = savedScope;
-      _currentlyCreatingProviderIndex = savedIndex;
+      if (kDebugMode) {
+        _currentlyCreatingProviderIndex = savedIndex;
+        _currentlyCreatingProvider = savedProvider;
+      }
     }
   }
 
@@ -725,23 +748,15 @@ class MultipleProviderOverrideOfSameInstance extends Error {
 class ProviderForwardReferenceError extends Error {
   /// {@macro ProviderForwardReferenceError}
   ProviderForwardReferenceError({
-    required this.currentIndex,
     required this.currentProvider,
     required this.requestedProvider,
-    required this.requestedIndex,
   });
 
-  /// The index of the provider currently being created
-  final int currentIndex;
-
-  /// The ArgProvider currently being created
+  /// The provider currently being created
   final Object currentProvider;
 
   /// The provider being requested
   final Object requestedProvider;
-
-  /// The index of the requested provider in the providers list
-  final int requestedIndex;
 
   @override
   String toString() {
@@ -763,12 +778,10 @@ class ProviderForwardReferenceError extends Error {
     };
 
     return 'Forward reference detected!\n\n'
-        '`$currentName` (at index $currentIndex) '
-        'tried to access `$requestedName` (at index $requestedIndex).\n\n'
+        '`$currentName` tried to access `$requestedName`.\n\n'
         'Providers in a ProviderScope can only access providers defined '
-        'EARLIER in the providers list (with a lower index). This prevents '
-        'circular dependencies.\n\n'
-        'To fix: Move `$currentName` before '
-        '`$requestedName` in your providers list.';
+        'EARLIER in the providers list. This prevents circular dependencies.\n\n'
+        'To fix: Move `$requestedName` before `$currentName` in your '
+        'providers list.';
   }
 }
