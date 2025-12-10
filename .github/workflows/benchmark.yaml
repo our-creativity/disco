@@ -58,6 +58,11 @@ jobs:
           # Run benchmark in debug mode (default for flutter test)
           flutter test benchmark/provider_benchmark.dart 2>&1 | tee benchmark_output.txt
           
+          # Debug: Show what patterns we're looking for
+          echo "=== Benchmark Output Preview ==="
+          head -50 benchmark_output.txt
+          echo "=== End Preview ==="
+          
           # Define benchmark patterns and labels
           declare -a patterns=(
             "Create 100 simple eager providers:|Create 100 simple eager providers"
@@ -79,8 +84,13 @@ jobs:
           for pattern_label in "${patterns[@]}"; do
             IFS='|' read -r pattern label <<< "$pattern_label"
             if grep -q "$pattern" benchmark_output.txt; then
-              time=$(grep "$pattern" benchmark_output.txt | sed -E 's/.*: ([0-9]+)ms/\1/')
-              echo "| $label | $time |" >> benchmark_results.md
+              # Extract time value - match numbers before 'ms'
+              time=$(grep "$pattern" benchmark_output.txt | sed -E 's/.*[: ]([0-9]+)ms.*/\1/' | head -1)
+              if [ -n "$time" ] && [ "$time" != "" ]; then
+                echo "| $label | $time |" >> benchmark_results.md
+              else
+                echo "| $label | N/A |" >> benchmark_results.md
+              fi
             else
               echo "| $label | N/A |" >> benchmark_results.md
             fi
@@ -100,12 +110,35 @@ jobs:
             const fs = require('fs');
             const results = fs.readFileSync('packages/disco/benchmark_results.md', 'utf8');
             
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            // Check if we already commented
+            const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: results
+              issue_number: context.issue.number,
             });
+            
+            const botComment = comments.data.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Provider Benchmark Results')
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: results
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: results
+              });
+            }
 
       - name: Display results
         run: cat packages/disco/benchmark_results.md
