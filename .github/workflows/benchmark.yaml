@@ -3,16 +3,16 @@ name: Provider Benchmarks
 on:
   pull_request:
     paths:
-      - 'packages/disco/lib/**'
-      - 'packages/disco/benchmark/**'
-      - '.github/workflows/benchmark.yaml'
+      - "packages/disco/lib/**"
+      - "packages/disco/benchmark/**"
+      - ".github/workflows/benchmark.yaml"
   push:
     branches:
       - main
       - dev
     paths:
-      - 'packages/disco/lib/**'
-      - 'packages/disco/benchmark/**'
+      - "packages/disco/lib/**"
+      - "packages/disco/benchmark/**"
   workflow_dispatch:
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,8 +40,7 @@ jobs:
       - name: Run benchmarks (Debug Mode - Worst Case)
         working-directory: packages/disco
         run: |
-          # Run benchmark in debug mode (default for flutter test)
-          # The benchmark will generate benchmark_results.md automatically
+          # Run benchmark, it will generate benchmark_results.md automatically
           flutter test benchmark/provider_benchmark.dart
 
       - name: Upload benchmark results
@@ -57,19 +56,19 @@ jobs:
           script: |
             const fs = require('fs');
             const results = fs.readFileSync('packages/disco/benchmark_results.md', 'utf8');
-            
+
             // Check if we already commented
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            
+
             const botComment = comments.data.find(comment => 
               comment.user.type === 'Bot' && 
               comment.body.includes('Provider Benchmark Results')
             );
-            
+
             if (botComment) {
               // Update existing comment
               await github.rest.issues.updateComment({
