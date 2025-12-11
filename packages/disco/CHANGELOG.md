@@ -2,6 +2,7 @@
 
 - **FEAT**: Allow providers declared in the same `ProviderScope` to depend on each other, by leveraging the order of declaration. This simplifies the development experience and prevents circular dependencies by design.
 - **FEAT**: Add `debugName` parameter to providers for easier debugging, allowing better identification of providers in error messages and logs.
+- **FEAT**: Introduce the new `disco_lint` package to help avoid common mistakes and simplify repetitive tasks.
 
 ## 1.0.3+1
 
