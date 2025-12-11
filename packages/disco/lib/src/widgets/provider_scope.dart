@@ -82,7 +82,7 @@ class ProviderScope extends StatefulWidget {
         final currentIndex = initializingScope._currentlyCreatingProviderIndex;
 
         // If we're currently creating a provider, validate it's not a
-        // forward ref (debug mode only)
+        // forward ref
         if (currentIndex != null && requestedIndex != null) {
           if (requestedIndex >= currentIndex) {
             // Forward reference detected!
@@ -216,24 +216,20 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Map each provider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
-  /// Only populated in debug mode for forward reference detection.
   final HashMap<Provider, int> _providerIndices = HashMap<Provider, int>();
 
   /// Map each ArgProvider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
-  /// Only populated in debug mode for forward reference detection.
   final HashMap<ArgProvider, int> _argProviderIndices =
       HashMap<ArgProvider, int>();
 
   /// The index of the provider currently being created during initialization.
   /// Null when not initializing. Used to detect forward/circular references.
-  /// Only tracked in debug mode.
   int? _currentlyCreatingProviderIndex;
 
   /// The provider object currently being created during initialization.
   /// Null when not initializing. Used for error reporting.
   /// Can be either a Provider or ArgProvider instance.
-  /// Only tracked in debug mode.
   Object? _currentlyCreatingProvider;
 
   @override
@@ -291,7 +287,7 @@ class ProviderScopeState extends State<ProviderScope> {
         final provider = item;
         final id = provider;
 
-        // Track original index for ordering validation (debug mode only)
+        // Track original index for ordering validation
         _providerIndices[id] = i;
 
         // In this case, the provider put in scope can be the ID itself.
@@ -300,7 +296,7 @@ class ProviderScopeState extends State<ProviderScope> {
         final instantiableArgProvider = item;
         final id = instantiableArgProvider._argProvider;
 
-        // Track original index for ordering validation (debug mode only)
+        // Track original index for ordering validation
         _argProviderIndices[id] = i;
 
         final provider =
