@@ -21,7 +21,7 @@ Alternatively, you can add Disco manually by updating your `pubspec.yaml` file a
 name: # your app name
 
 environment:
-  sdk: ^3.6.0 # Dart SDK version must be >=3.6.0 to support disco
+  sdk: ^3.10.0 # Dart SDK version must be >=3.6.0 to support disco
   flutter: ">=3.27.0"
 
 dependencies:

@@ -1,5 +1,5 @@
 name: disco_lint
-description: A sample command-line application.
+description: disco_lint is a developer tool for users of disco, designed to help stop common issues and simplify repetitive tasks
 version: 1.0.0
 # repository: https://github.com/my_org/my_repo
 
