@@ -31,3 +31,15 @@ dependencies:
 ```
 
 After updating the file, run `flutter pub get` in your terminal to fetch the dependencies.
+
+## Linter
+
+Disco provides an analyzer package called `disco_lint` to help you avoid common mistakes and simplify repetitive tasks (e.g. `Wrap with ProviderScope`).
+Be sure to have the Dart SDK version `>= 3.10.0` and the Flutter SDK `>= 3.38.0`.
+
+Then edit your `analysis_options.yaml` file and add these lines of code:
+
+```yaml
+plugins:
+  disco_lint: ^1.0.0
+```

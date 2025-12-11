@@ -1,6 +1,6 @@
-This package is a developer tool for users of flutter_solidart, designed to help stop common issues and simplify repetitive tasks.
+This package is a developer tool for users of disco, designed to help stop common issues and simplify repetitive tasks.
 
-> I highly recommend using this package to avoid errors and understand how to properly use flutter_solidart
+> I highly recommend using this package to avoid errors and understand how to properly use disco
 
 ## Getting started
 
@@ -17,4 +17,4 @@ plugins:
 
 ### Wrap with ProviderScope
 
-![Wrap with Solid sample](https://raw.githubusercontent.com/nank1ro/solidart/main/packages/solidart_lint/assets/wrap_with_solid.gif)
+![Wrap with ProviderScope sample](https://raw.githubusercontent.com/our-creativity/disco/main/packages/disco_lint/assets/wrap-with-providerscope.gif)
