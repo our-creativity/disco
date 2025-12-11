@@ -1219,4 +1219,89 @@ void main() {
       const TypeMatcher<ProviderForwardReferenceError>(),
     );
   });
+
+  // Circular dependency tests
+  group('Circular dependency prevention', () {
+    testWidgets(
+        'Impossible: Direct circular dependency in same scope (A→B, B→A)',
+        (tester) async {
+      // This test demonstrates that circular dependencies are impossible
+      // within the same scope due to forward reference errors.
+      // Provider A tries to access Provider B, which comes later in the list,
+      // resulting in a forward reference error.
+      late final Provider<int> providerA;
+      late final Provider<int> providerB;
+
+      providerA = Provider<int>((context) {
+        final b = providerB.of(context); // Forward reference to B!
+        return b + 1;
+      }, lazy: false);
+
+      providerB = Provider<int>((context) {
+        // In a circular dependency, B would try to access A, but A comes first
+        // so this wouldn't be a forward reference. However, A accessing B
+        // is already a forward reference, so we never get here.
+        return 10;
+      }, lazy: false);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProviderScope(
+              providers: [providerA, providerB],
+              child: Container(),
+            ),
+          ),
+        ),
+      );
+
+      // A accessing B (which comes later) throws ProviderForwardReferenceError
+      expect(
+        tester.takeException(),
+        const TypeMatcher<ProviderForwardReferenceError>(),
+      );
+    });
+
+
+    testWidgets(
+        'Impossible: ArgProvider circular dependency with regular Provider',
+        (tester) async {
+      // This test demonstrates that circular dependencies are also impossible
+      // when mixing ArgProvider and regular Provider.
+      late final Provider<int> providerA;
+      late final ArgProvider<int, String> argProviderB;
+
+      providerA = Provider<int>((context) {
+        final b = argProviderB.of(context); // Forward reference!
+        return b + 1;
+      }, lazy: false);
+
+      argProviderB = Provider.withArgument<int, String>(
+        (context, String arg) {
+          // In a circular dependency, B would try to access A
+          // But we never get here because A accessing B is already
+          // a forward reference error.
+          return 10;
+        },
+        lazy: false,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProviderScope(
+              providers: [providerA, argProviderB('test')],
+              child: Container(),
+            ),
+          ),
+        ),
+      );
+
+      // A accessing B (which comes later) throws ProviderForwardReferenceError
+      expect(
+        tester.takeException(),
+        const TypeMatcher<ProviderForwardReferenceError>(),
+      );
+    });
+  });
 }
