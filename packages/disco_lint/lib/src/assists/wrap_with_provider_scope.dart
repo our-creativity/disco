@@ -11,7 +11,7 @@ class WrapWithProviderScope extends WrapSingleWidget {
 
   @override
   AssistKind get assistKind => const AssistKind(
-    'solidart.wrap_with_provider_scope',
+    'disco.wrap_with_provider_scope',
     30,
     'Wrap with ProviderScope',
   );
