@@ -808,7 +808,7 @@ void main() {
     );
   });
   testWidgets(
-      '''ProviderScopeOverride must throw a MultipleProviderOverrideOfSameProviderInstance for duplicated providers''',
+      '''ProviderScopeOverride must throw a MultipleProviderOverrideOfSameInstance for duplicated providers''',
       (tester) async {
     final numberProvider = Provider<int>((context) => 0);
     await tester.pumpWidget(
@@ -1261,7 +1261,6 @@ void main() {
         const TypeMatcher<ProviderForwardReferenceError>(),
       );
     });
-
 
     testWidgets(
         'Impossible: ArgProvider circular dependency with regular Provider',
