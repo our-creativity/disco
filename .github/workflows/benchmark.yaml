@@ -49,6 +49,37 @@ jobs:
           name: benchmark-results
           path: packages/disco/benchmark_results.md
 
+      - name: Update README with benchmark results
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+        run: |
+          # Read benchmark results
+          BENCHMARK_CONTENT=$(cat packages/disco/benchmark_results.md)
+
+          # Check if README already has a Benchmark section
+          if grep -q "^## Benchmark" packages/disco/README.md; then
+            # Remove everything from ## Benchmark to the end
+            sed -i '/^## Benchmark/,$d' packages/disco/README.md
+          fi
+
+          # Add benchmark section at the end
+          echo "" >> packages/disco/README.md
+          echo "## Benchmark" >> packages/disco/README.md
+          echo "" >> packages/disco/README.md
+          echo "$BENCHMARK_CONTENT" >> packages/disco/README.md
+
+      - name: Commit benchmark results to README
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add packages/disco/README.md
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update benchmark results in README [skip ci]"
+            git push
+          fi
+
       - name: Comment PR with results
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
@@ -64,8 +95,8 @@ jobs:
               issue_number: context.issue.number,
             });
 
-            const botComment = comments.data.find(comment => 
-              comment.user.type === 'Bot' && 
+            const botComment = comments.data.find(comment =>
+              comment.user.type === 'Bot' &&
               comment.body.includes('Provider Benchmark Results')
             );
 
