@@ -1,3 +1,7 @@
+## 2.0.0
+
+- **FEAT**: Introduce the new `disco_lint` package to help avoid common mistakes and simplify repetitive tasks.
+
 ## 1.0.3+1
 
 - **CHORE**: Improve documentation.
