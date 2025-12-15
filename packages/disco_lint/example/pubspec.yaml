@@ -11,7 +11,9 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  disco: ^1.0.3+1
+  disco:
+    path: ../../disco
+
 
 dev_dependencies:
   flutter_test:
