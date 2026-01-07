@@ -7,8 +7,8 @@ class ProviderOverride<T extends Object> extends Override {
   ProviderOverride._(
     this._provider,
     T value,
-  )   : _value = value,
-        super._();
+  ) : _value = value,
+      super._();
 
   /// The reference of the provider to override.
   final Provider<T> _provider;
@@ -20,7 +20,7 @@ class ProviderOverride<T extends Object> extends Override {
   /// Creates a [Provider].
   /// This method is used internally by [ProviderScope].
   Provider<T> _generateIntermediateProvider() => Provider<T>(
-        (_) => _value,
-        lazy: false,
-      );
+    (_) => _value,
+    lazy: false,
+  );
 }

@@ -43,3 +43,12 @@ Then edit your `analysis_options.yaml` file and add these lines of code:
 plugins:
   disco_lint: ^1.0.0
 ```
+
+### Recommended `analysis_options.yaml` settings
+
+```yaml
+analyzer:
+  errors:
+    # Ignore non-obvious property types in providers, let the analyzer infer them
+    specify_nonobvious_property_types: ignore
+```

@@ -90,6 +90,7 @@ Some providers might have a dependency on other providers, to handle such cases,
 ### Wrong example
 
 The provider `doubleNumberPlusArgProvider` depends on `numberProvider`. Therefore, when scoping them both in the same `ProviderScope`, `numberProvider` must be declared first.
+Therefore, the following code will lead to a `ProviderForwardReferenceError`:
 
 ```dart title="Wrong example"
 ProviderScope(
@@ -101,7 +102,7 @@ ProviderScope(
 )
 ```
 
-to make it work, just swap the order of declaration:
+The error can be prevented by reordering the list of providers:
 
 ```dart title="Correct example"
 ProviderScope(

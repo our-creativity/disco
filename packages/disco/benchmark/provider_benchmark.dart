@@ -76,8 +76,9 @@ void main() {
       print('Create 100 simple lazy providers: ${time}ms');
     });
 
-    testWidgets('Benchmark: Create 50 providers with dependencies',
-        (tester) async {
+    testWidgets('Benchmark: Create 50 providers with dependencies', (
+      tester,
+    ) async {
       // Create a chain of providers where each depends on the previous one
       final providers = <Provider>[];
 
@@ -237,8 +238,9 @@ void main() {
       print('Access 100 providers in nested scopes: ${time}ms');
     });
 
-    testWidgets('Benchmark: Complex dependency chain with 30 providers',
-        (tester) async {
+    testWidgets('Benchmark: Complex dependency chain with 30 providers', (
+      tester,
+    ) async {
       final providers = <Provider>[];
 
       // Create a more complex dependency pattern
@@ -300,8 +302,9 @@ void main() {
       print('Complex dependency chain with 30 providers: ${time}ms');
     });
 
-    testWidgets('Benchmark: Mixed lazy and eager providers (100 total)',
-        (tester) async {
+    testWidgets('Benchmark: Mixed lazy and eager providers (100 total)', (
+      tester,
+    ) async {
       final providers = <Provider>[];
 
       // 50 eager providers
@@ -470,8 +473,9 @@ void main() {
       );
     });
 
-    testWidgets('Stress: Wide dependency tree (base + 100 dependents)',
-        (tester) async {
+    testWidgets('Stress: Wide dependency tree (base + 100 dependents)', (
+      tester,
+    ) async {
       final providers = <Provider>[];
 
       final baseProvider = Provider<int>(
@@ -559,7 +563,8 @@ void _writeBenchmarkResults() {
   buffer.writeln('# Provider Benchmark Results');
   buffer.writeln();
   buffer.writeln(
-      '**Date**: ${DateTime.now().toUtc().toString().split('.')[0]} UTC');
+    '**Date**: ${DateTime.now().toUtc().toString().split('.')[0]} UTC',
+  );
   buffer.writeln();
   buffer.writeln('## Results');
   buffer.writeln();

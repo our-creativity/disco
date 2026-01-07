@@ -28,11 +28,6 @@ class ProviderScope extends StatefulWidget {
   final Widget child;
 
   /// All the providers provided to all the descendants of [ProviderScope].
-  ///
-  /// Providers can be either [Provider] or [ArgProvider].
-  /// Providers that depends on other providers in the same [providers] list
-  /// must be listed after the providers they depend on, otherwise a
-  /// [ProviderForwardReferenceError] will be thrown.
   final List<InstantiableProvider>? providers;
 
   /// All the overrides provided to all the descendants of
@@ -62,6 +57,7 @@ class ProviderScope extends StatefulWidget {
 
   /// Helper method to handle common logic between Provider and ArgProvider
   /// access during initialization and lazy creation.
+  /// [id] can be either a `Provider<T>` or an `ArgProvider<T, A>`.
   static T? _getOrCreateValue<T extends Object, ID extends Object>({
     required BuildContext context,
     required ID id,
@@ -104,9 +100,9 @@ class ProviderScope extends StatefulWidget {
         final providerId = getProviderId(initializingScope, id);
         final createdProvider =
             initializingScope.createdProviderValues[providerId];
-// coverage:ignore-start
+        // coverage:ignore-start
         if (createdProvider != null) return createdProvider as T;
-// coverage:ignore-end
+        // coverage:ignore-end
 
         // Not created yet - create it now (for lazy providers)
         return createValue(initializingScope, id, context);
@@ -216,12 +212,11 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Map each provider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
-  final HashMap<Provider, int> _providerIndices = HashMap<Provider, int>();
+  final _providerIndices = HashMap<Provider, int>();
 
   /// Map each ArgProvider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
-  final HashMap<ArgProvider, int> _argProviderIndices =
-      HashMap<ArgProvider, int>();
+  final _argProviderIndices = HashMap<ArgProvider, int>();
 
   /// The index of the provider currently being created during initialization.
   /// Null when not initializing. Used to detect forward/circular references.
@@ -242,7 +237,8 @@ class ProviderScopeState extends State<ProviderScope> {
     try {
       if (widget.providers != null) {
         _initializeProviders(widget.providers!);
-      } else if (widget.overrides != null) {
+      }
+      if (widget.overrides != null) {
         _initializeOverrides(widget.overrides!);
       }
     } finally {
@@ -299,10 +295,10 @@ class ProviderScopeState extends State<ProviderScope> {
         // Track original index for ordering validation
         _argProviderIndices[id] = i;
 
-        final provider =
-            instantiableArgProvider._argProvider._generateIntermediateProvider(
-          instantiableArgProvider._arg,
-        );
+        final provider = instantiableArgProvider._argProvider
+            ._generateIntermediateProvider(
+              instantiableArgProvider._arg,
+            );
         allArgProvidersInScope[id] = provider;
       }
     }
@@ -376,8 +372,9 @@ class ProviderScopeState extends State<ProviderScope> {
       allProvidersInScope[id] = override._generateIntermediateProvider();
 
       // create providers (they are never lazy in the case of overrides)
-      createdProviderValues[id] =
-          allProvidersInScope[id]!._createValue(context);
+      createdProviderValues[id] = allProvidersInScope[id]!._createValue(
+        context,
+      );
     }
   }
 
@@ -409,20 +406,22 @@ class ProviderScopeState extends State<ProviderScope> {
 
       // create providers (they are never lazy in the case of overrides)
       final intermediateId = allArgProvidersInScope[id]!;
-      createdProviderValues[intermediateId] =
-          allArgProvidersInScope[id]!._createValue(context);
+      createdProviderValues[intermediateId] = allArgProvidersInScope[id]!
+          ._createValue(context);
     }
   }
 
   /// Initializes overrides by processing both provider and arg provider
   /// overrides.
   void _initializeOverrides(List<Override> overrides) {
-    final providerOverrides =
-        overrides.whereType<ProviderOverride<Object>>().toList();
+    final providerOverrides = overrides
+        .whereType<ProviderOverride<Object>>()
+        .toList();
     _processProviderOverrides(providerOverrides);
 
-    final argProviderOverrides =
-        overrides.whereType<ArgProviderOverride<Object, dynamic>>().toList();
+    final argProviderOverrides = overrides
+        .whereType<ArgProviderOverride<Object, dynamic>>()
+        .toList();
     _processArgProviderOverrides(argProviderOverrides);
   }
 
@@ -451,7 +450,7 @@ class ProviderScopeState extends State<ProviderScope> {
     // find the intermediate provider in the list
     final provider = getIntermediateProvider(id)!;
 
-    // Support same-scope access for lazy providers
+    // Temporarily override shared creation state
     final savedScope = _currentlyInitializingScope;
     final savedIndex = _currentlyCreatingProviderIndex;
     final savedProvider = _currentlyCreatingProvider;
@@ -460,12 +459,13 @@ class ProviderScopeState extends State<ProviderScope> {
       _currentlyCreatingProviderIndex = _providerIndices[id];
       _currentlyCreatingProvider = id;
 
-      // create and return its value
+      // Create the provider value (may throw or trigger nested creation)
       final value = provider._createValue(context);
-      // store the created provider value
+      // Store the created provider value
       createdProviderValues[id] = value;
       return value;
     } finally {
+      // Restore shared state on both success and failure
       _currentlyInitializingScope = savedScope;
       _currentlyCreatingProviderIndex = savedIndex;
       _currentlyCreatingProvider = savedProvider;
@@ -496,7 +496,7 @@ class ProviderScopeState extends State<ProviderScope> {
     // find the intermediate provider in the list
     final provider = getIntermediateProviderForArgProvider(id)!;
 
-    // Support same-scope access for lazy providers
+    // Temporarily override shared creation state
     final savedScope = _currentlyInitializingScope;
     final savedIndex = _currentlyCreatingProviderIndex;
     final savedProvider = _currentlyCreatingProvider;
@@ -505,12 +505,13 @@ class ProviderScopeState extends State<ProviderScope> {
       _currentlyCreatingProviderIndex = _argProviderIndices[id];
       _currentlyCreatingProvider = id;
 
-      // create and return its value
+      // Create the provider value (may throw or trigger nested creation)
       final value = provider._createValue(context);
-      // store the created provider value
+      // Store the created provider value
       createdProviderValues[allArgProvidersInScope[id]!] = value;
       return value;
     } finally {
+      // Restore shared state on both success and failure
       _currentlyInitializingScope = savedScope;
       _currentlyCreatingProviderIndex = savedIndex;
       _currentlyCreatingProvider = savedProvider;
@@ -533,7 +534,7 @@ class ProviderScopeState extends State<ProviderScope> {
     );
   }
 
-// coverage:ignore-start
+  // coverage:ignore-start
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
@@ -541,7 +542,8 @@ class ProviderScopeState extends State<ProviderScope> {
       IterableProperty('createdProviderValues', createdProviderValues.values),
     );
   }
-// coverage:ignore-end
+
+  // coverage:ignore-end
 }
 
 @immutable
@@ -550,12 +552,12 @@ class _InheritedProvider extends InheritedModel<Object> {
 
   final ProviderScopeState state;
 
-// coverage:ignore-start
+  // coverage:ignore-start
   @override
   bool updateShouldNotify(covariant _InheritedProvider oldWidget) {
     return false;
   }
-// coverage:ignore-end
+  // coverage:ignore-end
 
   bool isSupportedAspectWithType(
     Provider? providerId,
@@ -571,7 +573,7 @@ class _InheritedProvider extends InheritedModel<Object> {
     return state.isArgProviderInScope(argProviderId!);
   }
 
-// coverage:ignore-start
+  // coverage:ignore-start
   @override
   bool updateShouldNotifyDependent(
     covariant _InheritedProvider oldWidget,
@@ -579,7 +581,7 @@ class _InheritedProvider extends InheritedModel<Object> {
   ) {
     return false;
   }
-// coverage:ignore-end
+  // coverage:ignore-end
 
   /// The following two methods are taken from [InheritedModel] and modified
   /// in order to find the first [_InheritedProvider] ancestor that contains
@@ -595,8 +597,8 @@ class _InheritedProvider extends InheritedModel<Object> {
       (providerId != null) ^ (argProviderId != null),
       'Either a Provider or an ArgProvider must be used as ID.',
     );
-    final model =
-        context.getElementForInheritedWidgetOfExactType<_InheritedProvider>();
+    final model = context
+        .getElementForInheritedWidgetOfExactType<_InheritedProvider>();
     // No ancestors of type _InheritedProvider found, exit.
     if (model == null) {
       return null;
@@ -671,9 +673,9 @@ class ProviderWithoutScopeError extends Error {
     final name = switch (provider) {
       final Provider p => p._debugName,
       final ArgProvider ap => ap._debugName,
-// coverage:ignore-start
+      // coverage:ignore-start
       _ => throw Exception('Unknown provider type ${provider.runtimeType}'),
-// coverage:ignore-end
+      // coverage:ignore-end
     };
 
     return 'Seems like that you forgot to provide the provider of type $name '
@@ -734,18 +736,20 @@ class ProviderForwardReferenceError extends Error {
     final currentName = switch (currentProvider) {
       final Provider p => p._debugName,
       final ArgProvider ap => ap._debugName,
-// coverage:ignore-start
-      _ =>
-        throw Exception('Unknown provider type ${currentProvider.runtimeType}'),
-// coverage:ignore-end
+      // coverage:ignore-start
+      _ => throw Exception(
+        'Unknown provider type ${currentProvider.runtimeType}',
+      ),
+      // coverage:ignore-end
     };
     final requestedName = switch (requestedProvider) {
       final Provider p => p._debugName,
       final ArgProvider ap => ap._debugName,
-// coverage:ignore-start
+      // coverage:ignore-start
       _ => throw Exception(
-          'Unknown provider type ${requestedProvider.runtimeType}'),
-// coverage:ignore-end
+        'Unknown provider type ${requestedProvider.runtimeType}',
+      ),
+      // coverage:ignore-end
     };
 
     return 'Forward reference detected!\n\n'

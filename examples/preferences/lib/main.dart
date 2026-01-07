@@ -50,16 +50,12 @@ class _InitializationPageState extends State<InitializationPage> {
         } else if (snapshot.hasError) {
           return Directionality(
             textDirection: TextDirection.ltr,
-            child: Center(
-              child: Text('Error: ${snapshot.error}'),
-            ),
+            child: Center(child: Text('Error: ${snapshot.error}')),
           );
         }
         final data = snapshot.data!;
         return ProviderScope(
-          providers: [
-            sharedPreferencesProvider(data.preferences),
-          ],
+          providers: [sharedPreferencesProvider(data.preferences)],
           child: MyApp(),
         );
       },
@@ -86,9 +82,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       home: Scaffold(
-        body: Center(
-          child: Text("The counter is $counter"),
-        ),
+        body: Center(child: Text("The counter is $counter")),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             setState(() {

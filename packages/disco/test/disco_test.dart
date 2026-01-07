@@ -1,5 +1,7 @@
 // NB: by importing disco/src/disco_internal.dart instead of disco/disco.dart,
 // we can test components that are not exported.
+// ignore_for_file: document_ignores
+
 import 'package:disco/src/disco_internal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

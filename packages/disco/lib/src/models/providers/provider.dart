@@ -31,16 +31,17 @@ class Provider<T extends Object> extends InstantiableProvider {
   Provider(
     /// @macro Provider.create}
     CreateProviderValueFn<T> create, {
+
     /// {@macro Provider.dispose}
     DisposeProviderValueFn<T>? dispose,
 
     /// {@macro Provider.lazy}
     bool? lazy,
     this.debugName,
-  })  : _createValue = create,
-        _disposeValue = dispose,
-        _lazy = lazy ?? DiscoConfig.lazy,
-        super._();
+  }) : _createValue = create,
+       _disposeValue = dispose,
+       _lazy = lazy ?? DiscoConfig.lazy,
+       super._();
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(

@@ -45,7 +45,8 @@ class ProviderScopeOverrideState extends State<ProviderScopeOverride> {
   static ProviderScopeOverrideState? maybeOf(BuildContext context) {
     final provider = context
         .getElementForInheritedWidgetOfExactType<
-            _InheritedProviderScopeOverride>()
+          _InheritedProviderScopeOverride
+        >()
         ?.widget;
     return (provider as _InheritedProviderScopeOverride?)?.state;
   }
@@ -87,5 +88,6 @@ class _InheritedProviderScopeOverride extends InheritedWidget {
   bool updateShouldNotify(covariant _InheritedProviderScopeOverride oldWidget) {
     return false;
   }
+
   // coverage:ignore-end
 }

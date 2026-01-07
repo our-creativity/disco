@@ -8,12 +8,13 @@ class _InheritedProviderScopePortal extends InheritedWidget {
 
   final BuildContext mainContext;
 
-// coverage:ignore-start
+  // coverage:ignore-start
   @override
   bool updateShouldNotify(covariant InheritedWidget oldWidget) {
     return false;
   }
-// coverage:ignore-end
+
+  // coverage:ignore-end
 }
 
 /// {@template ProviderScopePortal}
@@ -46,7 +47,8 @@ class ProviderScopePortal extends StatelessWidget {
   static BuildContext? _maybeOf(BuildContext context) {
     final provider = context
         .getElementForInheritedWidgetOfExactType<
-            _InheritedProviderScopePortal>()
+          _InheritedProviderScopePortal
+        >()
         ?.widget;
     return (provider as _InheritedProviderScopePortal?)?.mainContext;
   }
