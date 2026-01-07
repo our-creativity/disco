@@ -855,7 +855,7 @@ void main() {
   );
 
   testWidgets(
-    '''Test ProviderScopeOverride throws MultipleProviderOfSameInstance for multiple instances of ArgProvider''',
+    '''Test ProviderScopeOverride throws MultipleProviderOverrideOfSameInstance for multiple instances of ArgProvider''',
     (tester) async {
       final numberProvider = Provider.withArgument((context, int arg) => arg);
 
@@ -879,7 +879,7 @@ void main() {
       );
       expect(
         tester.takeException(),
-        const TypeMatcher<MultipleProviderOfSameInstance>(),
+        const TypeMatcher<MultipleProviderOverrideOfSameInstance>(),
       );
     },
   );
