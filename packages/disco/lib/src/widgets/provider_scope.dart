@@ -390,7 +390,7 @@ class ProviderScopeState extends State<ProviderScope> {
         for (final override in argProviderOverrides) {
           final id = override._argProvider; // the instance of the provider
           if (ids.contains(id)) {
-            throw MultipleProviderOfSameInstance();
+            throw MultipleProviderOverrideOfSameInstance();
           }
           ids.add(id);
         }
