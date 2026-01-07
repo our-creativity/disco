@@ -20,7 +20,7 @@ jobs:
     name: Run Provider Benchmarks
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
 
     steps:
