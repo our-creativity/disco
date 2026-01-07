@@ -1,7 +1,14 @@
 name: disco_lint
 description: disco_lint is a developer tool for users of disco, designed to help stop common issues and simplify repetitive tasks
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/our-creativity/disco
+homepage: https://disco.mariuti.com
+documentation: https://disco.mariuti.com
+topics:
+  - dependency-injection
+  - scope
+  - provider
+  - linter
 
 environment:
   sdk: ^3.10.3
