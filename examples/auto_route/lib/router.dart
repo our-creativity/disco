@@ -10,17 +10,17 @@ part 'router.gr.dart';
 class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
-        AutoRoute(
-          path: '/',
-          page: HomeRoute.page,
-        ),
-        AutoRoute(
-          path: '/books',
-          page: BooksWrapperRoute.page,
-          children: [
-            AutoRoute(path: '', page: BooksRoute.page, initial: true),
-            AutoRoute(path: ':bookId', page: BookRoute.page),
-          ],
-        ),
-      ];
+    AutoRoute(
+      path: '/',
+      page: HomeRoute.page,
+    ),
+    AutoRoute(
+      path: '/books',
+      page: BooksWrapperRoute.page,
+      children: [
+        AutoRoute(path: '', page: BooksRoute.page, initial: true),
+        AutoRoute(path: ':bookId', page: BookRoute.page),
+      ],
+    ),
+  ];
 }

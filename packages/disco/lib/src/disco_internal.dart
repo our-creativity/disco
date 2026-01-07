@@ -10,6 +10,7 @@ part 'models/providers/instantiable_provider.dart';
 part 'models/providers/provider_argument.dart';
 part 'models/providers/provider.dart';
 part 'utils/disco_config.dart';
+part 'utils/extensions.dart';
 part 'widgets/provider_scope.dart';
 part 'widgets/provider_scope_override.dart';
 part 'widgets/provider_scope_portal.dart';

@@ -1,10 +1,11 @@
 part of '../../disco_internal.dart';
 
 /// A function that creates an object of type [T] with an argument of type [A].
-typedef CreateArgProviderValueFn<T, A> = T Function(
-  BuildContext context,
-  A arg,
-);
+typedef CreateArgProviderValueFn<T, A> =
+    T Function(
+      BuildContext context,
+      A arg,
+    );
 
 /// {@template ArgProvider}
 /// A [Provider] that needs to be given an initial argument before
@@ -17,9 +18,10 @@ class ArgProvider<T extends Object, A> {
     CreateArgProviderValueFn<T, A> create, {
     DisposeProviderValueFn<T>? dispose,
     bool? lazy,
-  })  : _createValue = create,
-        _disposeValue = dispose,
-        _lazy = lazy ?? DiscoConfig.lazy;
+    this.debugName,
+  }) : _createValue = create,
+       _disposeValue = dispose,
+       _lazy = lazy ?? DiscoConfig.lazy;
 
   /// {@macro Provider.lazy}
   final bool _lazy;
@@ -37,7 +39,7 @@ class ArgProvider<T extends Object, A> {
   /// {@macro Provider.overrideWithValue}
   @visibleForTesting
   ArgProviderOverride<T, A> overrideWithValue(T value) =>
-      ArgProviderOverride._(this, value);
+      ArgProviderOverride._(this, value, debugName: debugName);
 
   // ---
   // DI methods
@@ -47,7 +49,7 @@ class ArgProvider<T extends Object, A> {
   T of(BuildContext context) {
     final provider = maybeOf(context);
     if (provider == null) {
-      throw ArgProviderWithoutScopeError(this);
+      throw ProviderWithoutScopeError(this);
     }
     return provider;
   }
@@ -77,10 +79,13 @@ class ArgProvider<T extends Object, A> {
   /// Given an argument, creates a [Provider] with that argument.
   /// This method is used internally by [ProviderScope].
   Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
-        (context) => _createValue(context, arg),
-        dispose: _disposeValue,
-        lazy: _lazy,
-      );
+    (context) => _createValue(context, arg),
+    dispose: _disposeValue,
+    lazy: _lazy,
+  );
+
+  /// {@macro Provider.debugName}
+  final String? debugName;
 }
 
 /// {@template InstantiableArgProvider}

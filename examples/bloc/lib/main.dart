@@ -25,8 +25,9 @@ class MyApp extends StatelessWidget {
               return MaterialApp(
                 theme: isDarkMode
                     ? ThemeData.dark().copyWith(primaryColor: Colors.blueGrey)
-                    : ThemeData.light()
-                        .copyWith(primaryColor: Colors.lightBlue),
+                    : ThemeData.light().copyWith(
+                        primaryColor: Colors.lightBlue,
+                      ),
                 home: const ThemeSwitcherPage(),
               );
             },

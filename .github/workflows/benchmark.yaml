@@ -1,0 +1,122 @@
+name: Provider Benchmarks
+
+on:
+  pull_request:
+    paths:
+      - "packages/disco/lib/**"
+      - "packages/disco/benchmark/**"
+      - ".github/workflows/benchmark.yaml"
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - "packages/disco/lib/**"
+      - "packages/disco/benchmark/**"
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Run Provider Benchmarks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.18.0
+        with:
+          channel: "stable"
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: packages/disco
+
+      - name: Run benchmarks (Debug Mode - Worst Case)
+        working-directory: packages/disco
+        run: |
+          # Run benchmark, it will generate benchmark_results.md automatically
+          flutter test benchmark/provider_benchmark.dart
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: packages/disco/benchmark_results.md
+
+      - name: Update README with benchmark results
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+        run: |
+          # Read benchmark results
+          BENCHMARK_CONTENT=$(cat packages/disco/benchmark_results.md)
+
+          # Check if README already has a Benchmark section
+          if grep -q "^## Benchmark" packages/disco/README.md; then
+            # Remove everything from ## Benchmark to the end
+            sed -i '/^## Benchmark/,$d' packages/disco/README.md
+          fi
+
+          # Add benchmark section at the end
+          echo "" >> packages/disco/README.md
+          echo "## Benchmark" >> packages/disco/README.md
+          echo "" >> packages/disco/README.md
+          echo "$BENCHMARK_CONTENT" >> packages/disco/README.md
+
+      - name: Commit benchmark results to README
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add packages/disco/README.md
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update benchmark results in README [skip ci]"
+            git push
+          fi
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = fs.readFileSync('packages/disco/benchmark_results.md', 'utf8');
+
+            // Check if we already commented
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.data.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Provider Benchmark Results')
+            );
+
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: results
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: results
+              });
+            }
+
+      - name: Display results
+        run: cat packages/disco/benchmark_results.md

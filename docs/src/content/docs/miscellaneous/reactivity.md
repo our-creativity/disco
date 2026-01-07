@@ -14,17 +14,15 @@ final counterProvider = Provider((context) => Signal(0));
 
 // The internal Computed reacts to changes of counterProvider's inner Signal.
 final doubleCounterProvider = Provider((context) {
- return Computed(() => counterProvider.of(context).value * 2)
+ return Computed(() => counterProvider.of(context).value * 2);
 });
 
 runApp(
   MaterialApp(
     home: Scaffold(
       body: ProviderScope(
-        providers: [counterProvider],
-        child: ProviderScope(
-          providers: [doubleCounterProvider],
-          child: SignalBuilder(
+        providers: [counterProvider, doubleCounterProvider],
+        child: SignalBuilder(
             builder: (context, child) {
               final counter = counterProvider.of(context);
               final doubleCounter = doubleCounterProvider.of(context);
@@ -41,7 +39,6 @@ runApp(
               );
             },
           ),
-        ),
       ),
     ),
   ),

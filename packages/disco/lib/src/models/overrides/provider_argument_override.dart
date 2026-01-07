@@ -4,11 +4,9 @@ part of '../../disco_internal.dart';
 /// [_argProvider].
 @immutable
 class ArgProviderOverride<T extends Object, A> extends Override {
-  ArgProviderOverride._(
-    this._argProvider,
-    T value,
-  )   : _value = value,
-        super._();
+  ArgProviderOverride._(this._argProvider, T value, {this.debugName})
+    : _value = value,
+      super._();
 
   /// The reference of the argument provider to override.
   final ArgProvider<T, A> _argProvider;
@@ -21,7 +19,10 @@ class ArgProviderOverride<T extends Object, A> extends Override {
   /// Given an argument, creates a [Provider] with that argument.
   /// This method is used internally by [ProviderScope].
   Provider<T> _generateIntermediateProvider() => Provider<T>(
-        (_) => _value,
-        lazy: false,
-      );
+    (_) => _value,
+    lazy: false,
+  );
+
+  /// {@macro Provider.debugName}
+  final String? debugName;
 }

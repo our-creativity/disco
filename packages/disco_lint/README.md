@@ -1,6 +1,6 @@
 This package is a developer tool for users of disco, designed to help stop common issues and simplify repetitive tasks.
 
-> I highly recommend using this package to avoid errors and understand how to properly use disco
+> It is highly recommended to use this lint package in combination with [disco](https://pub.dev/packages/disco).
 
 ## Getting started
 
