@@ -57,19 +57,12 @@ class ArgProvider<T extends Object, A> {
   ///
   /// testWidgets('test', (tester) async {
   ///   numberProvider.overrideWithFunction((context, arg) => arg * 4);
-  ///   addTearDown(numberProvider.resetOverride);
   ///   // numberProvider(1) will now return 4 instead of 2
   /// });
   /// ```
   @visibleForTesting
   void overrideWithFunction(CreateArgProviderValueFn<T, A> fn) {
     _overrideFn = fn;
-  }
-
-  /// Resets the function override set by [overrideWithFunction].
-  @visibleForTesting
-  void resetOverride() {
-    _overrideFn = null;
   }
 
   // ---
