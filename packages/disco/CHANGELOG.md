@@ -1,3 +1,7 @@
+## 2.1.0
+
+- **FEAT**: Add `overrideWithFunction` to `ArgProvider` for dynamic test overrides. This allows passing a custom create function that receives the original argument, enabling inspection and custom logic during testing.
+
 ## 2.0.0
 
 - **FEAT**: Allow providers in the same `ProviderScope` to depend on previously declared providers. This simplifies the development experience. This friendlier syntax does not introduce circular dependencies.
