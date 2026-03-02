@@ -11,7 +11,6 @@ typedef CreateArgProviderValueFn<T, A> =
 /// A [Provider] that needs to be given an initial argument before
 /// it can be used.
 /// {@endtemplate}
-@immutable
 class ArgProvider<T extends Object, A> {
   /// {@macro ArgProvider}
   ArgProvider._(
@@ -32,6 +31,11 @@ class ArgProvider<T extends Object, A> {
   /// {@macro Provider.dispose}
   final DisposeProviderValueFn<T>? _disposeValue;
 
+  /// An optional function that overrides [_createValue] during testing.
+  /// When set, any argument passed to the provider is forwarded to this
+  /// function instead of the original [_createValue].
+  CreateArgProviderValueFn<T, A>? _overrideFn;
+
   // ---
   // Overrides
   // ---
@@ -40,6 +44,33 @@ class ArgProvider<T extends Object, A> {
   @visibleForTesting
   ArgProviderOverride<T, A> overrideWithValue(T value) =>
       ArgProviderOverride._(this, value, debugName: debugName);
+
+  /// Overrides the create function of this provider with [fn] for testing.
+  ///
+  /// Any argument passed to this provider in the widget tree will be forwarded
+  /// to [fn] instead of the original create function. This allows testing the
+  /// argument being passed to the provider while using a custom implementation.
+  ///
+  /// Example:
+  /// ```dart
+  /// final numberProvider = Provider.withArgument((context, int arg) => arg * 2);
+  ///
+  /// testWidgets('test', (tester) async {
+  ///   numberProvider.overrideWithFunction((context, arg) => arg * 4);
+  ///   addTearDown(numberProvider.resetOverride);
+  ///   // numberProvider(1) will now return 4 instead of 2
+  /// });
+  /// ```
+  @visibleForTesting
+  void overrideWithFunction(CreateArgProviderValueFn<T, A> fn) {
+    _overrideFn = fn;
+  }
+
+  /// Resets the function override set by [overrideWithFunction].
+  @visibleForTesting
+  void resetOverride() {
+    _overrideFn = null;
+  }
 
   // ---
   // DI methods
@@ -78,8 +109,10 @@ class ArgProvider<T extends Object, A> {
 
   /// Given an argument, creates a [Provider] with that argument.
   /// This method is used internally by [ProviderScope].
+  /// If [_overrideFn] is set (via [overrideWithFunction]), it is used instead
+  /// of [_createValue].
   Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
-    (context) => _createValue(context, arg),
+    (context) => (_overrideFn ?? _createValue)(context, arg),
     dispose: _disposeValue,
     lazy: _lazy,
   );

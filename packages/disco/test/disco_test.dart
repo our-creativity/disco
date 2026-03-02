@@ -752,6 +752,103 @@ void main() {
     expect(find.text('16'), findsOneWidget);
   });
 
+  testWidgets(
+    'overrideWithFunction replaces the create function of an ArgProvider',
+    (tester) async {
+      final numberProvider = Provider.withArgument(
+        (_, int arg) => arg * 2,
+      );
+
+      numberProvider.overrideWithFunction((_, arg) => arg * 4);
+      addTearDown(numberProvider.resetOverride);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProviderScope(
+              providers: [numberProvider(1)],
+              child: Builder(
+                builder: (context) {
+                  final number = numberProvider.of(context);
+                  return Text(number.toString());
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Without override: 1 * 2 = 2. With override: 1 * 4 = 4.
+      expect(find.text('4'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'overrideWithFunction forwards the arg to the overriding function',
+    (tester) async {
+      int? capturedArg;
+      final numberProvider = Provider.withArgument(
+        (_, int arg) => arg * 2,
+      );
+
+      numberProvider.overrideWithFunction((_, arg) {
+        capturedArg = arg;
+        return arg * 10;
+      });
+      addTearDown(numberProvider.resetOverride);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProviderScope(
+              providers: [numberProvider(7)],
+              child: Builder(
+                builder: (context) {
+                  final number = numberProvider.of(context);
+                  return Text(number.toString());
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('70'), findsOneWidget);
+      expect(capturedArg, 7);
+    },
+  );
+
+  testWidgets(
+    'resetOverride restores the original create function',
+    (tester) async {
+      final numberProvider = Provider.withArgument(
+        (_, int arg) => arg * 2,
+      );
+
+      numberProvider.overrideWithFunction((_, arg) => arg * 4);
+      numberProvider.resetOverride();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProviderScope(
+              providers: [numberProvider(3)],
+              child: Builder(
+                builder: (context) {
+                  final number = numberProvider.of(context);
+                  return Text(number.toString());
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // After reset, original function (arg * 2) is used: 3 * 2 = 6.
+      expect(find.text('6'), findsOneWidget);
+    },
+  );
+
   testWidgets('Only one ProviderScopeOverride can be present', (tester) async {
     final numberProvider = Provider<int>((_) => 0);
     await tester.pumpWidget(
