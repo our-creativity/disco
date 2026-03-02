@@ -25,7 +25,7 @@ environment:
   flutter: ">=3.27.0"
 
 dependencies:
-  disco: ^1.0.0
+  disco: ^2.1.0
   flutter:
     sdk: flutter
 ```
