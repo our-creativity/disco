@@ -38,8 +38,16 @@ class ArgProvider<T extends Object, A> {
 
   /// {@macro Provider.overrideWithValue}
   @visibleForTesting
-  ArgProviderOverride<T, A> overrideWithValue(T value) =>
-      ArgProviderOverride._(this, value, debugName: debugName);
+  ArgProviderOverride<T, A> overrideWithValue(
+    A arg,
+    T value, {
+    String? debugName,
+  }) => ArgProviderOverride._withValue(this, arg, value, debugName);
+
+  @visibleForTesting
+  ArgProviderOverride<T, A> overrideWithProvider(
+    ArgProvider<T, A> override,
+  ) => ArgProviderOverride._withArgProvider(this, override);
 
   // ---
   // DI methods

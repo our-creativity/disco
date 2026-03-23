@@ -81,8 +81,17 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// [ProviderScopeOverride].
   /// {@endtemplate}
   @visibleForTesting
-  ProviderOverride<T> overrideWithValue(T value) =>
-      ProviderOverride._(this, value);
+  ProviderOverride<T> overrideWithValue(T value, {String? debugName}) =>
+      ProviderOverride._withValue(this, value, debugName);
+
+  /// {@template Provider.overrideWithValue}
+  /// It creates an override of this provider to be passed to
+  /// [ProviderScopeOverride].
+  /// {@endtemplate}
+  @visibleForTesting
+  ProviderOverride<T> overrideWithProvider(
+    Provider<T> override,
+  ) => ProviderOverride._withProvider(this, override);
 
   // DI methods ---------------------------------------------------------------
 

@@ -355,7 +355,7 @@ class ProviderScopeState extends State<ProviderScope> {
         // check if there are multiple providers of the same type
         final ids = <Provider>[];
         for (final override in providerOverrides) {
-          final id = override._provider; // the instance of the provider
+          final id = override._originalProvider; // the instance of the provider
           if (ids.contains(id)) {
             throw MultipleProviderOverrideOfSameInstance();
           }
@@ -367,7 +367,7 @@ class ProviderScopeState extends State<ProviderScope> {
     );
 
     for (final override in providerOverrides) {
-      final id = override._provider;
+      final id = override._originalProvider;
 
       allProvidersInScope[id] = override._generateIntermediateProvider();
 
@@ -388,7 +388,8 @@ class ProviderScopeState extends State<ProviderScope> {
         // check if there are multiple providers of the same type
         final ids = <ArgProvider>[];
         for (final override in argProviderOverrides) {
-          final id = override._argProvider; // the instance of the provider
+          final id =
+              override._originalArgProvider; // the instance of the provider
           if (ids.contains(id)) {
             throw MultipleProviderOverrideOfSameInstance();
           }
@@ -400,7 +401,7 @@ class ProviderScopeState extends State<ProviderScope> {
     );
 
     for (final override in argProviderOverrides) {
-      final id = override._argProvider;
+      final id = override._originalArgProvider;
 
       allArgProvidersInScope[id] = override._generateIntermediateProvider();
 

@@ -702,6 +702,36 @@ void main() {
     tester,
   ) async {
     final numberProvider = Provider<int>((_) => 0);
+    final mockNumberProvider = Provider<int>((_) => 9);
+    await tester.pumpWidget(
+      ProviderScopeOverride(
+        overrides: [
+          numberProvider.overrideWithProvider(mockNumberProvider),
+        ],
+        child: MaterialApp(
+          home: ProviderScope(
+            providers: [
+              numberProvider,
+            ],
+            child: Builder(
+              builder: (context) {
+                final number = numberProvider.of(context);
+                return Text(number.toString());
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('9'), findsOneWidget);
+  });
+
+  // TODO(manuel): add other test (check also that debug is different, etc.)
+
+  testWidgets('''ProviderScopeOverride should override providers''', (
+    tester,
+  ) async {
+    final numberProvider = Provider<int>((_) => 0);
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
@@ -729,10 +759,12 @@ void main() {
     tester,
   ) async {
     final numberProvider = Provider.withArgument((_, int arg) => arg);
+    final mockNumberProvider = Provider.withArgument((_, int arg) => 4);
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          numberProvider.overrideWithValue(16),
+          // numberProvider.overrideWithValue(1, 16),
+          numberProvider.overrideWithProvider(mockNumberProvider),
         ],
         child: MaterialApp(
           home: ProviderScope(
@@ -864,8 +896,8 @@ void main() {
           home: Scaffold(
             body: ProviderScopeOverride(
               overrides: [
-                numberProvider.overrideWithValue(1),
-                numberProvider.overrideWithValue(2),
+                numberProvider.overrideWithValue(0, 1),
+                numberProvider.overrideWithValue(1, 2),
               ],
               child: Builder(
                 builder: (context) {
