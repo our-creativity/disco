@@ -120,6 +120,19 @@ class Provider<T extends Object> {
     return InstantiableNoArgProvider._(this);
   }
 
+  /// Creates a new [Provider] behaving exactly like this one.
+  ///
+  /// This method is used internally by [ProviderScope] to generate the
+  /// intermediate provider of an overridden provider. Generating a fresh
+  /// instance guarantees that the same mock can override more than one
+  /// provider without the resulting values being shared, since the values are
+  /// keyed by their intermediate provider.
+  Provider<T> _generateIntermediateProvider() => Provider<T>(
+    _createValue,
+    dispose: _disposeValue,
+    debugName: debugName,
+  );
+
   /// Returns the type of the value.
   Type get _valueType => T;
 

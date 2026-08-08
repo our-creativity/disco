@@ -18,9 +18,13 @@
 
   See [Lazy creation of the values](https://disco.mariuti.com/core/providers/#lazy-creation-of-the-values) for the details.
 
+- **BREAKING**: The order in which the providers of a `ProviderScope` are declared no longer matters, therefore `ProviderForwardReferenceError` has been removed. Only actual cycles are rejected, with the new `ProviderCircularDependencyError`. See [Scoping correctly with context](https://disco.mariuti.com/core/scoped-di/#scoping-correctly-with-context).
+- **FEAT**: The value of an overridden provider now lives in the very same `ProviderScope` where the value of the original provider would have lived, i.e. a mock has the exact same lifecycle as the provider it replaces. See [Testing](https://disco.mariuti.com/core/testing/).
+- **FEAT**: The values of a `ProviderScope` are disposed in the reverse order of their creation, so that a value is always disposed before the values it depends on. A throwing `dispose` no longer prevents the remaining values from being disposed.
 - **FIX**: A provider injecting an overridden provider of the same scope got the original provider instead of its override.
 - **FIX**: The value of an overridden provider is no longer created (it used to be created, and disposed, whenever the original provider was not lazy).
 - **FIX**: A mock passed to `overrideWith` can now inject other providers.
+- **FIX**: Reusing the same mock to override more than one provider no longer makes those providers share a single value.
 
 ## 2.0.0
 

@@ -984,12 +984,12 @@ void main() {
     expect(find.text('10'), findsOneWidget);
   });
 
-  testWidgets('Throws ProviderForwardReferenceError on forward reference', (
+  testWidgets('''The declaration order within a scope does not matter''', (
     tester,
   ) async {
     final numberProvider = Provider<int>((_) => 5);
     final doubleProvider = Provider<int>((context) {
-      final number = numberProvider.of(context); // Forward reference!
+      final number = numberProvider.of(context);
       return number * 2;
     });
 
@@ -997,15 +997,14 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            // Wrong order: doubleProvider depends on numberProvider
-            // but comes first
+            // `doubleProvider` depends on `numberProvider`, but it is declared
+            // first. Since every value is created lazily, and since all the
+            // providers of a scope are registered before any value exists, the
+            // dependency is resolved just fine.
             providers: [doubleProvider(), numberProvider()],
-            // The error is thrown while the value of `doubleProvider` is
-            // created, i.e. the first time it is injected.
             child: Builder(
               builder: (context) {
-                doubleProvider.of(context);
-                return Container();
+                return Text(doubleProvider.of(context).toString());
               },
             ),
           ),
@@ -1013,13 +1012,10 @@ void main() {
       ),
     );
 
-    expect(
-      tester.takeException(),
-      const TypeMatcher<ProviderForwardReferenceError>(),
-    );
+    expect(find.text('10'), findsOneWidget);
   });
 
-  testWidgets('ArgProvider can access earlier provider in same scope', (
+  testWidgets('ArgProvider can access another provider of the same scope', (
     tester,
   ) async {
     final numberProvider = Provider((_) => 5);
@@ -1121,7 +1117,9 @@ void main() {
     expect(creationCount, 1);
   });
 
-  testWidgets('Mixed Provider and ArgProvider respect order', (tester) async {
+  testWidgets('Mixed Provider and ArgProvider dependencies work', (
+    tester,
+  ) async {
     final numberProvider = Provider((_) => 5);
     final argProvider = Provider.withArgument(
       (context, String prefix) {
@@ -1139,9 +1137,9 @@ void main() {
         home: Scaffold(
           body: ProviderScope(
             providers: [
-              numberProvider(), // index 0
-              argProvider('num:'), // index 1
-              combineProvider(), // index 2
+              numberProvider(),
+              argProvider('num:'),
+              combineProvider(),
             ],
             child: Builder(
               builder: (context) {
@@ -1157,12 +1155,13 @@ void main() {
     expect(find.text('num:5!'), findsOneWidget);
   });
 
-  testWidgets('Throws ProviderForwardReferenceError when ArgProvider '
-      'accesses later Provider', (tester) async {
+  testWidgets('''An ArgProvider can access a Provider declared later''', (
+    tester,
+  ) async {
     final numberProvider = Provider<int>((_) => 5);
     final multiplierProvider = Provider.withArgument<int, int>(
       (context, int multiplier) {
-        final number = numberProvider.of(context); // Forward reference!
+        final number = numberProvider.of(context);
         return number * multiplier;
       },
     );
@@ -1171,13 +1170,10 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            // Wrong order: multiplierProvider depends on numberProvider
-            // but comes first
             providers: [multiplierProvider(3), numberProvider()],
             child: Builder(
               builder: (context) {
-                multiplierProvider.of(context);
-                return Container();
+                return Text(multiplierProvider.of(context).toString());
               },
             ),
           ),
@@ -1185,12 +1181,7 @@ void main() {
       ),
     );
 
-    // ArgProvider accessing a regular Provider throws
-    // ProviderForwardReferenceError
-    expect(
-      tester.takeException(),
-      const TypeMatcher<ProviderForwardReferenceError>(),
-    );
+    expect(find.text('15'), findsOneWidget);
   });
 
   testWidgets('Multiple lazy ArgProviders accessing same earlier provider '
@@ -1242,14 +1233,15 @@ void main() {
     expect(creationCount, 1);
   });
 
-  testWidgets('Throws ProviderForwardReferenceError when accessing '
-      'later ArgProvider', (tester) async {
+  testWidgets('''An ArgProvider can access an ArgProvider declared later''', (
+    tester,
+  ) async {
     final secondArgProvider = Provider.withArgument<int, int>(
       (context, int arg) => arg * 2,
     );
     final firstArgProvider = Provider.withArgument<int, int>(
       (context, int arg) {
-        final second = secondArgProvider.of(context); // Forward reference!
+        final second = secondArgProvider.of(context);
         return arg + second;
       },
     );
@@ -1258,13 +1250,10 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            // Wrong order: firstArgProvider depends on secondArgProvider
-            // but comes first
             providers: [firstArgProvider(5), secondArgProvider(3)],
             child: Builder(
               builder: (context) {
-                firstArgProvider.of(context);
-                return Container();
+                return Text(firstArgProvider.of(context).toString());
               },
             ),
           ),
@@ -1272,41 +1261,135 @@ void main() {
       ),
     );
 
-    expect(
-      tester.takeException(),
-      const TypeMatcher<ProviderForwardReferenceError>(),
-    );
+    // 5 + (3 * 2)
+    expect(find.text('11'), findsOneWidget);
   });
 
   // Circular dependency tests
   group('Circular dependency prevention', () {
-    testWidgets(
-      'Impossible: Direct circular dependency in same scope (A→B, B→A)',
-      (tester) async {
-        // This test demonstrates that circular dependencies are impossible
-        // within the same scope due to forward reference errors.
-        // Provider A tries to access Provider B, which comes later in the list,
-        // resulting in a forward reference error.
-        late final Provider<int> providerA;
-        late final Provider<int> providerB;
+    testWidgets('''Direct circular dependency in the same scope (A→B, B→A)''', (
+      tester,
+    ) async {
+      late final Provider<int> providerA;
+      late final Provider<int> providerB;
 
-        providerA = Provider<int>((context) {
-          final b = providerB.of(context); // Forward reference to B!
-          return b + 1;
-        });
+      providerA = Provider<int>((context) {
+        return providerB.of(context) + 1;
+      }, debugName: 'A');
 
-        providerB = Provider<int>((context) {
-          // In a circular dependency, B would try to access A, but A comes
-          // first so this wouldn't be a forward reference. However, A accessing
-          // B is already a forward reference, so we never get here.
-          return 10;
-        });
+      providerB = Provider<int>((context) {
+        return providerA.of(context) + 1;
+      }, debugName: 'B');
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: ProviderScope(
-                providers: [providerA(), providerB()],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProviderScope(
+              providers: [providerA(), providerB()],
+              child: Builder(
+                builder: (context) {
+                  providerA.of(context);
+                  return Container();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final error = tester.takeException();
+      expect(error, isA<ProviderCircularDependencyError>());
+      final cycleError = error as ProviderCircularDependencyError;
+      // The chain reports the cycle, i.e. A -> B -> A.
+      expect(cycleError.dependencyChain, [providerA, providerB, providerA]);
+      expect(
+        cycleError.toString(),
+        contains('Circular dependency detected!'),
+      );
+    });
+
+    testWidgets('''Circular dependency of a provider with itself (A→A)''', (
+      tester,
+    ) async {
+      late final Provider<int> providerA;
+      providerA = Provider<int>((context) => providerA.of(context) + 1);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProviderScope(
+              providers: [providerA()],
+              child: Builder(
+                builder: (context) {
+                  providerA.of(context);
+                  return Container();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        tester.takeException(),
+        isA<ProviderCircularDependencyError>(),
+      );
+    });
+
+    testWidgets('''Circular dependency mixing an ArgProvider and a Provider''', (
+      tester,
+    ) async {
+      late final Provider<int> providerA;
+      late final ArgProvider<int, String> argProviderB;
+
+      providerA = Provider<int>((context) {
+        return argProviderB.of(context) + 1;
+      });
+
+      argProviderB = Provider.withArgument<int, String>((context, arg) {
+        return providerA.of(context) + 1;
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProviderScope(
+              providers: [providerA(), argProviderB('test')],
+              child: Builder(
+                builder: (context) {
+                  providerA.of(context);
+                  return Container();
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final error = tester.takeException();
+      expect(error, isA<ProviderCircularDependencyError>());
+      expect(
+        (error as ProviderCircularDependencyError).dependencyChain,
+        [providerA, argProviderB, providerA],
+      );
+    });
+
+    testWidgets('''Circular dependency spanning two nested scopes''', (
+      tester,
+    ) async {
+      late final Provider<int> providerA;
+      late final Provider<int> providerB;
+
+      providerA = Provider<int>((context) => providerB.of(context) + 1);
+      providerB = Provider<int>((context) => providerA.of(context) + 1);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ProviderScope(
+              providers: [providerA()],
+              child: ProviderScope(
+                providers: [providerB()],
                 child: Builder(
                   builder: (context) {
                     providerA.of(context);
@@ -1316,48 +1399,41 @@ void main() {
               ),
             ),
           ),
-        );
+        ),
+      );
 
-        // A accessing B (which comes later) throws
-        // ProviderForwardReferenceError
-        expect(
-          tester.takeException(),
-          const TypeMatcher<ProviderForwardReferenceError>(),
-        );
-      },
-    );
+      expect(
+        tester.takeException(),
+        isA<ProviderCircularDependencyError>(),
+      );
+    });
 
     testWidgets(
-      'Impossible: ArgProvider circular dependency with regular Provider',
+      '''The same provider can be created again after a failed creation''',
       (tester) async {
-        // This test demonstrates that circular dependencies are also impossible
-        // when mixing ArgProvider and regular Provider.
-        late final Provider<int> providerA;
-        late final ArgProvider<int, String> argProviderB;
-
-        providerA = Provider<int>((context) {
-          final b = argProviderB.of(context); // Forward reference!
-          return b + 1;
+        // Regression test: the bookkeeping of the providers being created must
+        // be restored even when the creation throws.
+        var attempts = 0;
+        final throwingProvider = Provider<int>((_) {
+          attempts++;
+          if (attempts == 1) throw StateError('boom');
+          return 42;
         });
-
-        argProviderB = Provider.withArgument<int, String>(
-          (context, String arg) {
-            // In a circular dependency, B would try to access A
-            // But we never get here because A accessing B is already
-            // a forward reference error.
-            return 10;
-          },
-        );
 
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
               body: ProviderScope(
-                providers: [providerA(), argProviderB('test')],
+                providers: [throwingProvider()],
                 child: Builder(
                   builder: (context) {
-                    providerA.of(context);
-                    return Container();
+                    int? value;
+                    try {
+                      value = throwingProvider.of(context);
+                    } on StateError {
+                      value = throwingProvider.of(context);
+                    }
+                    return Text(value.toString());
                   },
                 ),
               ),
@@ -1365,12 +1441,8 @@ void main() {
           ),
         );
 
-        // A accessing B (which comes later) throws
-        // ProviderForwardReferenceError
-        expect(
-          tester.takeException(),
-          const TypeMatcher<ProviderForwardReferenceError>(),
-        );
+        expect(find.text('42'), findsOneWidget);
+        expect(attempts, 2);
       },
     );
   });
@@ -1426,6 +1498,176 @@ void main() {
         // The value of the original provider has never been created, therefore
         // its dispose is never called.
         expect(originalDisposed, false);
+      },
+    );
+
+    testWidgets(
+      '''An overridden provider is disposed by the ProviderScope providing it''',
+      (tester) async {
+        final disposedMockValues = <int>[];
+        var created = 0;
+
+        final numberProvider = Provider<int>((_) => 0);
+        final mockNumberProvider = Provider<int>(
+          (_) => ++created,
+          dispose: disposedMockValues.add,
+        );
+
+        Widget buildTree({required bool showScope}) {
+          return ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWith(mockNumberProvider),
+            ],
+            child: MaterialApp(
+              home: showScope
+                  ? ProviderScope(
+                      providers: [numberProvider()],
+                      child: Builder(
+                        builder: (context) {
+                          return Text(numberProvider.of(context).toString());
+                        },
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          );
+        }
+
+        await tester.pumpWidget(buildTree(showScope: true));
+        expect(find.text('1'), findsOneWidget);
+        expect(disposedMockValues, isEmpty);
+
+        // Only the ProviderScope providing the overridden provider is disposed:
+        // the mock has to be disposed with it, exactly like the original
+        // provider would have been.
+        await tester.pumpWidget(buildTree(showScope: false));
+        expect(disposedMockValues, [1]);
+
+        // Bringing the ProviderScope back creates a brand new mock value.
+        await tester.pumpWidget(buildTree(showScope: true));
+        expect(find.text('2'), findsOneWidget);
+
+        await tester.pumpWidget(Container());
+        expect(disposedMockValues, [1, 2]);
+      },
+    );
+
+    testWidgets(
+      '''A disposed ProviderScopeOverride recreates the values it owns''',
+      (tester) async {
+        final disposedMockValues = <int>[];
+        var created = 0;
+
+        final numberProvider = Provider<int>((_) => 0);
+        final mockNumberProvider = Provider<int>(
+          (_) => ++created,
+          dispose: disposedMockValues.add,
+        );
+
+        Widget buildTree(Key key) {
+          return ProviderScopeOverride(
+            key: key,
+            overrides: [
+              numberProvider.overrideWith(mockNumberProvider),
+            ],
+            // No ProviderScope provides `numberProvider` here, therefore the
+            // value of the mock lives in the internal ProviderScope of the
+            // ProviderScopeOverride itself.
+            child: MaterialApp(
+              home: Builder(
+                builder: (context) {
+                  return Text(numberProvider.of(context).toString());
+                },
+              ),
+            ),
+          );
+        }
+
+        await tester.pumpWidget(buildTree(const ValueKey('first')));
+        expect(find.text('1'), findsOneWidget);
+        expect(disposedMockValues, isEmpty);
+
+        // Changing the key forces the ProviderScopeOverride to be disposed and
+        // built again from scratch: its value has to be disposed and recreated
+        // with it.
+        await tester.pumpWidget(buildTree(const ValueKey('second')));
+        expect(disposedMockValues, [1]);
+        expect(find.text('2'), findsOneWidget);
+
+        await tester.pumpWidget(Container());
+        expect(disposedMockValues, [1, 2]);
+      },
+    );
+
+    testWidgets(
+      '''Two ProviderScopes providing an overridden provider get two values''',
+      (tester) async {
+        var created = 0;
+        final numberProvider = Provider<int>((_) => 0);
+        final mockNumberProvider = Provider<int>((_) => ++created);
+
+        await tester.pumpWidget(
+          ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWith(mockNumberProvider),
+            ],
+            child: MaterialApp(
+              home: Column(
+                children: [
+                  for (var i = 0; i < 2; i++)
+                    ProviderScope(
+                      providers: [numberProvider()],
+                      child: Builder(
+                        builder: (context) {
+                          return Text(numberProvider.of(context).toString());
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        // Exactly like the original provider, the mock creates one value per
+        // ProviderScope providing it.
+        expect(find.text('1'), findsOneWidget);
+        expect(find.text('2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''The same mock can override two providers without sharing its value''',
+      (tester) async {
+        var created = 0;
+        final firstProvider = Provider<int>((_) => 0);
+        final secondProvider = Provider<int>((_) => 0);
+        // The very same mock instance is used for both overrides.
+        final mockProvider = Provider<int>((_) => ++created);
+
+        await tester.pumpWidget(
+          ProviderScopeOverride(
+            overrides: [
+              firstProvider.overrideWith(mockProvider),
+              secondProvider.overrideWith(mockProvider),
+            ],
+            child: MaterialApp(
+              home: ProviderScope(
+                providers: [firstProvider(), secondProvider()],
+                child: Builder(
+                  builder: (context) {
+                    final first = firstProvider.of(context);
+                    final second = secondProvider.of(context);
+                    return Text('$first $second');
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // The two overridden providers keep being independent from each other.
+        expect(find.text('1 2'), findsOneWidget);
       },
     );
 
@@ -1588,14 +1830,16 @@ void main() {
           ),
         );
 
-        // The provider without argument is overridden, since its value is
-        // created and stored by the ProviderScope of the ProviderScopeOverride
-        // itself, which always takes precedence.
+        // The provider without argument is overridden, because the internal
+        // ProviderScope of the ProviderScopeOverride provides the mock itself
+        // and, being nearer to the injecting widget, it shadows the ancestor
+        // scope.
         //
         // The argument provider is NOT overridden, since its intermediate
-        // provider is generated by the ProviderScope providing it (the only
-        // place where the argument is known), and that scope is an ancestor of
-        // the ProviderScopeOverride, i.e. it cannot know about the overrides.
+        // provider can only be generated by the ProviderScope providing it (the
+        // only place where the argument is known), and that scope is an
+        // ancestor of the ProviderScopeOverride, i.e. it cannot know about the
+        // overrides.
         expect(find.text('9 1'), findsOneWidget);
       },
     );
@@ -1693,6 +1937,118 @@ void main() {
         // The dependency belongs to another scope, which has always been
         // resolved through the widget tree.
         expect(find.text('10 20'), findsOneWidget);
+      },
+    );
+  });
+
+  group('Disposal', () {
+    testWidgets(
+      '''The values are disposed in the reverse order of creation''',
+      (tester) async {
+        final disposals = <String>[];
+
+        final aProvider = Provider<String>(
+          (_) => 'a',
+          dispose: disposals.add,
+        );
+        // `b` depends on `a`, therefore the value of `a` is created first and
+        // has to be disposed last.
+        final bProvider = Provider<String>(
+          (context) => '${aProvider.of(context)}b',
+          dispose: disposals.add,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ProviderScope(
+              // The declaration order is deliberately the opposite of the
+              // creation order, to make sure the latter is what counts.
+              providers: [bProvider(), aProvider()],
+              child: Builder(
+                builder: (context) => Text(bProvider.of(context)),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('ab'), findsOneWidget);
+        expect(disposals, isEmpty);
+
+        await tester.pumpWidget(Container());
+
+        // `ab` depends on `a`, therefore it is disposed first.
+        expect(disposals, ['ab', 'a']);
+      },
+    );
+
+    testWidgets(
+      '''The reverse order of creation also holds across the two kinds of providers''',
+      (tester) async {
+        final disposals = <String>[];
+
+        final argProvider = Provider.withArgument<String, String>(
+          (_, arg) => arg,
+          dispose: disposals.add,
+        );
+        // A provider without argument depending on an argument provider: the
+        // value of the latter is created first and has to be disposed last.
+        final dependentProvider = Provider<String>(
+          (context) => '${argProvider.of(context)}!',
+          dispose: disposals.add,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ProviderScope(
+              providers: [dependentProvider(), argProvider('arg')],
+              child: Builder(
+                builder: (context) => Text(dependentProvider.of(context)),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('arg!'), findsOneWidget);
+
+        await tester.pumpWidget(Container());
+
+        expect(disposals, ['arg!', 'arg']);
+      },
+    );
+
+    testWidgets(
+      '''A throwing dispose does not prevent the other values from being disposed''',
+      (tester) async {
+        final disposals = <String>[];
+
+        final aProvider = Provider<String>(
+          (_) => 'a',
+          dispose: disposals.add,
+        );
+        final bProvider = Provider<String>(
+          (context) => '${aProvider.of(context)}b',
+          dispose: (value) {
+            disposals.add(value);
+            throw StateError('boom');
+          },
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ProviderScope(
+              providers: [aProvider(), bProvider()],
+              child: Builder(
+                builder: (context) => Text(bProvider.of(context)),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpWidget(Container());
+
+        // The error is reported, but the disposal keeps going.
+        expect(tester.takeException(), isA<StateError>());
+        expect(disposals, ['ab', 'a']);
       },
     );
   });

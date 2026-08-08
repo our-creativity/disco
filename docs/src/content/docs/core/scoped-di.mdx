@@ -90,36 +90,44 @@ The solution is "5 20".
 
 ## Scoping correctly with context
 
-Some providers might have a dependency on other providers, to handle such cases, you can:
-1. Access another provider if it is declared in an ancestor `ProviderScope`.
-2. Declare the dependent provider after the provider it depends on, within the same `ProviderScope`. The order of declaration matters here otherwise a `ProviderForwardReferenceError` will be thrown at runtime.
+Some providers might have a dependency on other providers. The `context` a provider receives in its `create` is the context of the widget injecting it, therefore a provider can inject:
 
-### Wrong example
+1. any provider declared in an ancestor `ProviderScope`;
+2. any provider declared in its own `ProviderScope`, in any order.
 
-The provider `doubleNumberPlusArgProvider` depends on `numberProvider`. Therefore, when scoping them both in the same `ProviderScope`, `numberProvider` must be declared first.
-Therefore, the following code will lead to a `ProviderForwardReferenceError`:
+The order in which the providers are declared does not matter, because all the providers of a `ProviderScope` are registered as soon as the scope is mounted, while their values are only created on demand:
 
-```dart title="Wrong example"
+```dart
+// Both of these work, and behave identically.
 ProviderScope(
-  providers: [
-    doubleNumberPlusArgProvider(10),
-    numberProvider(),
-  ],
+  providers: [numberProvider(), doubleNumberPlusArgProvider(10)],
+  child: // ...
+)
+
+ProviderScope(
+  providers: [doubleNumberPlusArgProvider(10), numberProvider()],
   child: // ...
 )
 ```
 
-The error can be prevented by reordering the list of providers:
+### Circular dependencies
 
-```dart title="Correct example"
-ProviderScope(
-  providers: [
-    numberProvider(),
-    doubleNumberPlusArgProvider(10),
-  ],
-  child: // ...
-)
+The only combination that cannot work is a cycle, i.e. a provider that directly or indirectly injects itself. This is detected while the value is being created and reported with a `ProviderCircularDependencyError`, which lists the providers taking part in the cycle:
+
+```dart
+// Throws a ProviderCircularDependencyError the first time either provider is
+// injected.
+final aProvider = Provider((context) => bProvider.of(context) + 1);
+final bProvider = Provider((context) => aProvider.of(context) + 1);
 ```
+
+<Aside type="tip">
+  A cycle usually means that a dependency is being resolved too early. Injecting the value where it is *used* instead of where it is *created* is often enough to break it.
+</Aside>
+
+### Disposal order
+
+Because the values are created lazily, a value is always created *after* the values it depends on. When a `ProviderScope` is disposed, its values are therefore disposed in the reverse order of creation, so that a value is always disposed *before* its own dependencies. This means that the `dispose` of a provider can safely use the values it injected in its `create`.
 
 ## Graphical representation
 

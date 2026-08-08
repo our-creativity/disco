@@ -12,21 +12,17 @@ Refer to the following graph to understand how the providers are retrieved.
 
 ### Steps
 
-1. When a provider is injected, the first thing that is checked is if a `ProviderScopeOverride` exists.
+1. When a provider is injected, the first `ProviderScope` ancestor is searched.
 
-2. If it does, its internal map of overridden providers is checked to see if the provider is there.
+2. If a `ProviderScope` ancestor is found, the provider is searched in its internal map of providers.
 
-3. If is there, the value of the overriding provider is returned.
+3. If the provider is found, its value is returned. If the value has not been created yet (i.e. it is the first time the provider is injected), it gets created right before it is returned.
 
-4. Otherwise, the search continues for the first `ProviderScope` ancestor.
+4. If the provider is not found, the search proceeds to the next `ProviderScope` ancestor, continuing recursively up the widget tree until the root is reached.
 
-5. If a `ProviderScope` ancestor is found, the provider is searched in its internal map of providers.
+5. If the provider is not found, a `ProviderWithoutScopeError` is thrown.
 
-6. If the provider is found, its value is returned. If the value has not been created yet (i.e. it is the first time the provider is injected), it gets created right before it is returned.
-
-7. If the provider is not found, the search proceeds to the next `ProviderScope` ancestor, continuing recursively up the widget tree until the root is reached.
-
-8. If the provider is not found, a `ProviderWithoutScopeError` is thrown.
+A `ProviderScopeOverride` needs no special treatment in this process: it holds an internal `ProviderScope` providing the mocks, which takes part in the traversal like any other scope.
 
 <Aside type="tip">
   The error can be avoided by using `provider.maybeOf(context)`, which returns `null` if the provider is not found.
@@ -51,15 +47,17 @@ The second layer is what makes overrides and arguments possible, because an inte
 | Inserted provider | Intermediate provider |
 | - | - |
 | `myProvider()` | `myProvider` itself |
-| `myProvider()`, with an override | the provider passed to `overrideWith` |
+| `myProvider()`, with an override | a copy of the provider passed to `overrideWith` |
 | `myArgProvider(arg)` | a provider combining `myArgProvider` with `arg` |
 | `myArgProvider(arg)`, with an override | a provider combining the provider passed to `overrideWith` with `arg` |
 
-## Providers with an argument and overrides
+Since the values are keyed by their intermediate provider, and since a fresh intermediate provider is generated for every override, the same mock can be reused to override several providers without the resulting values being shared.
 
-An argument provider cannot be instantiated by the `ProviderScopeOverride` itself, since no argument is available there: the argument only exists where the provider is inserted into the widget tree. Therefore, a `ProviderScopeOverride` merely *registers* the overrides of argument providers, and every `ProviderScope` below it consults that registry while generating its intermediate providers.
+## How overrides are applied
 
-In other words, for providers with an argument, the retrieval process skips steps 1-3 above: there is nothing to look up in the `ProviderScopeOverride`, because the override has already been applied when the provider was inserted into the scope.
+A `ProviderScopeOverride` merely *registers* its overrides. Every `ProviderScope` below it consults that registry while generating its own intermediate providers, so that the value of a mock lives exactly where the value of the original provider would have lived — and therefore shares its lifecycle.
+
+There is one exception, and it concerns argument providers only: an argument provider cannot be instantiated by the `ProviderScopeOverride` itself, since no argument is available there. A plain `Provider` can, which is why a plain provider can be overridden even when no `ProviderScope` provides it at all.
 
 <Aside>
   The practical consequences are described in the [Testing](https://disco.mariuti.com/core/testing/) page. The recommendation of placing the `ProviderScopeOverride` as the root widget of your tests makes them irrelevant.
