@@ -63,54 +63,16 @@ class ProviderScope extends StatefulWidget {
   static T? _getOrCreateValue<T extends Object, ID extends Object>({
     required BuildContext context,
     required ID id,
-    required bool Function(ProviderScopeState, ID) isInScope,
-    required int? Function(ProviderScopeState, ID) getIndex,
     required T? Function(ProviderScopeState, ID) getCreatedValue,
     required ProviderScopeState? Function(BuildContext, ID) findState,
     required T Function(ProviderScopeState, ID, BuildContext) createValue,
   }) {
-    // STEP 1: Check if we're in the middle of initializing a scope
-    final initializingScope = ProviderScopeState._currentlyInitializingScope;
-    if (initializingScope != null) {
-      // Check if the requested provider is in the CURRENT scope being
-      // initialized
-      if (isInScope(initializingScope, id)) {
-        // Found in current scope! Now validate ordering.
-        final requestedIndex = getIndex(initializingScope, id);
-        final currentIndex = initializingScope._currentlyCreatingProviderIndex;
-
-        // If we're currently creating a provider, validate it's not a
-        // forward ref
-        if (currentIndex != null && requestedIndex != null) {
-          if (requestedIndex >= currentIndex) {
-            // Forward reference detected!
-            final currentProvider =
-                initializingScope._currentlyCreatingProvider;
-            assert(
-              currentProvider != null,
-              'Current provider should be set during initialization',
-            );
-            throw ProviderForwardReferenceError(
-              requestedProvider: id,
-              currentProvider: currentProvider!,
-            );
-          }
-        }
-
-        // Valid same-scope access to an earlier provider
-        // Check if its value has already been created
-        final createdValue = getCreatedValue(initializingScope, id);
-        // coverage:ignore-start
-        if (createdValue != null) return createdValue;
-        // coverage:ignore-end
-
-        // Not created yet - create it now (for lazy providers)
-        return createValue(initializingScope, id, context);
-      }
-    }
-
-    // STEP 2: Not in current scope or not initializing - search ancestors
     // Try to find the provider in the current widget tree.
+    //
+    // NB: the scope providing [id] is always looked up through the widget tree
+    // (or through the overrides), even while it is creating its own values.
+    // This is what makes a provider injecting another provider of the same
+    // scope get its override, if any.
     var state = findState(context, id);
     // If the state has not been found yet, try to find it by using the
     // ProviderScopePortal context.
@@ -121,6 +83,12 @@ class ProviderScope extends StatefulWidget {
       }
     }
     if (state == null) return null;
+
+    // The scope which has been found may be in the middle of creating one of
+    // its own values: in that case, only the providers declared earlier in its
+    // list can be injected.
+    state._checkForwardReference(id);
+
     final createdValue = getCreatedValue(state, id);
     if (createdValue != null) return createdValue;
     // if the value has not been created yet, create it lazily
@@ -144,8 +112,6 @@ class ProviderScope extends StatefulWidget {
     return _getOrCreateValue<T, Provider<T>>(
       context: context,
       id: id,
-      isInScope: (scope, id) => scope.isProviderInScope(id),
-      getIndex: (scope, id) => scope._providerIndices[id],
       getCreatedValue: (scope, id) => scope.getCreatedProviderValue(id) as T?,
       findState: (context, id) => _findState<T>(context, id: id),
       createValue: (scope, id, context) =>
@@ -174,8 +140,6 @@ class ProviderScope extends StatefulWidget {
     return _getOrCreateValue<T, ArgProvider<T, A>>(
       context: context,
       id: id,
-      isInScope: (scope, id) => scope.isArgProviderInScope(id),
-      getIndex: (scope, id) => scope._argProviderIndices[id],
       getCreatedValue: (scope, id) =>
           scope.getCreatedArgProviderValue(id) as T?,
       findState: (context, id) =>
@@ -244,10 +208,6 @@ class ProviderScopeState extends State<ProviderScope> {
   /// values.
   final createdArgProviderValues = HashMap<Provider, Object>();
 
-  /// Track the scope currently being initialized. This enables same-scope
-  /// provider access during initialization.
-  static ProviderScopeState? _currentlyInitializingScope;
-
   /// Map each provider to its index in the original providers list.
   /// Used to enforce ordering constraints during same-scope access.
   final _providerIndices = HashMap<Provider, int>();
@@ -269,19 +229,10 @@ class ProviderScopeState extends State<ProviderScope> {
   void initState() {
     super.initState();
 
-    // Set this scope as currently initializing to enable same-scope access
-    _currentlyInitializingScope = this;
-
-    try {
-      if (widget.providers != null) {
-        _initializeProviders(widget.providers!);
-      } else if (widget.overrides != null) {
-        _initializeOverrides(widget.overrides!);
-      }
-    } finally {
-      _currentlyInitializingScope = null;
-      _currentlyCreatingProviderIndex = null;
-      _currentlyCreatingProvider = null;
+    if (widget.providers != null) {
+      _initializeProviders(widget.providers!);
+    } else if (widget.overrides != null) {
+      _initializeOverrides(widget.overrides!);
     }
   }
 
@@ -354,46 +305,46 @@ class ProviderScopeState extends State<ProviderScope> {
     }
   }
 
-  /// PHASE 2: Creates the values of the non-lazy providers.
-  /// Now that all the intermediate providers are registered, we can create
-  /// their values.
-  void _createNonLazyProviders(List<InstantiableProvider> allProviders) {
-    for (var i = 0; i < allProviders.length; i++) {
-      final item = allProviders[i];
-
-      if (item is InstantiableNoArgProvider) {
-        final id = item._provider;
-        final provider = allProvidersInScope[id]!;
-
-        // create the values of the non lazy providers.
-        if (!provider._lazy) {
-          _currentlyCreatingProviderIndex = i;
-          _currentlyCreatingProvider = id;
-          createdProviderValues[provider] = provider._createValue(context);
-          _currentlyCreatingProviderIndex = null;
-          _currentlyCreatingProvider = null;
-        }
-      } else if (item is InstantiableArgProvider) {
-        final id = item._argProvider;
-        final provider = allArgProvidersInScope[id]!;
-
-        // create the values of the non lazy providers.
-        if (!provider._lazy) {
-          _currentlyCreatingProviderIndex = i;
-          _currentlyCreatingProvider = id;
-          createdArgProviderValues[provider] = provider._createValue(context);
-          _currentlyCreatingProviderIndex = null;
-          _currentlyCreatingProvider = null;
-        }
-      }
-    }
-  }
-
-  /// Initializes providers by validating, registering, and creating them.
+  /// Initializes providers by validating and registering them. Their values are
+  /// always created lazily, i.e. the first time they are injected.
   void _initializeProviders(List<InstantiableProvider> allProviders) {
     _validateProvidersUniqueness(allProviders);
     _registerAllProviders(allProviders);
-    _createNonLazyProviders(allProviders);
+  }
+
+  /// Throws a [ProviderForwardReferenceError] if this scope is currently
+  /// creating one of its values and [id] is declared later than it in the
+  /// providers list, i.e. if [id] is a forward reference.
+  ///
+  /// This prevents circular dependencies: a provider can only inject the
+  /// providers declared before it in the same scope.
+  void _checkForwardReference(Object id) {
+    final currentIndex = _currentlyCreatingProviderIndex;
+    // This scope is not creating any value, therefore there is nothing to
+    // validate.
+    if (currentIndex == null) return;
+
+    final requestedIndex = switch (id) {
+      final Provider provider => _providerIndices[provider],
+      final ArgProvider argProvider => _argProviderIndices[argProvider],
+      // coverage:ignore-start
+      _ => null,
+      // coverage:ignore-end
+    };
+
+    // The requested provider does not belong to this scope, or it is declared
+    // earlier than the one being created.
+    if (requestedIndex == null || requestedIndex < currentIndex) return;
+
+    final currentProvider = _currentlyCreatingProvider;
+    assert(
+      currentProvider != null,
+      'Current provider should be set during creation',
+    );
+    throw ProviderForwardReferenceError(
+      requestedProvider: id,
+      currentProvider: currentProvider!,
+    );
   }
 
   /// Processes provider overrides by validating uniqueness and creating them.
@@ -420,12 +371,9 @@ class ProviderScopeState extends State<ProviderScope> {
       final id = override._originalProvider;
 
       // The intermediate provider is regenerated: the mock takes the place of
-      // the top-level provider.
-      final provider = override._mockProvider;
-      allProvidersInScope[id] = provider;
-
-      // create the values (they are never lazy in the case of overrides)
-      createdProviderValues[provider] = provider._createValue(context);
+      // the top-level provider. Its value is created lazily, like the value of
+      // any other provider, so that a mock can inject other providers too.
+      allProvidersInScope[id] = override._mockProvider;
     }
   }
 
@@ -517,12 +465,10 @@ class ProviderScopeState extends State<ProviderScope> {
     // find the intermediate provider in the list
     final provider = getIntermediateProvider(id)!;
 
-    // Temporarily override shared creation state
-    final savedScope = _currentlyInitializingScope;
+    // Temporarily override the creation state of this scope
     final savedIndex = _currentlyCreatingProviderIndex;
     final savedProvider = _currentlyCreatingProvider;
     try {
-      _currentlyInitializingScope = this;
       _currentlyCreatingProviderIndex = _providerIndices[id];
       _currentlyCreatingProvider = id;
 
@@ -532,8 +478,7 @@ class ProviderScopeState extends State<ProviderScope> {
       createdProviderValues[provider] = value;
       return value;
     } finally {
-      // Restore shared state on both success and failure
-      _currentlyInitializingScope = savedScope;
+      // Restore the creation state on both success and failure
       _currentlyCreatingProviderIndex = savedIndex;
       _currentlyCreatingProvider = savedProvider;
     }
@@ -580,12 +525,10 @@ class ProviderScopeState extends State<ProviderScope> {
     // find the intermediate provider in the list
     final provider = getIntermediateProviderForArgProvider(id)!;
 
-    // Temporarily override shared creation state
-    final savedScope = _currentlyInitializingScope;
+    // Temporarily override the creation state of this scope
     final savedIndex = _currentlyCreatingProviderIndex;
     final savedProvider = _currentlyCreatingProvider;
     try {
-      _currentlyInitializingScope = this;
       _currentlyCreatingProviderIndex = _argProviderIndices[id];
       _currentlyCreatingProvider = id;
 
@@ -597,8 +540,7 @@ class ProviderScopeState extends State<ProviderScope> {
       createdArgProviderValues[provider] = value;
       return value;
     } finally {
-      // Restore shared state on both success and failure
-      _currentlyInitializingScope = savedScope;
+      // Restore the creation state on both success and failure
       _currentlyCreatingProviderIndex = savedIndex;
       _currentlyCreatingProvider = savedProvider;
     }

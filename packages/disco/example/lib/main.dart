@@ -117,13 +117,13 @@ final modelProvider = Provider<Model>(
   debugName: 'model',
 );
 
-/// An eager provider (`lazy: false`) with a `dispose` callback: its value is
-/// created as soon as the ProviderScope providing it is mounted, and disposed
-/// when that scope is unmounted.
+/// A provider with a `dispose` callback: its value is disposed when the
+/// ProviderScope providing it is unmounted.
+///
+/// See [MainApp] for how its value is created as soon as the app starts.
 final loggerProvider = Provider<Logger>(
-  (context) => Logger()..log('Logger created eagerly'),
+  (context) => Logger()..log('Logger created'),
   dispose: (logger) => logger.dispose(),
-  lazy: false,
   debugName: 'logger',
 );
 
@@ -180,12 +180,6 @@ final missingProvider = Provider<String>(
 // ---------------------------------------------------------------------------
 
 void main() {
-  // Application-wide configuration. `DiscoConfig.lazy` decides whether the
-  // values of the providers are created lazily by default. It is read when a
-  // provider is declared: since the top-level variables of Dart are
-  // initialized lazily, set it before any provider is used.
-  DiscoConfig.lazy = true;
-
   runApp(const MainApp());
 }
 
@@ -203,12 +197,20 @@ class MainApp extends StatelessWidget {
         // to be declared after it.
         analyticsProvider(),
       ],
-      child: MaterialApp(
-        title: 'Disco Example',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        home: const HomePage(),
+      // The values of the providers are always created lazily. Injecting the
+      // logger right below the scope creates it as soon as the app starts:
+      // this is the recommended way of initializing a value eagerly.
+      child: Builder(
+        builder: (context) {
+          loggerProvider.of(context);
+          return MaterialApp(
+            title: 'Disco Example',
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+            ),
+            home: const HomePage(),
+          );
+        },
       ),
     );
   }
@@ -267,7 +269,7 @@ class HomePage extends StatelessWidget {
                         pageBuilder: (context) => const ModalsPage(),
                       ),
                       _DemoTile(
-                        title: 'Lazy and eager providers',
+                        title: 'Lazy creation',
                         subtitle: 'When the values get created',
                         pageBuilder: (context) => const LazinessPage(),
                       ),
@@ -547,16 +549,17 @@ class LazinessPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lazy and eager providers')),
+      appBar: AppBar(title: const Text('Lazy creation')),
       body: Column(
         children: [
           const Padding(
             padding: EdgeInsets.all(16),
             child: Text(
-              'The logger is eager (lazy: false): its value was created when '
-              'the app-wide scope was mounted. The analytics are lazy: their '
-              'value is created the first time they get injected, which has '
-              'already happened by opening this page from the list.',
+              'The value of a provider is created the first time it gets '
+              'injected, and never before. The logger was created at startup '
+              'only because MainApp injects it right below the app-wide '
+              'scope. The analytics were created later, the first time a demo '
+              'was opened from the list.',
             ),
           ),
           Builder(

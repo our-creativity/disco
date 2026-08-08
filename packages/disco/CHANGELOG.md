@@ -1,7 +1,26 @@
 ## 3.0.0
 
 - **BREAKING**: A provider has to be called to be inserted into a `ProviderScope`, i.e. `providers: [myProvider()]` instead of `providers: [myProvider]`. This makes the syntax the same for both providers and argument providers.
-- **BREAKING**: `provider.overrideWithValue(value)` has been replaced by `provider.overrideWith(provider)`, which overrides a provider entirely (and not just its value). The mock is a regular provider, with its own `create`, `dispose` and `lazy` parameters. Argument providers are overridden with argument providers, which receive the argument specified in the widget tree.
+- **BREAKING**: `provider.overrideWithValue(value)` has been replaced by `provider.overrideWith(provider)`, which overrides a provider entirely (and not just its value). The mock is a regular provider, with its own `create` and `dispose`. Argument providers are overridden with argument providers, which receive the argument specified in the widget tree.
+- **BREAKING**: The values of the providers are now always created lazily: the `lazy` parameter and `DiscoConfig` (whose only option was `lazy`) have been removed. To create a value as soon as its scope is mounted, inject it in a widget placed below the scope:
+
+  ```dart
+  ProviderScope(
+    providers: [myProvider()],
+    child: Builder(
+      builder: (context) {
+        myProvider.of(context);
+        return const MyChild();
+      },
+    ),
+  )
+  ```
+
+  See [Lazy creation of the values](https://disco.mariuti.com/core/providers/#lazy-creation-of-the-values) for the details.
+
+- **FIX**: A provider injecting an overridden provider of the same scope got the original provider instead of its override.
+- **FIX**: The value of an overridden provider is no longer created (it used to be created, and disposed, whenever the original provider was not lazy).
+- **FIX**: A mock passed to `overrideWith` can now inject other providers.
 
 ## 2.0.0
 

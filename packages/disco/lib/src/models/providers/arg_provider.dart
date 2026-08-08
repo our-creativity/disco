@@ -17,14 +17,9 @@ class ArgProvider<T extends Object, A> {
   ArgProvider._(
     CreateArgProviderValueFn<T, A> create, {
     DisposeProviderValueFn<T>? dispose,
-    bool? lazy,
     this.debugName,
   }) : _createValue = create,
-       _disposeValue = dispose,
-       _lazy = lazy ?? DiscoConfig.lazy;
-
-  /// {@macro Provider.lazy}
-  final bool _lazy;
+       _disposeValue = dispose;
 
   /// {@macro Provider.create}
   final CreateArgProviderValueFn<T, A> _createValue;
@@ -82,7 +77,6 @@ class ArgProvider<T extends Object, A> {
   Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
     (context) => _createValue(context, arg),
     dispose: _disposeValue,
-    lazy: _lazy,
   );
 
   /// {@macro Provider.debugName}

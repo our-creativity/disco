@@ -87,23 +87,53 @@ void main() {
     expect(find.text('6'), findsOneWidget);
   });
 
-  testWidgets('Test Provider.withArgument not lazy', (tester) async {
+  testWidgets('The value of a provider is not created until it is injected', (
+    tester,
+  ) async {
     var fired = false;
 
-    final doubleCountProvider = Provider.withArgument(
-      (context, int arg) {
-        fired = true;
-        return arg * 2;
-      },
-      lazy: false,
-    );
+    final doubleCountProvider = Provider.withArgument((context, int arg) {
+      fired = true;
+      return arg * 2;
+    });
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
             providers: [doubleCountProvider(3)],
+            // Nothing injects the provider.
             child: const Text('hello'),
+          ),
+        ),
+      ),
+    );
+
+    expect(fired, false);
+  });
+
+  testWidgets('''A value can be created as soon as its scope is mounted, by injecting it right below the scope''', (
+    tester,
+  ) async {
+    var fired = false;
+
+    final doubleCountProvider = Provider.withArgument((context, int arg) {
+      fired = true;
+      return arg * 2;
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ProviderScope(
+            providers: [doubleCountProvider(3)],
+            // This is the recommended way of creating a value eagerly.
+            child: Builder(
+              builder: (context) {
+                doubleCountProvider.of(context);
+                return const Text('hello');
+              },
+            ),
           ),
         ),
       ),
@@ -288,11 +318,9 @@ void main() {
 
     final numberContainer1Provider = Provider(
       (_) => const NumberContainer(1),
-      lazy: false,
     );
     final numberContainer2Provider = Provider(
       (_) => const NumberContainer(100),
-      lazy: false,
     );
     final nameContainerProvider = Provider(
       (_) => nameContainer,
@@ -928,63 +956,9 @@ void main() {
   );
 
   // Same-scope provider access tests
-  testWidgets('Provider can access earlier provider in same scope (non-lazy)', (
+  testWidgets('Provider can access earlier provider in same scope', (
     tester,
   ) async {
-    final numberProvider = Provider((_) => 5, lazy: false);
-    final doubleProvider = Provider((context) {
-      final number = numberProvider.of(context);
-      return number * 2;
-    }, lazy: false);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ProviderScope(
-            providers: [numberProvider(), doubleProvider()],
-            child: Builder(
-              builder: (context) {
-                final double = doubleProvider.of(context);
-                return Text(double.toString());
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-
-    expect(find.text('10'), findsOneWidget);
-  });
-
-  testWidgets('Throws ProviderForwardReferenceError on forward reference', (
-    tester,
-  ) async {
-    final numberProvider = Provider<int>((_) => 5, lazy: false);
-    final doubleProvider = Provider<int>((context) {
-      final number = numberProvider.of(context); // Forward reference!
-      return number * 2;
-    }, lazy: false);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: ProviderScope(
-            // Wrong order: doubleProvider depends on numberProvider
-            // but comes first
-            providers: [doubleProvider(), numberProvider()],
-            child: Container(),
-          ),
-        ),
-      ),
-    );
-
-    expect(
-      tester.takeException(),
-      const TypeMatcher<ProviderForwardReferenceError>(),
-    );
-  });
-
-  testWidgets('Lazy provider can access earlier lazy provider', (tester) async {
     final numberProvider = Provider((_) => 5);
     final doubleProvider = Provider((context) {
       final number = numberProvider.of(context);
@@ -1010,24 +984,28 @@ void main() {
     expect(find.text('10'), findsOneWidget);
   });
 
-  testWidgets('Non-lazy provider can access lazy earlier provider', (
+  testWidgets('Throws ProviderForwardReferenceError on forward reference', (
     tester,
   ) async {
-    final numberProvider = Provider((_) => 5);
-    final doubleProvider = Provider((context) {
-      final number = numberProvider.of(context);
+    final numberProvider = Provider<int>((_) => 5);
+    final doubleProvider = Provider<int>((context) {
+      final number = numberProvider.of(context); // Forward reference!
       return number * 2;
-    }, lazy: false); // non-lazy
+    });
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [numberProvider(), doubleProvider()],
+            // Wrong order: doubleProvider depends on numberProvider
+            // but comes first
+            providers: [doubleProvider(), numberProvider()],
+            // The error is thrown while the value of `doubleProvider` is
+            // created, i.e. the first time it is injected.
             child: Builder(
               builder: (context) {
-                final double = doubleProvider.of(context);
-                return Text(double.toString());
+                doubleProvider.of(context);
+                return Container();
               },
             ),
           ),
@@ -1035,20 +1013,21 @@ void main() {
       ),
     );
 
-    // doubleProvider's creation should trigger numberProvider's creation
-    expect(find.text('10'), findsOneWidget);
+    expect(
+      tester.takeException(),
+      const TypeMatcher<ProviderForwardReferenceError>(),
+    );
   });
 
   testWidgets('ArgProvider can access earlier provider in same scope', (
     tester,
   ) async {
-    final numberProvider = Provider((_) => 5, lazy: false);
+    final numberProvider = Provider((_) => 5);
     final multiplierProvider = Provider.withArgument(
       (context, int multiplier) {
         final number = numberProvider.of(context);
         return number * multiplier;
       },
-      lazy: false,
     );
 
     await tester.pumpWidget(
@@ -1071,14 +1050,12 @@ void main() {
   });
 
   testWidgets('Nested provider dependencies work (A→B→C)', (tester) async {
-    final aProvider = Provider((_) => 1, lazy: false);
+    final aProvider = Provider((_) => 1);
     final bProvider = Provider(
       (context) => aProvider.of(context) + 1,
-      lazy: false,
     );
     final cProvider = Provider(
       (context) => bProvider.of(context) + 1,
-      lazy: false,
     );
 
     await tester.pumpWidget(
@@ -1145,18 +1122,17 @@ void main() {
   });
 
   testWidgets('Mixed Provider and ArgProvider respect order', (tester) async {
-    final numberProvider = Provider((_) => 5, lazy: false);
+    final numberProvider = Provider((_) => 5);
     final argProvider = Provider.withArgument(
       (context, String prefix) {
         final number = numberProvider.of(context);
         return '$prefix$number';
       },
-      lazy: false,
     );
     final combineProvider = Provider((context) {
       final str = argProvider.of(context);
       return '$str!';
-    }, lazy: false);
+    });
 
     await tester.pumpWidget(
       MaterialApp(
@@ -1183,13 +1159,12 @@ void main() {
 
   testWidgets('Throws ProviderForwardReferenceError when ArgProvider '
       'accesses later Provider', (tester) async {
-    final numberProvider = Provider<int>((_) => 5, lazy: false);
+    final numberProvider = Provider<int>((_) => 5);
     final multiplierProvider = Provider.withArgument<int, int>(
       (context, int multiplier) {
         final number = numberProvider.of(context); // Forward reference!
         return number * multiplier;
       },
-      lazy: false,
     );
 
     await tester.pumpWidget(
@@ -1199,7 +1174,12 @@ void main() {
             // Wrong order: multiplierProvider depends on numberProvider
             // but comes first
             providers: [multiplierProvider(3), numberProvider()],
-            child: Container(),
+            child: Builder(
+              builder: (context) {
+                multiplierProvider.of(context);
+                return Container();
+              },
+            ),
           ),
         ),
       ),
@@ -1266,14 +1246,12 @@ void main() {
       'later ArgProvider', (tester) async {
     final secondArgProvider = Provider.withArgument<int, int>(
       (context, int arg) => arg * 2,
-      lazy: false,
     );
     final firstArgProvider = Provider.withArgument<int, int>(
       (context, int arg) {
         final second = secondArgProvider.of(context); // Forward reference!
         return arg + second;
       },
-      lazy: false,
     );
 
     await tester.pumpWidget(
@@ -1283,7 +1261,12 @@ void main() {
             // Wrong order: firstArgProvider depends on secondArgProvider
             // but comes first
             providers: [firstArgProvider(5), secondArgProvider(3)],
-            child: Container(),
+            child: Builder(
+              builder: (context) {
+                firstArgProvider.of(context);
+                return Container();
+              },
+            ),
           ),
         ),
       ),
@@ -1310,21 +1293,26 @@ void main() {
         providerA = Provider<int>((context) {
           final b = providerB.of(context); // Forward reference to B!
           return b + 1;
-        }, lazy: false);
+        });
 
         providerB = Provider<int>((context) {
           // In a circular dependency, B would try to access A, but A comes
           // first so this wouldn't be a forward reference. However, A accessing
           // B is already a forward reference, so we never get here.
           return 10;
-        }, lazy: false);
+        });
 
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
               body: ProviderScope(
                 providers: [providerA(), providerB()],
-                child: Container(),
+                child: Builder(
+                  builder: (context) {
+                    providerA.of(context);
+                    return Container();
+                  },
+                ),
               ),
             ),
           ),
@@ -1350,7 +1338,7 @@ void main() {
         providerA = Provider<int>((context) {
           final b = argProviderB.of(context); // Forward reference!
           return b + 1;
-        }, lazy: false);
+        });
 
         argProviderB = Provider.withArgument<int, String>(
           (context, String arg) {
@@ -1359,7 +1347,6 @@ void main() {
             // a forward reference error.
             return 10;
           },
-          lazy: false,
         );
 
         await tester.pumpWidget(
@@ -1367,7 +1354,12 @@ void main() {
             home: Scaffold(
               body: ProviderScope(
                 providers: [providerA(), argProviderB('test')],
-                child: Container(),
+                child: Builder(
+                  builder: (context) {
+                    providerA.of(context);
+                    return Container();
+                  },
+                ),
               ),
             ),
           ),
@@ -1487,18 +1479,52 @@ void main() {
     );
 
     testWidgets(
-      '''A non-lazy override of an argument provider gets created eagerly''',
+      '''The value of an overridden provider is never created''',
       (tester) async {
-        var mockCreated = false;
+        var originalCreated = false;
 
-        // The original provider is lazy, the mock is not.
-        final numberProvider = Provider.withArgument<int, int>((_, arg) => arg);
-        final mockNumberProvider = Provider.withArgument<int, int>(
-          (_, arg) {
-            mockCreated = true;
-            return arg + 100;
-          },
-          lazy: false,
+        final numberProvider = Provider<int>((_) {
+          originalCreated = true;
+          return 1;
+        });
+        final mockNumberProvider = Provider<int>((_) => 10);
+
+        await tester.pumpWidget(
+          ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWith(mockNumberProvider),
+            ],
+            child: MaterialApp(
+              home: ProviderScope(
+                providers: [
+                  numberProvider(),
+                ],
+                child: Builder(
+                  builder: (context) {
+                    return Text(numberProvider.of(context).toString());
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('10'), findsOneWidget);
+        // Since every value is created lazily, and every injection resolves to
+        // the mock, the original provider is never created at all.
+        expect(originalCreated, false);
+      },
+    );
+
+    testWidgets(
+      '''A mock can inject the other providers of the widget tree''',
+      (tester) async {
+        final numberProvider = Provider<int>((_) => 1);
+        final baseProvider = Provider<int>((_) => 100);
+        // The mock is created lazily, therefore it can inject the providers
+        // available where the overridden provider is injected.
+        final mockNumberProvider = Provider<int>(
+          (context) => baseProvider.of(context) + 5,
         );
 
         await tester.pumpWidget(
@@ -1509,18 +1535,20 @@ void main() {
             child: MaterialApp(
               home: ProviderScope(
                 providers: [
-                  numberProvider(1),
+                  baseProvider(),
+                  numberProvider(),
                 ],
-                // The provider is never injected.
-                child: const Text('no injection'),
+                child: Builder(
+                  builder: (context) {
+                    return Text(numberProvider.of(context).toString());
+                  },
+                ),
               ),
             ),
           ),
         );
 
-        // The laziness of the mock takes precedence over the one of the
-        // original provider.
-        expect(mockCreated, true);
+        expect(find.text('105'), findsOneWidget);
       },
     );
 
@@ -1569,6 +1597,102 @@ void main() {
         // place where the argument is known), and that scope is an ancestor of
         // the ProviderScopeOverride, i.e. it cannot know about the overrides.
         expect(find.text('9 1'), findsOneWidget);
+      },
+    );
+  });
+
+  // Regression tests: when a provider is overridden, the providers *depending*
+  // on it get the override as well, no matter which scope declares them.
+  group('Overrides of dependencies', () {
+    testWidgets(
+      '''A provider injecting an overridden provider of the same scope gets the override''',
+      (tester) async {
+        final numberProvider = Provider<int>(
+          (_) => 1,
+          debugName: 'number',
+        );
+        final doubleNumberProvider = Provider<int>(
+          (context) => numberProvider.of(context) * 2,
+          debugName: 'doubleNumber',
+        );
+        final mockNumberProvider = Provider<int>((_) => 10);
+
+        await tester.pumpWidget(
+          ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWith(mockNumberProvider),
+            ],
+            child: MaterialApp(
+              home: ProviderScope(
+                providers: [
+                  numberProvider(),
+                  doubleNumberProvider(),
+                ],
+                child: Builder(
+                  builder: (context) {
+                    final number = numberProvider.of(context);
+                    final doubleNumber = doubleNumberProvider.of(context);
+                    return Text('$number $doubleNumber');
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // The widget gets the override (10), therefore the provider depending
+        // on it gets 20 and not 2, i.e. it is created out of the override and
+        // not out of the original provider.
+        expect(find.text('10 20'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''A provider injecting an overridden provider of an ANCESTOR scope gets the override''',
+      (tester) async {
+        final numberProvider = Provider<int>(
+          (_) => 1,
+          debugName: 'number',
+        );
+        final doubleNumberProvider = Provider<int>(
+          (context) => numberProvider.of(context) * 2,
+          debugName: 'doubleNumber',
+        );
+        final mockNumberProvider = Provider<int>((_) => 10);
+
+        await tester.pumpWidget(
+          ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWith(mockNumberProvider),
+            ],
+            child: MaterialApp(
+              home: ProviderScope(
+                providers: [
+                  numberProvider(),
+                ],
+                // The dependent provider is provided by another scope,
+                // therefore the dependency is not resolved within the scope
+                // creating it.
+                child: ProviderScope(
+                  providers: [
+                    doubleNumberProvider(),
+                  ],
+                  child: Builder(
+                    builder: (context) {
+                      final number = numberProvider.of(context);
+                      final doubleNumber = doubleNumberProvider.of(context);
+                      return Text('$number $doubleNumber');
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // The dependency belongs to another scope, which has always been
+        // resolved through the widget tree.
+        expect(find.text('10 20'), findsOneWidget);
       },
     );
   });

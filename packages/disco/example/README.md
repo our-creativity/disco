@@ -10,7 +10,7 @@ disposed.
 | Providers with arguments | `Provider.withArgument`, `dispose`, and injecting a provider of an ancestor scope |
 | Nested scopes | Two scopes providing the same provider: the nearest one wins |
 | Modals | `ProviderScopePortal`, and what happens in a dialog without it |
-| Lazy and eager providers | `lazy: false` versus the default lazy creation |
+| Lazy creation | When the values get created, and how to create one as soon as a scope is mounted |
 | Recreating a scope | Forcing a new value by changing the `key` of a `ProviderScope` |
 | Missing providers | `of` throwing a `ProviderWithoutScopeError`, versus `maybeOf` returning `null` |
 

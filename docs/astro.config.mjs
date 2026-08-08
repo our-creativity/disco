@@ -45,7 +45,6 @@ export default defineConfig({
             'core/modals',
             'core/testing',
             'core/provider-retrieval-process',
-            'core/configuration',
           ],
         },
         {

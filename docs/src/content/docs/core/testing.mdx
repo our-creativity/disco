@@ -7,7 +7,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Testing is done with overrides. You need to place a `ProviderScopeOverride` and then specify the `overrides` argument with a list containing the providers followed by `.overrideWith(provider)`.
 
-An override replaces a provider **entirely**, and not just the value it holds: the provider passed to `overrideWith` is a regular provider, with its own `create`, `dispose` and `lazy` parameters. This means a mock can, for instance, inject other providers through its context, exactly like the provider it replaces.
+An override replaces a provider **entirely**, and not just the value it holds: the provider passed to `overrideWith` is a regular provider, with its own `create` and `dispose`. This means a mock can, for instance, inject other providers through its context, exactly like the provider it replaces. The value of the original provider is never created at all.
 
 <Aside>
   The overrides always take precedence over the providers provided with `ProviderScope`, even if the `ProviderScopeOverride` is placed above in the widget tree.

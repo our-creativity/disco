@@ -7,10 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// Comprehensive benchmark suite for provider performance testing.
 ///
+/// The value of a provider is always created lazily, i.e. the first time it is
+/// injected. Therefore the benchmarks distinguish between:
+/// - registering the providers, which is what mounting a ProviderScope does;
+/// - creating their values, which is what injecting them does.
+///
 /// This benchmark tests various scenarios:
-/// - Creating N simple providers (lazy and eager)
-/// - Creating N providers with dependencies
-/// - Retrieving provider values
+/// - Registering N providers
+/// - Creating the values of N providers
+/// - Creating N values with dependencies
 /// - ArgProviders performance
 /// - Nested scope performance
 
@@ -23,19 +28,34 @@ List<InstantiableProvider> _instantiateAll(
   Iterable<Provider<Object>> providers,
 ) => [for (final provider in providers) provider()];
 
+/// A widget which injects all the [providers], so that their values are
+/// created.
+class _InjectAll extends StatelessWidget {
+  const _InjectAll(this.providers);
+
+  final Iterable<Provider<Object>> providers;
+
+  @override
+  Widget build(BuildContext context) {
+    for (final provider in providers) {
+      provider.of(context);
+    }
+    return Container();
+  }
+}
+
 void main() {
   // Write results to file after all tests complete
   tearDownAll(_writeBenchmarkResults);
 
   group('Provider Benchmark', () {
-    testWidgets('Benchmark: Create 100 simple eager providers', (tester) async {
+    testWidgets('Benchmark: Register 100 providers', (tester) async {
       final stopwatch = Stopwatch()..start();
 
       final providers = List.generate(
         100,
         (i) => Provider(
           (_) => 'Value$i',
-          lazy: false,
           debugName: 'provider$i',
         ),
       );
@@ -44,6 +64,7 @@ void main() {
         MaterialApp(
           home: ProviderScope(
             providers: _instantiateAll(providers),
+            // No value is created, since nothing is injected.
             child: Container(),
           ),
         ),
@@ -51,18 +72,17 @@ void main() {
 
       stopwatch.stop();
       final time = stopwatch.elapsedMilliseconds;
-      _benchmarkResults['Create 100 simple eager providers'] = time;
-      print('Create 100 simple eager providers: ${time}ms');
+      _benchmarkResults['Register 100 providers'] = time;
+      print('Register 100 providers: ${time}ms');
     });
 
-    testWidgets('Benchmark: Create 100 simple lazy providers', (tester) async {
+    testWidgets('Benchmark: Create 100 provider values', (tester) async {
       final stopwatch = Stopwatch()..start();
 
       final providers = List.generate(
         100,
         (i) => Provider(
           (_) => 'Value$i',
-          lazy: true,
           debugName: 'provider$i',
         ),
       );
@@ -71,18 +91,18 @@ void main() {
         MaterialApp(
           home: ProviderScope(
             providers: _instantiateAll(providers),
-            child: Container(),
+            child: _InjectAll(providers),
           ),
         ),
       );
 
       stopwatch.stop();
       final time = stopwatch.elapsedMilliseconds;
-      _benchmarkResults['Create 100 simple lazy providers'] = time;
-      print('Create 100 simple lazy providers: ${time}ms');
+      _benchmarkResults['Create 100 provider values'] = time;
+      print('Create 100 provider values: ${time}ms');
     });
 
-    testWidgets('Benchmark: Create 50 providers with dependencies', (
+    testWidgets('Benchmark: Create 50 values with dependencies', (
       tester,
     ) async {
       // Create a chain of providers where each depends on the previous one
@@ -92,7 +112,6 @@ void main() {
       providers.add(
         Provider(
           (_) => 0,
-          lazy: false,
           debugName: 'provider0',
         ),
       );
@@ -105,7 +124,6 @@ void main() {
               final prev = providers[i - 1].of(context);
               return prev + 1;
             },
-            lazy: false,
             debugName: 'provider$i',
           ),
         );
@@ -119,23 +137,23 @@ void main() {
         MaterialApp(
           home: ProviderScope(
             providers: instantiatedProviders,
-            child: Container(),
+            // Injecting the last provider creates the whole chain.
+            child: _InjectAll([providers.last]),
           ),
         ),
       );
 
       stopwatch.stop();
       final time = stopwatch.elapsedMilliseconds;
-      _benchmarkResults['Create 50 providers with dependencies'] = time;
-      print('Create 50 providers with dependencies: ${time}ms');
+      _benchmarkResults['Create 50 values with dependencies'] = time;
+      print('Create 50 values with dependencies: ${time}ms');
     });
 
-    testWidgets('Benchmark: Retrieve 100 lazy provider values', (tester) async {
+    testWidgets('Benchmark: Retrieve 100 provider values', (tester) async {
       final providers = List.generate(
         100,
         (i) => Provider(
           (_) => 'Value$i',
-          lazy: true,
           debugName: 'provider$i',
         ),
       );
@@ -148,15 +166,15 @@ void main() {
               builder: (context) {
                 final stopwatch = Stopwatch()..start();
 
-                // Access all lazy providers to trigger creation
+                // Access all providers to trigger creation
                 for (final provider in providers) {
                   provider.of(context);
                 }
 
                 stopwatch.stop();
                 final time = stopwatch.elapsedMilliseconds;
-                _benchmarkResults['Retrieve 100 lazy provider values'] = time;
-                print('Retrieve 100 lazy provider values: ${time}ms');
+                _benchmarkResults['Retrieve 100 provider values'] = time;
+                print('Retrieve 100 provider values: ${time}ms');
 
                 return Container();
               },
@@ -166,12 +184,11 @@ void main() {
       );
     });
 
-    testWidgets('Benchmark: Create 100 ArgProviders', (tester) async {
+    testWidgets('Benchmark: Create 100 ArgProvider values', (tester) async {
       final argProviders = List.generate(
         100,
         (i) => Provider.withArgument<String, int>(
           (_, arg) => 'Value$i-$arg',
-          lazy: false,
           debugName: 'argProvider$i',
         ),
       );
@@ -184,15 +201,22 @@ void main() {
         MaterialApp(
           home: ProviderScope(
             providers: instantiated,
-            child: Container(),
+            child: Builder(
+              builder: (context) {
+                for (final argProvider in argProviders) {
+                  argProvider.of(context);
+                }
+                return Container();
+              },
+            ),
           ),
         ),
       );
 
       stopwatch.stop();
       final time = stopwatch.elapsedMilliseconds;
-      _benchmarkResults['Create 100 ArgProviders'] = time;
-      print('Create 100 ArgProviders: ${time}ms');
+      _benchmarkResults['Create 100 ArgProvider values'] = time;
+      print('Create 100 ArgProvider values: ${time}ms');
     });
 
     testWidgets('Benchmark: Access providers in nested scopes', (tester) async {
@@ -200,7 +224,6 @@ void main() {
         50,
         (i) => Provider(
           (_) => 'Outer$i',
-          lazy: false,
           debugName: 'outerProvider$i',
         ),
       );
@@ -209,7 +232,6 @@ void main() {
         50,
         (i) => Provider(
           (_) => 'Inner$i',
-          lazy: false,
           debugName: 'innerProvider$i',
         ),
       );
@@ -260,7 +282,6 @@ void main() {
         providers.add(
           Provider(
             (_) => i,
-            lazy: false,
             debugName: 'base$i',
           ),
         );
@@ -275,7 +296,6 @@ void main() {
               final base2 = providers[i - 9].of(context);
               return base1 + base2;
             },
-            lazy: false,
             debugName: 'mid$i',
           ),
         );
@@ -290,13 +310,14 @@ void main() {
               final mid2 = providers[i - 9].of(context);
               return mid1 + mid2;
             },
-            lazy: false,
             debugName: 'top$i',
           ),
         );
       }
 
       final instantiatedProviders = _instantiateAll(providers);
+      // Injecting the top-level providers creates all the others.
+      final topProviders = providers.sublist(20);
 
       final stopwatch = Stopwatch()..start();
 
@@ -304,7 +325,7 @@ void main() {
         MaterialApp(
           home: ProviderScope(
             providers: instantiatedProviders,
-            child: Container(),
+            child: _InjectAll(topProviders),
           ),
         ),
       );
@@ -315,59 +336,13 @@ void main() {
       print('Complex dependency chain with 30 providers: ${time}ms');
     });
 
-    testWidgets('Benchmark: Mixed lazy and eager providers (100 total)', (
-      tester,
-    ) async {
-      final providers = <Provider<String>>[];
-
-      // 50 eager providers
-      for (var i = 0; i < 50; i++) {
-        providers.add(
-          Provider(
-            (_) => 'Eager$i',
-            lazy: false,
-            debugName: 'eager$i',
-          ),
-        );
-      }
-
-      // 50 lazy providers
-      for (var i = 50; i < 100; i++) {
-        providers.add(
-          Provider(
-            (_) => 'Lazy$i',
-            lazy: true,
-            debugName: 'lazy$i',
-          ),
-        );
-      }
-
-      final instantiatedProviders = _instantiateAll(providers);
-
-      final stopwatch = Stopwatch()..start();
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ProviderScope(
-            providers: instantiatedProviders,
-            child: Container(),
-          ),
-        ),
-      );
-
-      stopwatch.stop();
-      final time = stopwatch.elapsedMilliseconds;
-      _benchmarkResults['Mixed lazy and eager (100 total)'] = time;
-      print('Mixed lazy and eager providers (100 total): ${time}ms');
-    });
-
     testWidgets('Benchmark: ArgProviders with dependencies', (tester) async {
       final providers = <InstantiableProvider>[];
+      final argProviders = <ArgProvider<int, int>>[];
 
       // Base provider
       final baseProvider = Provider<int>(
         (_) => 10,
-        lazy: false,
         debugName: 'base',
       );
       providers.add(baseProvider());
@@ -379,9 +354,9 @@ void main() {
             final base = baseProvider.of(context);
             return base + arg + i;
           },
-          lazy: false,
           debugName: 'argProvider$i',
         );
+        argProviders.add(argProvider);
         providers.add(argProvider.call(i));
       }
 
@@ -391,7 +366,14 @@ void main() {
         MaterialApp(
           home: ProviderScope(
             providers: providers,
-            child: Container(),
+            child: Builder(
+              builder: (context) {
+                for (final argProvider in argProviders) {
+                  argProvider.of(context);
+                }
+                return Container();
+              },
+            ),
           ),
         ),
       );
@@ -407,7 +389,6 @@ void main() {
         500,
         (i) => Provider(
           (_) => 'Value$i',
-          lazy: i.isOdd, // Alternate between lazy and eager
           debugName: 'provider$i',
         ),
       );
@@ -420,7 +401,7 @@ void main() {
         MaterialApp(
           home: ProviderScope(
             providers: instantiatedProviders,
-            child: Container(),
+            child: _InjectAll(providers),
           ),
         ),
       );
@@ -439,7 +420,6 @@ void main() {
       providers.add(
         Provider(
           (_) => 0,
-          lazy: false,
           debugName: 'provider0',
         ),
       );
@@ -451,7 +431,6 @@ void main() {
               final prev = providers[i - 1].of(context);
               return prev + 1;
             },
-            lazy: false,
             debugName: 'provider$i',
           ),
         );
@@ -465,7 +444,7 @@ void main() {
         MaterialApp(
           home: ProviderScope(
             providers: instantiatedProviders,
-            child: Container(),
+            child: _InjectAll([providers.last]),
           ),
         ),
       );
@@ -499,7 +478,6 @@ void main() {
 
       final baseProvider = Provider<int>(
         (_) => 42,
-        lazy: false,
         debugName: 'base',
       );
       providers.add(baseProvider);
@@ -511,7 +489,6 @@ void main() {
               final base = baseProvider.of(context);
               return base + i;
             },
-            lazy: false,
             debugName: 'dependent$i',
           ),
         );
@@ -525,7 +502,7 @@ void main() {
         MaterialApp(
           home: ProviderScope(
             providers: instantiatedProviders,
-            child: Container(),
+            child: _InjectAll(providers),
           ),
         ),
       );
@@ -541,7 +518,6 @@ void main() {
         20,
         (i) => Provider(
           (_) => 'Value$i',
-          lazy: false,
           debugName: 'provider$i',
         ),
       );
@@ -562,7 +538,7 @@ void main() {
                   providers: instantiatedProviders,
                   child: ProviderScope(
                     providers: instantiatedProviders,
-                    child: Container(),
+                    child: _InjectAll(providers),
                   ),
                 ),
               ),
@@ -596,14 +572,13 @@ void _writeBenchmarkResults() {
 
   // Write results in the expected order
   final orderedKeys = [
-    'Create 100 simple eager providers',
-    'Create 100 simple lazy providers',
-    'Create 50 providers with dependencies',
-    'Retrieve 100 lazy provider values',
-    'Create 100 ArgProviders',
+    'Register 100 providers',
+    'Create 100 provider values',
+    'Create 50 values with dependencies',
+    'Retrieve 100 provider values',
+    'Create 100 ArgProvider values',
     'Access 100 providers in nested scopes',
     'Complex dependency chain (30 providers)',
-    'Mixed lazy and eager (100 total)',
     'ArgProviders with dependencies (50)',
     'Large scale (500 providers)',
     'Deep dependency chain (100 levels)',

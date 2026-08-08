@@ -14,11 +14,23 @@ typedef DisposeProviderValueFn<T> = void Function(T value);
 /// such as instantiating a BLoC.
 ///
 /// Provider is the equivalent of a State.initState combined with State.dispose.
-/// [_createValue] is called only once in State.initState.
-/// The `create` callback is lazily called. It is called the first time the
-/// value is read, instead of the first time Provider is inserted in the widget
-/// tree.
-/// This behavior can be disabled by passing [_lazy] false.
+/// The `create` callback is always called lazily, i.e. the first time the value
+/// is injected, and not when the provider is inserted into the widget tree.
+///
+/// > If you need a value to be created as soon as its [ProviderScope] is
+/// > mounted, inject it in a widget placed right below the scope:
+/// >
+/// > ```dart
+/// > ProviderScope(
+/// >   providers: [myProvider()],
+/// >   child: Builder(
+/// >     builder: (context) {
+/// >       myProvider.of(context);
+/// >       return const MyChild();
+/// >     },
+/// >   ),
+/// > )
+/// > ```
 ///
 /// {@endtemplate}
 @immutable
@@ -34,32 +46,16 @@ class Provider<T extends Object> {
 
     /// {@macro Provider.dispose}
     DisposeProviderValueFn<T>? dispose,
-
-    /// {@macro Provider.lazy}
-    bool? lazy,
     this.debugName,
   }) : _createValue = create,
-       _disposeValue = dispose,
-       _lazy = lazy ?? DiscoConfig.lazy;
+       _disposeValue = dispose;
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
     CreateArgProviderValueFn<T, A> create, {
     DisposeProviderValueFn<T>? dispose,
-    bool lazy = true,
     String? debugName,
-  }) =>
-      ArgProvider._(create, dispose: dispose, lazy: lazy, debugName: debugName);
-
-  /// {@template Provider.lazy}
-  /// Makes the creation of the provided value lazy. defaults to true.
-  ///
-  /// > The provider itself is not lazily created, only its contained value.
-  ///
-  /// if this value is true, the provider's value will be created only when
-  /// retrieved from descendants for the first time.
-  /// {@endtemplate}
-  final bool _lazy;
+  }) => ArgProvider._(create, dispose: dispose, debugName: debugName);
 
   /// {@template Provider.create}
   /// The function called to create the element.
