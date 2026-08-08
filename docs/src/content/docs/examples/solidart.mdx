@@ -191,7 +191,7 @@ class TodosPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Using ProviderScope here to provide the [TodosController] to descendants.
     return ProviderScope(
-      providers: [todosControllerProvider],
+      providers: [todosControllerProvider()],
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Todos'),
@@ -247,7 +247,7 @@ class _TodosBodyState extends State<TodosBody> {
       providers: [
         // make the active filter signal visible only to descendants.
         // scoped here because this is where it starts to be necessary.
-        todosFilterProvider,
+        todosFilterProvider(),
       ],
       child: Column(
         children: [
@@ -577,7 +577,9 @@ Widget wrapWithMockedTodosController({
   return MaterialApp(
     home: ProviderScopeOverride(
       overrides: [
-        todosControllerProvider.overrideWithValue(todosController),
+        todosControllerProvider.overrideWith(
+          Provider((context) => todosController),
+        ),
       ],
       child: child,
     ),

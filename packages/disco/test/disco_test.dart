@@ -42,8 +42,8 @@ void main() {
         home: Scaffold(
           body: ProviderScope(
             providers: [
-              numberContainer1Provider,
-              numberContainer2Provider,
+              numberContainer1Provider(),
+              numberContainer2Provider(),
             ],
             child: Builder(
               builder: (context) {
@@ -124,9 +124,9 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [numberProvider],
+            providers: [numberProvider()],
             child: ProviderScope(
-              providers: [doubleNumberProvider],
+              providers: [doubleNumberProvider()],
               child: Builder(
                 builder: (context) {
                   final number = numberProvider.of(context);
@@ -153,7 +153,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [zeroProvider],
+            providers: [zeroProvider()],
             child: Builder(
               builder: (context) {
                 final ten = tenProvider.of(context);
@@ -240,7 +240,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ProviderScope(
-              providers: [nameContainerProvider],
+              providers: [nameContainerProvider()],
               child: Builder(
                 builder: (context) {
                   final numberContainer = numberContainerProvider.maybeOf(
@@ -266,8 +266,8 @@ void main() {
           home: Scaffold(
             body: ProviderScope(
               providers: [
-                numberContainerProvider,
-                numberContainerProvider,
+                numberContainerProvider(),
+                numberContainerProvider(),
               ],
               child: const SizedBox(),
             ),
@@ -310,9 +310,9 @@ void main() {
         home: Scaffold(
           body: ProviderScope(
             providers: [
-              nameContainerProvider,
-              numberContainer1Provider,
-              numberContainer2Provider,
+              nameContainerProvider(),
+              numberContainer1Provider(),
+              numberContainer2Provider(),
               fullNameContainerProvider('Smith'),
             ],
             child: Builder(
@@ -379,7 +379,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [numberContainerProvider],
+            providers: [numberContainerProvider()],
             child: Builder(
               builder: (context) {
                 return ElevatedButton(
@@ -435,7 +435,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: ProviderScope(
-              providers: [nameContainerProvider],
+              providers: [nameContainerProvider()],
               child: Builder(
                 builder: (context) {
                   return ElevatedButton(
@@ -483,7 +483,7 @@ void main() {
             mainContext: context,
             child: ProviderScope(
               providers: [
-                secondNumberContainerProvider,
+                secondNumberContainerProvider(),
                 doubleCountProvider(3),
               ],
               child: Builder(
@@ -509,7 +509,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [numberContainerProvider],
+            providers: [numberContainerProvider()],
             child: Builder(
               builder: (context) {
                 return ElevatedButton(
@@ -567,7 +567,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [baseProvider, doubleProvider],
+            providers: [baseProvider(), doubleProvider()],
             child: Builder(
               builder: (context) {
                 return ElevatedButton(
@@ -606,7 +606,7 @@ void main() {
             builder: (BuildContext context, Key key, Widget? child) {
               return ProviderScope(
                 key: key,
-                providers: [numberProvider],
+                providers: [numberProvider()],
                 child: Builder(
                   builder: (context) {
                     final number = numberProvider.of(context);
@@ -706,12 +706,12 @@ void main() {
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          numberProvider.overrideWithProvider(mockNumberProvider),
+          numberProvider.overrideWith(mockNumberProvider),
         ],
         child: MaterialApp(
           home: ProviderScope(
             providers: [
-              numberProvider,
+              numberProvider(),
             ],
             child: Builder(
               builder: (context) {
@@ -726,21 +726,21 @@ void main() {
     expect(find.text('9'), findsOneWidget);
   });
 
-  // TODO(manuel): add other test (check also that debug is different, etc.)
-
   testWidgets('''ProviderScopeOverride should override providers''', (
     tester,
   ) async {
     final numberProvider = Provider<int>((_) => 0);
+    final number100Provider = Provider<int>((_) => 100);
+
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          numberProvider.overrideWithValue(100),
+          numberProvider.overrideWith(number100Provider),
         ],
         child: MaterialApp(
           home: ProviderScope(
             providers: [
-              numberProvider,
+              numberProvider(),
             ],
             child: Builder(
               builder: (context) {
@@ -759,12 +759,11 @@ void main() {
     tester,
   ) async {
     final numberProvider = Provider.withArgument((_, int arg) => arg);
-    final mockNumberProvider = Provider.withArgument((_, int arg) => 4);
+    final mockNumberProvider = Provider.withArgument((_, int arg) => 16);
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          // numberProvider.overrideWithValue(1, 16),
-          numberProvider.overrideWithProvider(mockNumberProvider),
+          numberProvider.overrideWith(mockNumberProvider),
         ],
         child: MaterialApp(
           home: ProviderScope(
@@ -786,15 +785,18 @@ void main() {
 
   testWidgets('Only one ProviderScopeOverride can be present', (tester) async {
     final numberProvider = Provider<int>((_) => 0);
+    final number100Provider = Provider<int>((_) => 100);
+    final number200Provider = Provider<int>((_) => 200);
+
     await tester.pumpWidget(
       ProviderScopeOverride(
         overrides: [
-          numberProvider.overrideWithValue(100),
+          numberProvider.overrideWith(number100Provider),
         ],
         child: MaterialApp(
           home: ProviderScopeOverride(
             overrides: [
-              numberProvider.overrideWithValue(200),
+              numberProvider.overrideWith(number200Provider),
             ],
             child: Builder(
               builder: (context) {
@@ -868,12 +870,15 @@ void main() {
   testWidgets(
     '''ProviderScopeOverride must throw a MultipleProviderOverrideOfSameInstance for duplicated providers''',
     (tester) async {
-      final numberProvider = Provider<int>((context) => 0);
+      final number0Provider = Provider<int>((context) => 0);
+      final number1Provider = Provider<int>((context) => 1);
+      final number2Provider = Provider<int>((context) => 2);
+
       await tester.pumpWidget(
         ProviderScopeOverride(
           overrides: [
-            numberProvider.overrideWithValue(1),
-            numberProvider.overrideWithValue(2),
+            number0Provider.overrideWith(number1Provider),
+            number0Provider.overrideWith(number2Provider),
           ],
           child: const Text('hello'),
         ),
@@ -890,14 +895,20 @@ void main() {
     '''Test ProviderScopeOverride throws MultipleProviderOverrideOfSameInstance for multiple instances of ArgProvider''',
     (tester) async {
       final numberProvider = Provider.withArgument((context, int arg) => arg);
+      final numberPlusOneProvider = Provider.withArgument(
+        (context, int arg) => arg + 1,
+      );
+      final numberPlusTwoProvider = Provider.withArgument(
+        (context, int arg) => arg + 2,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: ProviderScopeOverride(
               overrides: [
-                numberProvider.overrideWithValue(0, 1),
-                numberProvider.overrideWithValue(1, 2),
+                numberProvider.overrideWith(numberPlusOneProvider),
+                numberProvider.overrideWith(numberPlusTwoProvider),
               ],
               child: Builder(
                 builder: (context) {
@@ -930,7 +941,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [numberProvider, doubleProvider],
+            providers: [numberProvider(), doubleProvider()],
             child: Builder(
               builder: (context) {
                 final double = doubleProvider.of(context);
@@ -960,7 +971,7 @@ void main() {
           body: ProviderScope(
             // Wrong order: doubleProvider depends on numberProvider
             // but comes first
-            providers: [doubleProvider, numberProvider],
+            providers: [doubleProvider(), numberProvider()],
             child: Container(),
           ),
         ),
@@ -984,7 +995,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [numberProvider, doubleProvider],
+            providers: [numberProvider(), doubleProvider()],
             child: Builder(
               builder: (context) {
                 final double = doubleProvider.of(context);
@@ -1012,7 +1023,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [numberProvider, doubleProvider],
+            providers: [numberProvider(), doubleProvider()],
             child: Builder(
               builder: (context) {
                 final double = doubleProvider.of(context);
@@ -1044,7 +1055,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [numberProvider, multiplierProvider(3)],
+            providers: [numberProvider(), multiplierProvider(3)],
             child: Builder(
               builder: (context) {
                 final result = multiplierProvider.of(context);
@@ -1074,7 +1085,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [aProvider, bProvider, cProvider],
+            providers: [aProvider(), bProvider(), cProvider()],
             child: Builder(
               builder: (context) {
                 final c = cProvider.of(context);
@@ -1112,7 +1123,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: ProviderScope(
-            providers: [aProvider, bProvider, cProvider],
+            providers: [aProvider(), bProvider(), cProvider()],
             child: Builder(
               builder: (context) {
                 // Access B first, which will create A
@@ -1152,9 +1163,9 @@ void main() {
         home: Scaffold(
           body: ProviderScope(
             providers: [
-              numberProvider, // index 0
+              numberProvider(), // index 0
               argProvider('num:'), // index 1
-              combineProvider, // index 2
+              combineProvider(), // index 2
             ],
             child: Builder(
               builder: (context) {
@@ -1187,7 +1198,7 @@ void main() {
           body: ProviderScope(
             // Wrong order: multiplierProvider depends on numberProvider
             // but comes first
-            providers: [multiplierProvider(3), numberProvider],
+            providers: [multiplierProvider(3), numberProvider()],
             child: Container(),
           ),
         ),
@@ -1312,7 +1323,7 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: ProviderScope(
-                providers: [providerA, providerB],
+                providers: [providerA(), providerB()],
                 child: Container(),
               ),
             ),
@@ -1355,7 +1366,7 @@ void main() {
           MaterialApp(
             home: Scaffold(
               body: ProviderScope(
-                providers: [providerA, argProviderB('test')],
+                providers: [providerA(), argProviderB('test')],
                 child: Container(),
               ),
             ),
@@ -1368,6 +1379,196 @@ void main() {
           tester.takeException(),
           const TypeMatcher<ProviderForwardReferenceError>(),
         );
+      },
+    );
+  });
+
+  // Lifecycle and precedence of the overrides
+  group('Overrides', () {
+    testWidgets(
+      '''The dispose of an overridden provider is the one of the mock''',
+      (tester) async {
+        var originalDisposed = false;
+        var mockDisposed = false;
+
+        final numberProvider = Provider<int>(
+          (_) => 0,
+          dispose: (_) {
+            originalDisposed = true;
+          },
+        );
+        final mockNumberProvider = Provider<int>(
+          (_) => 9,
+          dispose: (_) {
+            mockDisposed = true;
+          },
+        );
+
+        await tester.pumpWidget(
+          ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWith(mockNumberProvider),
+            ],
+            child: MaterialApp(
+              home: ProviderScope(
+                providers: [
+                  numberProvider(),
+                ],
+                child: Builder(
+                  builder: (context) {
+                    return Text(numberProvider.of(context).toString());
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('9'), findsOneWidget);
+        expect(mockDisposed, false);
+
+        // Dispose the whole tree
+        await tester.pumpWidget(Container());
+
+        expect(mockDisposed, true);
+        // The value of the original provider has never been created, therefore
+        // its dispose is never called.
+        expect(originalDisposed, false);
+      },
+    );
+
+    testWidgets(
+      '''An overridden argument provider is disposed by the ProviderScope providing it''',
+      (tester) async {
+        var originalDisposed = false;
+        final disposedMockValues = <int>[];
+
+        final numberProvider = Provider.withArgument<int, int>(
+          (_, arg) => arg,
+          dispose: (_) {
+            originalDisposed = true;
+          },
+        );
+        final mockNumberProvider = Provider.withArgument<int, int>(
+          (_, arg) => arg + 100,
+          dispose: disposedMockValues.add,
+        );
+
+        await tester.pumpWidget(
+          ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWith(mockNumberProvider),
+            ],
+            child: MaterialApp(
+              home: ProviderScope(
+                providers: [
+                  numberProvider(1),
+                ],
+                child: Builder(
+                  builder: (context) {
+                    return Text(numberProvider.of(context).toString());
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // The mock receives the argument specified in the widget tree.
+        expect(find.text('101'), findsOneWidget);
+        expect(disposedMockValues, isEmpty);
+
+        // Dispose the whole tree
+        await tester.pumpWidget(Container());
+
+        expect(disposedMockValues, [101]);
+        expect(originalDisposed, false);
+      },
+    );
+
+    testWidgets(
+      '''A non-lazy override of an argument provider gets created eagerly''',
+      (tester) async {
+        var mockCreated = false;
+
+        // The original provider is lazy, the mock is not.
+        final numberProvider = Provider.withArgument<int, int>((_, arg) => arg);
+        final mockNumberProvider = Provider.withArgument<int, int>(
+          (_, arg) {
+            mockCreated = true;
+            return arg + 100;
+          },
+          lazy: false,
+        );
+
+        await tester.pumpWidget(
+          ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWith(mockNumberProvider),
+            ],
+            child: MaterialApp(
+              home: ProviderScope(
+                providers: [
+                  numberProvider(1),
+                ],
+                // The provider is never injected.
+                child: const Text('no injection'),
+              ),
+            ),
+          ),
+        );
+
+        // The laziness of the mock takes precedence over the one of the
+        // original provider.
+        expect(mockCreated, true);
+      },
+    );
+
+    testWidgets(
+      '''An argument provider override does not affect the ProviderScopes above the ProviderScopeOverride''',
+      (tester) async {
+        final numberProvider = Provider<int>((_) => 0);
+        final mockNumberProvider = Provider<int>((_) => 9);
+        final numberArgProvider = Provider.withArgument<int, int>(
+          (_, arg) => arg,
+        );
+        final mockNumberArgProvider = Provider.withArgument<int, int>(
+          (_, arg) => arg + 100,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ProviderScope(
+              providers: [
+                numberProvider(),
+                numberArgProvider(1),
+              ],
+              child: ProviderScopeOverride(
+                overrides: [
+                  numberProvider.overrideWith(mockNumberProvider),
+                  numberArgProvider.overrideWith(mockNumberArgProvider),
+                ],
+                child: Builder(
+                  builder: (context) {
+                    final number = numberProvider.of(context);
+                    final numberArg = numberArgProvider.of(context);
+                    return Text('$number $numberArg');
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // The provider without argument is overridden, since its value is
+        // created and stored by the ProviderScope of the ProviderScopeOverride
+        // itself, which always takes precedence.
+        //
+        // The argument provider is NOT overridden, since its intermediate
+        // provider is generated by the ProviderScope providing it (the only
+        // place where the argument is known), and that scope is an ancestor of
+        // the ProviderScopeOverride, i.e. it cannot know about the overrides.
+        expect(find.text('9 1'), findsOneWidget);
       },
     );
   });

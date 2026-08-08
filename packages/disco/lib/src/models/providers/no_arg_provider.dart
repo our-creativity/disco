@@ -22,7 +22,7 @@ typedef DisposeProviderValueFn<T> = void Function(T value);
 ///
 /// {@endtemplate}
 @immutable
-class Provider<T extends Object> extends InstantiableProvider {
+class Provider<T extends Object> {
   //! NB: do not make the constructor `const`, since that would give the same
   //! hash code to different instances of `Provider` with the same generic
   //! type.
@@ -40,8 +40,7 @@ class Provider<T extends Object> extends InstantiableProvider {
     this.debugName,
   }) : _createValue = create,
        _disposeValue = dispose,
-       _lazy = lazy ?? DiscoConfig.lazy,
-       super._();
+       _lazy = lazy ?? DiscoConfig.lazy;
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
@@ -74,22 +73,14 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// {@endtemplate}
   final DisposeProviderValueFn<T>? _disposeValue;
 
-  // Overrides ----------------------------------------------------------------
+  // Override -----------------------------------------------------------------
 
-  /// {@template Provider.overrideWithValue}
+  /// {@template Provider.overrideWithProvider}
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
   /// {@endtemplate}
   @visibleForTesting
-  ProviderOverride<T> overrideWithValue(T value, {String? debugName}) =>
-      ProviderOverride._withValue(this, value, debugName);
-
-  /// {@template Provider.overrideWithValue}
-  /// It creates an override of this provider to be passed to
-  /// [ProviderScopeOverride].
-  /// {@endtemplate}
-  @visibleForTesting
-  ProviderOverride<T> overrideWithProvider(
+  ProviderOverride<T> overrideWith(
     Provider<T> override,
   ) => ProviderOverride._withProvider(this, override);
 
@@ -126,6 +117,11 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// [ProviderScopeState] otherwise assumes).
   void _safeDisposeValue(Object value) {
     _disposeValue?.call(value as T);
+  }
+
+  /// It creates an [InstantiableNoArgProvider].
+  InstantiableNoArgProvider<T> call() {
+    return InstantiableNoArgProvider._(this);
   }
 
   /// Returns the type of the value.

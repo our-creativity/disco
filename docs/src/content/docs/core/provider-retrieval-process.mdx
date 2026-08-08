@@ -16,7 +16,7 @@ Refer to the following graph to understand how the providers are retrieved.
 
 2. If it does, its internal map of overridden providers is checked to see if the provider is there.
 
-3. If is there, the overridden value is returned.
+3. If is there, the value of the overriding provider is returned.
 
 4. Otherwise, the search continues for the first `ProviderScope` ancestor.
 
@@ -34,4 +34,33 @@ Refer to the following graph to understand how the providers are retrieved.
 
 <Aside>
 The lookup of a provider is __O(1)__ because it just involves a map lookup, in addition the tree is traversed using [getElementForInheritedWidgetOfExactType](https://api.flutter.dev/flutter/widgets/BuildContext/getElementForInheritedWidgetOfExactType.html), which is O(1) because it jumps from one InheritedWidget of type `T` to another, skipping the widgets in between.
+</Aside>
+
+## The three layers of providers
+
+The steps above talk about "the internal map of providers" of a scope. Knowing what that map actually contains makes the behavior of overrides — and of providers with an argument — easy to predict.
+
+1. **Top-level providers.** These are the providers you declare in your files. They are never used to create anything: they only act as type-safe identifiers. This is why they can be declared globally without holding any global state.
+
+2. **Intermediate providers.** Whenever a top-level provider is inserted into a `ProviderScope`, that scope generates an intermediate provider for it and stores the pair in its internal map. The intermediate provider is the one actually responsible for creating (and disposing) the value.
+
+3. **Values.** These are the objects your widgets inject, and they are stored per intermediate provider.
+
+The second layer is what makes overrides and arguments possible, because an intermediate provider can be *regenerated* from something else than the top-level provider it is registered under:
+
+| Inserted provider | Intermediate provider |
+| - | - |
+| `myProvider()` | `myProvider` itself |
+| `myProvider()`, with an override | the provider passed to `overrideWith` |
+| `myArgProvider(arg)` | a provider combining `myArgProvider` with `arg` |
+| `myArgProvider(arg)`, with an override | a provider combining the provider passed to `overrideWith` with `arg` |
+
+## Providers with an argument and overrides
+
+An argument provider cannot be instantiated by the `ProviderScopeOverride` itself, since no argument is available there: the argument only exists where the provider is inserted into the widget tree. Therefore, a `ProviderScopeOverride` merely *registers* the overrides of argument providers, and every `ProviderScope` below it consults that registry while generating its intermediate providers.
+
+In other words, for providers with an argument, the retrieval process skips steps 1-3 above: there is nothing to look up in the `ProviderScopeOverride`, because the override has already been applied when the provider was inserted into the scope.
+
+<Aside>
+  The practical consequences are described in the [Testing](https://disco.mariuti.com/core/testing/) page. The recommendation of placing the `ProviderScopeOverride` as the root widget of your tests makes them irrelevant.
 </Aside>

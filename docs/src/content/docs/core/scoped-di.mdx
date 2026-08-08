@@ -28,7 +28,7 @@ In case the provider does not take an argument, we scope it the following way:
 
 ```dart
 ProviderScope(
-  providers: [numberProvider]
+  providers: [numberProvider()]
   child: // ...
 )
 ```
@@ -41,6 +41,13 @@ ProviderScope(
   child: // ...
 )
 ```
+
+<Aside>
+  Note the parentheses: a provider is never inserted into a `ProviderScope`
+  directly. Calling it is what tells the scope to instantiate it, and it is
+  also what allows an argument to be passed. This way, the syntax is the same
+  for both kinds of providers.
+</Aside>
 
 ### How to inject
 
@@ -65,7 +72,7 @@ runApp(
   MaterialApp(
     home: Scaffold(
       body: ProviderScope(
-        providers: [numberProvider, doubleNumberPlusArgProvider],
+        providers: [numberProvider(), doubleNumberPlusArgProvider(10)],
         child: Builder(
             builder: (context) {
               final number = numberProvider.of(context);
@@ -96,7 +103,7 @@ Therefore, the following code will lead to a `ProviderForwardReferenceError`:
 ProviderScope(
   providers: [
     doubleNumberPlusArgProvider(10),
-    numberProvider,
+    numberProvider(),
   ],
   child: // ...
 )
@@ -107,7 +114,7 @@ The error can be prevented by reordering the list of providers:
 ```dart title="Correct example"
 ProviderScope(
   providers: [
-    numberProvider,
+    numberProvider(),
     doubleNumberPlusArgProvider(10),
   ],
   child: // ...

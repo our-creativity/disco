@@ -28,10 +28,12 @@ class ProviderScope extends StatefulWidget {
   final Widget child;
 
   /// All the providers provided to all the descendants of [ProviderScope].
+  /// [providers] and [overrides] cannot coexist.
   final List<InstantiableProvider>? providers;
 
   /// All the overrides provided to all the descendants of
   /// [ProviderScopeOverride].
+  /// [providers] and [overrides] cannot coexist.
   final List<Override>? overrides;
 
   @override
@@ -63,7 +65,7 @@ class ProviderScope extends StatefulWidget {
     required ID id,
     required bool Function(ProviderScopeState, ID) isInScope,
     required int? Function(ProviderScopeState, ID) getIndex,
-    required Provider? Function(ProviderScopeState, ID) getProviderId,
+    required T? Function(ProviderScopeState, ID) getCreatedValue,
     required ProviderScopeState? Function(BuildContext, ID) findState,
     required T Function(ProviderScopeState, ID, BuildContext) createValue,
   }) {
@@ -96,12 +98,10 @@ class ProviderScope extends StatefulWidget {
         }
 
         // Valid same-scope access to an earlier provider
-        // Check if already created
-        final providerId = getProviderId(initializingScope, id);
-        final createdProvider =
-            initializingScope.createdProviderValues[providerId];
+        // Check if its value has already been created
+        final createdValue = getCreatedValue(initializingScope, id);
         // coverage:ignore-start
-        if (createdProvider != null) return createdProvider as T;
+        if (createdValue != null) return createdValue;
         // coverage:ignore-end
 
         // Not created yet - create it now (for lazy providers)
@@ -121,14 +121,13 @@ class ProviderScope extends StatefulWidget {
       }
     }
     if (state == null) return null;
-    final providerId = getProviderId(state, id);
-    final createdProvider = state.createdProviderValues[providerId];
-    if (createdProvider != null) return createdProvider as T;
-    // if the provider is not already present, create it lazily
+    final createdValue = getCreatedValue(state, id);
+    if (createdValue != null) return createdValue;
+    // if the value has not been created yet, create it lazily
     return createValue(state, id, context);
   }
 
-  /// {@template _getOrCreateProvider}
+  /// {@template _getOrCreateProviderValue}
   /// Tries to find the provided value associated to [id].
   ///
   /// If the [id] is not found in any [ProviderScope], this function
@@ -147,7 +146,7 @@ class ProviderScope extends StatefulWidget {
       id: id,
       isInScope: (scope, id) => scope.isProviderInScope(id),
       getIndex: (scope, id) => scope._providerIndices[id],
-      getProviderId: (scope, id) => id,
+      getCreatedValue: (scope, id) => scope.getCreatedProviderValue(id) as T?,
       findState: (context, id) => _findState<T>(context, id: id),
       createValue: (scope, id, context) =>
           scope.createProviderValue(id, context) as T,
@@ -159,17 +158,15 @@ class ProviderScope extends StatefulWidget {
     BuildContext context, {
     required ArgProvider<T, A> id,
   }) {
-    // try finding the override first
-    final providerScopeOverride = ProviderScopeOverrideState.maybeOf(context);
-    if (providerScopeOverride != null) {
-      final state = providerScopeOverride.providerScopeState;
-      if (state.isArgProviderInScope(id)) return state;
-    }
-
+    // NB: differently from [_findState], the override does not have to be
+    // looked up here. An overridden argument provider is instantiated by the
+    // ProviderScope inserting it into the widget tree (which is the only place
+    // where its argument is known), i.e. the override is already taken into
+    // account by the intermediate providers of that scope.
     return _InheritedProvider.inheritFromNearest(context, null, id)?.state;
   }
 
-  /// {@macro _getOrCreateProvider}
+  /// {@macro _getOrCreateProviderValue}
   static T? _getOrCreateArgProviderValue<T extends Object, A>(
     BuildContext context, {
     required ArgProvider<T, A> id,
@@ -179,7 +176,8 @@ class ProviderScope extends StatefulWidget {
       id: id,
       isInScope: (scope, id) => scope.isArgProviderInScope(id),
       getIndex: (scope, id) => scope._argProviderIndices[id],
-      getProviderId: (scope, id) => scope.allArgProvidersInScope[id],
+      getCreatedValue: (scope, id) =>
+          scope.getCreatedArgProviderValue(id) as T?,
       findState: (context, id) =>
           _findStateForArgProvider<T, A>(context, id: id),
       createValue: (scope, id, context) =>
@@ -191,20 +189,60 @@ class ProviderScope extends StatefulWidget {
 /// The state of the [ProviderScope] widget
 @protected
 class ProviderScopeState extends State<ProviderScope> {
-  /// Stores all the argument providers in the current scope. The values are
-  /// intermediate providers, which are used as internal IDs by
-  /// [createdProviderValues].
+  // There are three layers of providers:
+  //
+  // 1. the top-level providers, i.e. the ones defined by the user. They are
+  //    never used to create any value: they only act as type-safe IDs.
+  // 2. the intermediate providers, i.e. the providers actually used to create
+  //    the values. An intermediate provider is generated (or regenerated, in
+  //    case of an override) for every top-level provider inserted into this
+  //    scope. For a [Provider], the intermediate provider is either the
+  //    top-level provider itself or its mock; for an [ArgProvider], the
+  //    intermediate provider is a [Provider] generated by combining the
+  //    (possibly overridden) argument provider with the argument given in the
+  //    widget tree.
+  // 3. the values, which are created by the intermediate providers and are
+  //    keyed by them.
+
+  /// Stores all the argument providers in the current scope. The keys are the
+  /// top-level argument providers, while the values are the intermediate
+  /// providers, which are used as internal IDs by [createdArgProviderValues].
   final allArgProvidersInScope = HashMap<ArgProvider, Provider>();
 
   /// Stores all the providers without argument in the current scope.
-  /// The values are intermediate providers, which are used as internal IDs
-  /// by [createdProviderValues].
+  /// The keys are the top-level providers, while the values are the
+  /// intermediate providers, which are used as internal IDs by
+  /// [createdProviderValues].
   final allProvidersInScope = HashMap<Provider, Provider>();
+
+  /// Stores the argument providers overridden by a [ProviderScopeOverride].
+  ///
+  /// This map is only filled for the internal [ProviderScope] of a
+  /// [ProviderScopeOverride]. It maps a top-level argument provider to the
+  /// argument provider that has to be used in its place.
+  ///
+  /// Differently from [ProviderOverride]s, an [ArgProviderOverride] cannot be
+  /// instantiated here, since the argument is only known where the argument
+  /// provider is inserted into the widget tree. Therefore, the overrides are
+  /// only registered here and every [ProviderScope] looks them up while
+  /// generating its intermediate providers.
+  ///
+  /// NB: as a consequence, the value of an overridden argument provider lives
+  /// in the [ProviderScope] providing it (and not in the [ProviderScope] of
+  /// the [ProviderScopeOverride]) and, thus, only the [ProviderScope]s that
+  /// are descendants of the [ProviderScopeOverride] are affected.
+  final overriddenArgProviders = HashMap<ArgProvider, ArgProvider>();
 
   /// Stores all the created values (associated to the providers).
   /// The keys are the intermediate providers (which are not necessarily the
   /// globally defined providers), while the values are the provided values.
   final createdProviderValues = HashMap<Provider, Object>();
+
+  /// Stores all the created values (associated to the argument providers).
+  /// The keys are the intermediate providers (which are generated by combining
+  /// an argument provider with an argument), while the values are the provided
+  /// values.
+  final createdArgProviderValues = HashMap<Provider, Object>();
 
   /// Track the scope currently being initialized. This enables same-scope
   /// provider access during initialization.
@@ -237,8 +275,7 @@ class ProviderScopeState extends State<ProviderScope> {
     try {
       if (widget.providers != null) {
         _initializeProviders(widget.providers!);
-      }
-      if (widget.overrides != null) {
+      } else if (widget.overrides != null) {
         _initializeOverrides(widget.overrides!);
       }
     } finally {
@@ -249,15 +286,17 @@ class ProviderScopeState extends State<ProviderScope> {
   }
 
   /// Validates that there are no duplicate providers in the list.
-  void _validateProvidersUniqueness(List<InstantiableProvider> allProviders) {
+  void _validateProvidersUniqueness(
+    List<InstantiableProvider> allProviders,
+  ) {
     assert(
       () {
         final providerIds = <Provider>{};
         final argProviderIds = <ArgProvider>{};
 
         for (final item in allProviders) {
-          if (item is Provider) {
-            if (!providerIds.add(item)) {
+          if (item is InstantiableNoArgProvider) {
+            if (!providerIds.add(item._provider)) {
               throw MultipleProviderOfSameInstance();
             }
           } else if (item is InstantiableArgProvider) {
@@ -272,66 +311,77 @@ class ProviderScopeState extends State<ProviderScope> {
     );
   }
 
-  /// PHASE 1: Registers all providers and tracks their indices.
-  /// This must be done before creating any providers so that
+  /// PHASE 1: Registers all providers (i.e. it generates their intermediate
+  /// providers) and tracks their indices.
+  /// This must be done before creating any value so that
   /// isProviderInScope() works correctly during creation.
   void _registerAllProviders(List<InstantiableProvider> allProviders) {
+    // The overrides of a ProviderScopeOverride, if present. They are needed to
+    // regenerate the intermediate providers of the overridden argument
+    // providers.
+    final overridesScope = ProviderScopeOverrideState.maybeOf(
+      context,
+    )?.providerScopeState;
+
     for (var i = 0; i < allProviders.length; i++) {
       final item = allProviders[i];
 
-      if (item is Provider) {
-        final provider = item;
-        final id = provider;
+      if (item is InstantiableNoArgProvider) {
+        final id = item._provider;
 
         // Track original index for ordering validation
         _providerIndices[id] = i;
 
-        // In this case, the provider put in scope can be the ID itself.
-        allProvidersInScope[id] = provider;
+        // In this case, the intermediate provider can be the ID itself.
+        // NB: an eventual override of this provider is not handled here, since
+        // the value of an overridden provider is created and stored by the
+        // ProviderScope of the ProviderScopeOverride itself.
+        allProvidersInScope[id] = id;
       } else if (item is InstantiableArgProvider) {
-        final instantiableArgProvider = item;
-        final id = instantiableArgProvider._argProvider;
+        final id = item._argProvider;
 
         // Track original index for ordering validation
         _argProviderIndices[id] = i;
 
-        final provider = instantiableArgProvider._argProvider
-            ._generateIntermediateProvider(
-              instantiableArgProvider._arg,
-            );
-        allArgProvidersInScope[id] = provider;
+        // The argument provider generating the intermediate provider is either
+        // the top-level one or, if overridden, its mock.
+        final argProvider = overridesScope?.getOverriddenArgProvider(id) ?? id;
+
+        allArgProvidersInScope[id] = argProvider._generateIntermediateProvider(
+          item._arg,
+        );
       }
     }
   }
 
-  /// PHASE 2: Creates non-lazy providers.
-  /// Now that all providers are registered, we can create them.
+  /// PHASE 2: Creates the values of the non-lazy providers.
+  /// Now that all the intermediate providers are registered, we can create
+  /// their values.
   void _createNonLazyProviders(List<InstantiableProvider> allProviders) {
     for (var i = 0; i < allProviders.length; i++) {
       final item = allProviders[i];
 
-      if (item is Provider) {
-        final provider = item;
-        final id = provider;
+      if (item is InstantiableNoArgProvider) {
+        final id = item._provider;
+        final provider = allProvidersInScope[id]!;
 
-        // create non lazy providers.
+        // create the values of the non lazy providers.
         if (!provider._lazy) {
           _currentlyCreatingProviderIndex = i;
           _currentlyCreatingProvider = id;
-          createdProviderValues[id] = provider._createValue(context);
+          createdProviderValues[provider] = provider._createValue(context);
           _currentlyCreatingProviderIndex = null;
           _currentlyCreatingProvider = null;
         }
       } else if (item is InstantiableArgProvider) {
-        final instantiableArgProvider = item;
-        final id = instantiableArgProvider._argProvider;
+        final id = item._argProvider;
+        final provider = allArgProvidersInScope[id]!;
 
-        // create non lazy providers.
-        if (!instantiableArgProvider._argProvider._lazy) {
+        // create the values of the non lazy providers.
+        if (!provider._lazy) {
           _currentlyCreatingProviderIndex = i;
           _currentlyCreatingProvider = id;
-          createdProviderValues[allArgProvidersInScope[id]!] =
-              allArgProvidersInScope[id]!._createValue(context);
+          createdArgProviderValues[provider] = provider._createValue(context);
           _currentlyCreatingProviderIndex = null;
           _currentlyCreatingProvider = null;
         }
@@ -369,17 +419,19 @@ class ProviderScopeState extends State<ProviderScope> {
     for (final override in providerOverrides) {
       final id = override._originalProvider;
 
-      allProvidersInScope[id] = override._generateIntermediateProvider();
+      // The intermediate provider is regenerated: the mock takes the place of
+      // the top-level provider.
+      final provider = override._mockProvider;
+      allProvidersInScope[id] = provider;
 
-      // create providers (they are never lazy in the case of overrides)
-      createdProviderValues[id] = allProvidersInScope[id]!._createValue(
-        context,
-      );
+      // create the values (they are never lazy in the case of overrides)
+      createdProviderValues[provider] = provider._createValue(context);
     }
   }
 
-  /// Processes arg provider overrides by validating uniqueness and creating
-  /// them.
+  /// Processes arg provider overrides by validating uniqueness and registering
+  /// them, so that the [ProviderScope]s below can generate their intermediate
+  /// providers out of them.
   void _processArgProviderOverrides(
     List<ArgProviderOverride<Object, dynamic>> argProviderOverrides,
   ) {
@@ -403,12 +455,11 @@ class ProviderScopeState extends State<ProviderScope> {
     for (final override in argProviderOverrides) {
       final id = override._originalArgProvider;
 
-      allArgProvidersInScope[id] = override._generateIntermediateProvider();
-
-      // create providers (they are never lazy in the case of overrides)
-      final intermediateId = allArgProvidersInScope[id]!;
-      createdProviderValues[intermediateId] = allArgProvidersInScope[id]!
-          ._createValue(context);
+      // The mock cannot be instantiated here, since no argument is available
+      // in this scope. It is only registered, so that the ProviderScopes
+      // inserting this argument provider into the widget tree can generate
+      // their intermediate providers out of the mock.
+      overriddenArgProviders[id] = override._mockArgProvider;
     }
   }
 
@@ -428,14 +479,20 @@ class ProviderScopeState extends State<ProviderScope> {
 
   @override
   void dispose() {
-    // dispose all the created providers
-    createdProviderValues.forEach((key, value) {
-      key._safeDisposeValue(value);
+    // dispose all the created values, by leveraging the intermediate providers
+    // that created them
+    createdProviderValues.forEach((provider, value) {
+      provider._safeDisposeValue(value);
+    });
+    createdArgProviderValues.forEach((provider, value) {
+      provider._safeDisposeValue(value);
     });
 
     allArgProvidersInScope.clear();
     allProvidersInScope.clear();
+    overriddenArgProviders.clear();
     createdProviderValues.clear();
+    createdArgProviderValues.clear();
     super.dispose();
   }
 
@@ -444,6 +501,15 @@ class ProviderScopeState extends State<ProviderScope> {
   /// Tries to find the intermediate [Provider] associated with this [id].
   Provider? getIntermediateProvider(Provider id) {
     return allProvidersInScope[id];
+  }
+
+  /// Tries to find the value already created for this [id].
+  /// It returns null if the [id] is not in this scope or if its value has not
+  /// been created yet.
+  Object? getCreatedProviderValue(Provider id) {
+    final provider = getIntermediateProvider(id);
+    if (provider == null) return null;
+    return createdProviderValues[provider];
   }
 
   /// Creates a provider value and stores it to [createdProviderValues].
@@ -463,7 +529,7 @@ class ProviderScopeState extends State<ProviderScope> {
       // Create the provider value (may throw or trigger nested creation)
       final value = provider._createValue(context);
       // Store the created provider value
-      createdProviderValues[id] = value;
+      createdProviderValues[provider] = value;
       return value;
     } finally {
       // Restore shared state on both success and failure
@@ -489,7 +555,24 @@ class ProviderScopeState extends State<ProviderScope> {
     return allArgProvidersInScope[id];
   }
 
-  /// Creates a provider value and stores it to [createdProviderValues].
+  /// Tries to find the [ArgProvider] overriding this [id].
+  ///
+  /// It returns null if this [id] is not overridden. Only the internal
+  /// [ProviderScope] of a [ProviderScopeOverride] can return a value here.
+  ArgProvider? getOverriddenArgProvider(ArgProvider id) {
+    return overriddenArgProviders[id];
+  }
+
+  /// Tries to find the value already created for this [id].
+  /// It returns null if the [id] is not in this scope or if its value has not
+  /// been created yet.
+  Object? getCreatedArgProviderValue(ArgProvider id) {
+    final provider = getIntermediateProviderForArgProvider(id);
+    if (provider == null) return null;
+    return createdArgProviderValues[provider];
+  }
+
+  /// Creates a provider value and stores it to [createdArgProviderValues].
   dynamic createProviderValueForArgProvider(
     ArgProvider id,
     BuildContext context,
@@ -507,9 +590,11 @@ class ProviderScopeState extends State<ProviderScope> {
       _currentlyCreatingProvider = id;
 
       // Create the provider value (may throw or trigger nested creation)
-      final value = provider._createValue(context);
+      final value = provider._createValue(
+        context,
+      );
       // Store the created provider value
-      createdProviderValues[allArgProvidersInScope[id]!] = value;
+      createdArgProviderValues[provider] = value;
       return value;
     } finally {
       // Restore shared state on both success and failure
@@ -539,9 +624,16 @@ class ProviderScopeState extends State<ProviderScope> {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(
-      IterableProperty('createdProviderValues', createdProviderValues.values),
-    );
+    properties
+      ..add(
+        IterableProperty('createdProviderValues', createdProviderValues.values),
+      )
+      ..add(
+        IterableProperty(
+          'createdArgProviderValues',
+          createdArgProviderValues.values,
+        ),
+      );
   }
 
   // coverage:ignore-end

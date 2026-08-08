@@ -114,7 +114,7 @@ You insert a `ProviderScope` **where** you want the providers to be active — n
 
 ```dart
 ProviderScope(
-  providers: [modelProvider, secondModelProvider],
+  providers: [modelProvider(), secondModelProvider()],
   child: MyWidget(),
 )
 ```

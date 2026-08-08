@@ -17,6 +17,12 @@ import 'package:flutter_test/flutter_test.dart';
 // Global map to store benchmark results
 final Map<String, int> _benchmarkResults = {};
 
+/// Instantiates all the [providers], so that they can be inserted into a
+/// [ProviderScope].
+List<InstantiableProvider> _instantiateAll(
+  Iterable<Provider<Object>> providers,
+) => [for (final provider in providers) provider()];
+
 void main() {
   // Write results to file after all tests complete
   tearDownAll(_writeBenchmarkResults);
@@ -37,7 +43,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: _instantiateAll(providers),
             child: Container(),
           ),
         ),
@@ -64,7 +70,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: _instantiateAll(providers),
             child: Container(),
           ),
         ),
@@ -80,7 +86,7 @@ void main() {
       tester,
     ) async {
       // Create a chain of providers where each depends on the previous one
-      final providers = <Provider>[];
+      final providers = <Provider<int>>[];
 
       // First provider has no dependencies
       providers.add(
@@ -96,7 +102,7 @@ void main() {
         providers.add(
           Provider(
             (context) {
-              final prev = providers[i - 1].of(context) as int;
+              final prev = providers[i - 1].of(context);
               return prev + 1;
             },
             lazy: false,
@@ -105,12 +111,14 @@ void main() {
         );
       }
 
+      final instantiatedProviders = _instantiateAll(providers);
+
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: instantiatedProviders,
             child: Container(),
           ),
         ),
@@ -135,7 +143,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: _instantiateAll(providers),
             child: Builder(
               builder: (context) {
                 final stopwatch = Stopwatch()..start();
@@ -206,14 +214,17 @@ void main() {
         ),
       );
 
+      final instantiatedOuterProviders = _instantiateAll(outerProviders);
+      final instantiatedInnerProviders = _instantiateAll(innerProviders);
+
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: outerProviders,
+            providers: instantiatedOuterProviders,
             child: ProviderScope(
-              providers: innerProviders,
+              providers: instantiatedInnerProviders,
               child: Builder(
                 builder: (context) {
                   // Access outer providers from inner scope
@@ -241,7 +252,7 @@ void main() {
     testWidgets('Benchmark: Complex dependency chain with 30 providers', (
       tester,
     ) async {
-      final providers = <Provider>[];
+      final providers = <Provider<int>>[];
 
       // Create a more complex dependency pattern
       // Base providers (0-9)
@@ -260,8 +271,8 @@ void main() {
         providers.add(
           Provider(
             (context) {
-              final base1 = providers[i - 10].of(context) as int;
-              final base2 = providers[i - 9].of(context) as int;
+              final base1 = providers[i - 10].of(context);
+              final base2 = providers[i - 9].of(context);
               return base1 + base2;
             },
             lazy: false,
@@ -275,8 +286,8 @@ void main() {
         providers.add(
           Provider(
             (context) {
-              final mid1 = providers[i - 10].of(context) as int;
-              final mid2 = providers[i - 9].of(context) as int;
+              final mid1 = providers[i - 10].of(context);
+              final mid2 = providers[i - 9].of(context);
               return mid1 + mid2;
             },
             lazy: false,
@@ -285,12 +296,14 @@ void main() {
         );
       }
 
+      final instantiatedProviders = _instantiateAll(providers);
+
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: instantiatedProviders,
             child: Container(),
           ),
         ),
@@ -305,7 +318,7 @@ void main() {
     testWidgets('Benchmark: Mixed lazy and eager providers (100 total)', (
       tester,
     ) async {
-      final providers = <Provider>[];
+      final providers = <Provider<String>>[];
 
       // 50 eager providers
       for (var i = 0; i < 50; i++) {
@@ -329,12 +342,14 @@ void main() {
         );
       }
 
+      final instantiatedProviders = _instantiateAll(providers);
+
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: instantiatedProviders,
             child: Container(),
           ),
         ),
@@ -355,7 +370,7 @@ void main() {
         lazy: false,
         debugName: 'base',
       );
-      providers.add(baseProvider);
+      providers.add(baseProvider());
 
       // ArgProviders that depend on base
       for (var i = 0; i < 50; i++) {
@@ -397,12 +412,14 @@ void main() {
         ),
       );
 
+      final instantiatedProviders = _instantiateAll(providers);
+
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: instantiatedProviders,
             child: Container(),
           ),
         ),
@@ -417,7 +434,7 @@ void main() {
 
   group('Provider Benchmark - Stress Tests', () {
     testWidgets('Stress: Deep dependency chain (100 levels)', (tester) async {
-      final providers = <Provider>[];
+      final providers = <Provider<int>>[];
 
       providers.add(
         Provider(
@@ -431,7 +448,7 @@ void main() {
         providers.add(
           Provider(
             (context) {
-              final prev = providers[i - 1].of(context) as int;
+              final prev = providers[i - 1].of(context);
               return prev + 1;
             },
             lazy: false,
@@ -440,12 +457,14 @@ void main() {
         );
       }
 
+      final instantiatedProviders = _instantiateAll(providers);
+
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: instantiatedProviders,
             child: Container(),
           ),
         ),
@@ -460,10 +479,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: instantiatedProviders,
             child: Builder(
               builder: (context) {
-                final lastValue = providers.last.of(context) as int;
+                final lastValue = providers.last.of(context);
                 expect(lastValue, 99);
                 return Container();
               },
@@ -476,7 +495,7 @@ void main() {
     testWidgets('Stress: Wide dependency tree (base + 100 dependents)', (
       tester,
     ) async {
-      final providers = <Provider>[];
+      final providers = <Provider<int>>[];
 
       final baseProvider = Provider<int>(
         (_) => 42,
@@ -498,12 +517,14 @@ void main() {
         );
       }
 
+      final instantiatedProviders = _instantiateAll(providers);
+
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: instantiatedProviders,
             child: Container(),
           ),
         ),
@@ -525,20 +546,22 @@ void main() {
         ),
       );
 
+      final instantiatedProviders = _instantiateAll(providers);
+
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
         MaterialApp(
           home: ProviderScope(
-            providers: providers,
+            providers: instantiatedProviders,
             child: ProviderScope(
-              providers: providers,
+              providers: instantiatedProviders,
               child: ProviderScope(
-                providers: providers,
+                providers: instantiatedProviders,
                 child: ProviderScope(
-                  providers: providers,
+                  providers: instantiatedProviders,
                   child: ProviderScope(
-                    providers: providers,
+                    providers: instantiatedProviders,
                     child: Container(),
                   ),
                 ),

@@ -33,19 +33,12 @@ class ArgProvider<T extends Object, A> {
   final DisposeProviderValueFn<T>? _disposeValue;
 
   // ---
-  // Overrides
+  // Override
   // ---
 
-  /// {@macro Provider.overrideWithValue}
+  /// {@macro Provider.overrideWithProvider}
   @visibleForTesting
-  ArgProviderOverride<T, A> overrideWithValue(
-    A arg,
-    T value, {
-    String? debugName,
-  }) => ArgProviderOverride._withValue(this, arg, value, debugName);
-
-  @visibleForTesting
-  ArgProviderOverride<T, A> overrideWithProvider(
+  ArgProviderOverride<T, A> overrideWith(
     ArgProvider<T, A> override,
   ) => ArgProviderOverride._withArgProvider(this, override);
 
@@ -94,18 +87,4 @@ class ArgProvider<T extends Object, A> {
 
   /// {@macro Provider.debugName}
   final String? debugName;
-}
-
-/// {@template InstantiableArgProvider}
-/// An instance of this class is needed to insert an [ArgProvider] into the
-/// widget tree. This ensures that an initial argument is always present and,
-/// thus, the [ArgProvider] can be correctly created.
-/// {@endtemplate}
-@immutable
-class InstantiableArgProvider<T extends Object, A>
-    extends InstantiableProvider {
-  /// {@macro InstantiableArgProvider}
-  InstantiableArgProvider._(this._argProvider, this._arg) : super._();
-  final ArgProvider<T, A> _argProvider;
-  final A _arg;
 }

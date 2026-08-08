@@ -35,6 +35,10 @@ class MyDatabase {
   While providers can be declared globally, they **do not function globally**. They are just used as **identifiers** when registered in a scope.
 </Aside>
 
+<Aside>
+  As a consequence, the `create` function above is never called directly by you: a provider is called (i.e. `numberProvider()`) only to insert it into a `ProviderScope`, which is what creates and owns the value. See [Scoped DI](https://disco.mariuti.com/core/scoped-di/).
+</Aside>
+
 ### Injection of other providers with context
 
 Providers can leverage the context to inject other providers. The context will be relative to the scope in which they are provided.
@@ -87,3 +91,24 @@ There are also two optional named parameters that can be specified.
 | -------------- | ------- | ----------- |
 | `dispose`      | null    | The function to call when the scope containing the provider gets disposed. It is used to dispose correctly the value held by the provider. |
 | `lazy`         | `DiscoConfig.lazy`, which defaults to true | The provider's value is created lazily, meaning it is only created when first injected.|
+| `debugName`    | null    | An optional name, shown in the error messages of this library, which makes a provider easier to recognize. |
+
+## Overriding a provider
+
+A provider can be replaced by another provider of the same type through `overrideWith`, which is meant to be used for testing:
+
+```dart
+final myProviderOverride = myProvider.overrideWith(
+  Provider((context) => MyMock()),
+);
+```
+
+The same works for providers with an argument, as long as the mock takes an argument of the same type:
+
+```dart
+final myArgProviderOverride = myArgProvider.overrideWith(
+  Provider.withArgument((context, int arg) => MyMock(arg)),
+);
+```
+
+Since the override is a provider itself, it also controls how the mocked value is created, disposed and whether it is lazy. Refer to the [Testing](https://disco.mariuti.com/core/testing/) page to see how overrides are inserted into the widget tree.
