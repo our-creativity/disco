@@ -17,14 +17,9 @@ class ArgProvider<T extends Object, A> {
   ArgProvider._(
     CreateArgProviderValueFn<T, A> create, {
     DisposeProviderValueFn<T>? dispose,
-    bool? lazy,
     this.debugName,
   }) : _createValue = create,
-       _disposeValue = dispose,
-       _lazy = lazy ?? DiscoConfig.lazy;
-
-  /// {@macro Provider.lazy}
-  final bool _lazy;
+       _disposeValue = dispose;
 
   /// {@macro Provider.create}
   final CreateArgProviderValueFn<T, A> _createValue;
@@ -33,13 +28,26 @@ class ArgProvider<T extends Object, A> {
   final DisposeProviderValueFn<T>? _disposeValue;
 
   // ---
-  // Overrides
+  // Override
   // ---
 
-  /// {@macro Provider.overrideWithValue}
+  /// {@macro Provider.overrideWithProvider}
+  @visibleForTesting
+  ArgProviderOverride<T, A> overrideWith(
+    ArgProvider<T, A> override,
+  ) => ArgProviderOverride._withArgProvider(this, override);
+
+  /// Deprecated: Use [overrideWith] instead.
+  ///
+  /// This method is deprecated and will be removed in a future version.
+  /// Use `provider.overrideWith(Provider.withArgument<T, A>((_, __) => value))`
+  /// instead.
+  @Deprecated(
+    'Use overrideWith(Provider.withArgument<T, A>((_, __) => value)) instead',
+  )
   @visibleForTesting
   ArgProviderOverride<T, A> overrideWithValue(T value) =>
-      ArgProviderOverride._(this, value, debugName: debugName);
+      overrideWith(Provider.withArgument<T, A>((_, __) => value));
 
   // ---
   // DI methods
@@ -63,11 +71,15 @@ class ArgProvider<T extends Object, A> {
   // Utils leveraged by ProviderScope
   // ---
 
-  /// It creates an [InstantiableArgProvider] with the passed argument.
+  /// It creates an [ArgProviderValueBinding] with the passed argument.
   /// This ensures that an [ArgProvider] inserted into the widget tree always
   /// has an initial argument and, thus, can be created.
-  InstantiableArgProvider<T, A> call(A arg) {
-    return InstantiableArgProvider._(this, arg);
+  /// You should interpret this as following: this method creates all necessary
+  /// "instructions"/"data" for [ProviderScope] to actually generate an
+  /// intermediate provider, and thus also an actual value
+  /// (note that the value is computed lazily).
+  ArgProviderValueBinding<T, A> call(A arg) {
+    return ArgProviderValueBinding._(this, arg);
   }
 
   /// Returns the type of the value
@@ -81,23 +93,8 @@ class ArgProvider<T extends Object, A> {
   Provider<T> _generateIntermediateProvider(A arg) => Provider<T>(
     (context) => _createValue(context, arg),
     dispose: _disposeValue,
-    lazy: _lazy,
   );
 
   /// {@macro Provider.debugName}
   final String? debugName;
-}
-
-/// {@template InstantiableArgProvider}
-/// An instance of this class is needed to insert an [ArgProvider] into the
-/// widget tree. This ensures that an initial argument is always present and,
-/// thus, the [ArgProvider] can be correctly created.
-/// {@endtemplate}
-@immutable
-class InstantiableArgProvider<T extends Object, A>
-    extends InstantiableProvider {
-  /// {@macro InstantiableArgProvider}
-  InstantiableArgProvider._(this._argProvider, this._arg) : super._();
-  final ArgProvider<T, A> _argProvider;
-  final A _arg;
 }

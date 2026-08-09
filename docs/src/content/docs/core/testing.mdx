@@ -5,7 +5,11 @@ description: How to use overrides for testing.
 
 import { Aside } from '@astrojs/starlight/components';
 
-Testing is done with overrides. You need to place a `ProviderScopeOverride` and then specify the `overrides` argument with a list containing the providers followed by `.overrideWithValue(T value)`.
+Testing is done with overrides. You need to place a `ProviderScopeOverride` and then specify the `overrides` argument with a list containing the providers followed by `.overrideWith(provider)`.
+
+An override replaces a provider **entirely**, and not just the value it holds: the provider passed to `overrideWith` is a regular provider, with its own `create` and `dispose`. The replacement must use the same provider kind as the provider being overridden: use `Provider.withArgument` to override a provider created with `Provider.withArgument`. This means a mock can, for instance, inject other providers through its context, exactly like the provider it replaces. The value of the original provider is never created at all.
+
+An override also takes the place of the provider it replaces in every `ProviderScope` below the `ProviderScopeOverride`. The mock therefore has the very same lifecycle as the original provider: its value is created lazily where the value of the original provider would have been created, it is disposed when that `ProviderScope` is disposed, and there is one value per `ProviderScope` providing it.
 
 <Aside>
   The overrides always take precedence over the providers provided with `ProviderScope`, even if the `ProviderScopeOverride` is placed above in the widget tree.
@@ -31,12 +35,12 @@ testWidgets(
   await tester.pumpWidget(
     ProviderScopeOverride(
       overrides: [
-        numberProvider.overrideWithValue(100),
+        numberProvider.overrideWith(Provider((context) => 100)),
       ],
       child: MaterialApp(
         home: ProviderScope(
           providers: [
-            numberProvider,
+            numberProvider(),
           ],
           child: Builder(
             builder: (context) {
@@ -52,7 +56,7 @@ testWidgets(
 });
 ```
 
-Testing is possible also with providers that take an argument, and it is done the same exact way.
+Testing is possible also with providers that take an argument, and it is done the same exact way. The only difference is that the mock is an argument provider as well, and thus it receives the argument that has been specified in the widget tree.
 
 ```dart
 testWidgets(
@@ -62,7 +66,10 @@ testWidgets(
   await tester.pumpWidget(
     ProviderScopeOverride(
       overrides: [
-        numberProvider.overrideWithValue(8),
+        // `arg` is 1 here, i.e. the argument passed to the provider below
+        numberProvider.overrideWith(
+          Provider.withArgument((context, int arg) => arg + 7),
+        ),
       ],
       child: MaterialApp(
         home: ProviderScope(
@@ -82,3 +89,55 @@ testWidgets(
   expect(find.text('8'), findsOneWidget);
 });
 ```
+
+### Mocking a class
+
+Since a mock is a full-fledged provider, the object it creates is built the same way as in production code. A typical override therefore looks like this:
+
+```dart
+class MockModel extends Model {
+  // ...
+}
+
+// ...
+
+modelProvider.overrideWith(Provider<Model>((context) => MockModel())),
+```
+
+<Aside type="caution">
+  Note the explicit `Provider<Model>`: an override must have the exact same type as the provider it replaces. Without it, the type would be inferred as `Provider<MockModel>`, which does not compile.
+</Aside>
+
+### Ignoring the value of a provider
+
+If a test does not care about the value of a provider, but the provider still has to be present, an override can also be used to make its creation cheap:
+
+```dart
+analyticsProvider.overrideWith(Provider((context) => NoopAnalytics())),
+```
+
+## Differences between the two kinds of overrides
+
+Overrides of providers and overrides of argument providers behave almost identically. The only difference comes from the fact that an argument provider can only be instantiated where its argument is known, i.e. where it is inserted into the widget tree:
+
+| | `Provider` | `Provider.withArgument` |
+| - | - | - |
+| Where the value lives | in the `ProviderScope` providing it | in the `ProviderScope` providing it |
+| Number of values created | one per `ProviderScope` providing it | one per `ProviderScope` providing it |
+| Requires a `ProviderScope` providing it | no | yes |
+
+A plain `Provider` does not strictly need a `ProviderScope` providing it, because the `ProviderScopeOverride` can provide the mock itself. This is handy when testing a single widget in isolation:
+
+```dart
+await tester.pumpWidget(
+  ProviderScopeOverride(
+    overrides: [modelProvider.overrideWith(Provider<Model>((_) => MockModel()))],
+    // No ProviderScope needed: the override provides the mock.
+    child: const MaterialApp(home: WidgetUnderTest()),
+  ),
+);
+```
+
+<Aside type="caution">
+  An argument provider can never be overridden for a `ProviderScope` that is **not** a descendant of the `ProviderScopeOverride`, since such a scope cannot know about the overrides. This is one more reason to place the `ProviderScopeOverride` as the root widget of your test.
+</Aside>

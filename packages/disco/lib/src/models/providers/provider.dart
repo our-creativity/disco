@@ -14,15 +14,27 @@ typedef DisposeProviderValueFn<T> = void Function(T value);
 /// such as instantiating a BLoC.
 ///
 /// Provider is the equivalent of a State.initState combined with State.dispose.
-/// [_createValue] is called only once in State.initState.
-/// The `create` callback is lazily called. It is called the first time the
-/// value is read, instead of the first time Provider is inserted in the widget
-/// tree.
-/// This behavior can be disabled by passing [_lazy] false.
+/// The `create` callback is always called lazily, i.e. the first time the value
+/// is injected, and not when the provider is inserted into the widget tree.
+///
+/// > If you need a value to be created as soon as its [ProviderScope] is
+/// > mounted, inject it in a widget placed right below the scope:
+/// >
+/// > ```dart
+/// > ProviderScope(
+/// >   providers: [myProvider()],
+/// >   child: Builder(
+/// >     builder: (context) {
+/// >       myProvider.of(context);
+/// >       return const MyChild();
+/// >     },
+/// >   ),
+/// > )
+/// > ```
 ///
 /// {@endtemplate}
 @immutable
-class Provider<T extends Object> extends InstantiableProvider {
+class Provider<T extends Object> {
   //! NB: do not make the constructor `const`, since that would give the same
   //! hash code to different instances of `Provider` with the same generic
   //! type.
@@ -34,33 +46,16 @@ class Provider<T extends Object> extends InstantiableProvider {
 
     /// {@macro Provider.dispose}
     DisposeProviderValueFn<T>? dispose,
-
-    /// {@macro Provider.lazy}
-    bool? lazy,
     this.debugName,
   }) : _createValue = create,
-       _disposeValue = dispose,
-       _lazy = lazy ?? DiscoConfig.lazy,
-       super._();
+       _disposeValue = dispose;
 
   /// {@macro arg-provider}
   static ArgProvider<T, A> withArgument<T extends Object, A>(
     CreateArgProviderValueFn<T, A> create, {
     DisposeProviderValueFn<T>? dispose,
-    bool lazy = true,
     String? debugName,
-  }) =>
-      ArgProvider._(create, dispose: dispose, lazy: lazy, debugName: debugName);
-
-  /// {@template Provider.lazy}
-  /// Makes the creation of the provided value lazy. defaults to true.
-  ///
-  /// > The provider itself is not lazily created, only its contained value.
-  ///
-  /// if this value is true, the provider's value will be created only when
-  /// retrieved from descendants for the first time.
-  /// {@endtemplate}
-  final bool _lazy;
+  }) => ArgProvider._(create, dispose: dispose, debugName: debugName);
 
   /// {@template Provider.create}
   /// The function called to create the element.
@@ -74,15 +69,25 @@ class Provider<T extends Object> extends InstantiableProvider {
   /// {@endtemplate}
   final DisposeProviderValueFn<T>? _disposeValue;
 
-  // Overrides ----------------------------------------------------------------
+  // Override -----------------------------------------------------------------
 
-  /// {@template Provider.overrideWithValue}
+  /// {@template Provider.overrideWithProvider}
   /// It creates an override of this provider to be passed to
   /// [ProviderScopeOverride].
   /// {@endtemplate}
   @visibleForTesting
+  ProviderOverride<T> overrideWith(
+    Provider<T> override,
+  ) => ProviderOverride._withProvider(this, override);
+
+  /// Deprecated: Use [overrideWith] instead.
+  ///
+  /// This method is deprecated and will be removed in a future version.
+  /// Use `provider.overrideWith(Provider((_) => value))` instead.
+  @Deprecated('Use overrideWith(Provider((_) => value)) instead')
+  @visibleForTesting
   ProviderOverride<T> overrideWithValue(T value) =>
-      ProviderOverride._(this, value);
+      overrideWith(Provider<T>((_) => value));
 
   // DI methods ---------------------------------------------------------------
 
@@ -118,6 +123,28 @@ class Provider<T extends Object> extends InstantiableProvider {
   void _safeDisposeValue(Object value) {
     _disposeValue?.call(value as T);
   }
+
+  /// This method creates a [ProviderValueBinding]. You should interpret this
+  /// as following: this method creates all necessary "instructions"/"data" for
+  /// [ProviderScope] to actually generate an intermediate provider, and thus
+  /// also an actual value (note that the value is computed lazily).
+  // ignore: use_to_and_as_if_applicable
+  ProviderValueBinding<T> call() {
+    return ProviderValueBinding._(this);
+  }
+
+  /// Creates a new [Provider] behaving exactly like this one.
+  ///
+  /// This method is used internally by [ProviderScope] to generate the
+  /// intermediate provider of an overridden provider. Generating a fresh
+  /// instance guarantees that the same mock can override more than one
+  /// provider without the resulting values being shared, since the values are
+  /// keyed by their intermediate provider.
+  Provider<T> _generateIntermediateProvider() => Provider<T>(
+    _createValue,
+    dispose: _disposeValue,
+    debugName: debugName,
+  );
 
   /// Returns the type of the value.
   Type get _valueType => T;

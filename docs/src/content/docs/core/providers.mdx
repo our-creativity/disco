@@ -35,6 +35,10 @@ class MyDatabase {
   While providers can be declared globally, they **do not function globally**. They are just used as **identifiers** when registered in a scope.
 </Aside>
 
+<Aside>
+  As a consequence, the `create` function above is never called directly by you: a provider is called (i.e. `numberProvider()`) only to insert it into a `ProviderScope`, which is what creates and owns the value. See [Scoped DI](https://disco.mariuti.com/core/scoped-di/).
+</Aside>
+
 ### Injection of other providers with context
 
 Providers can leverage the context to inject other providers. The context will be relative to the scope in which they are provided.
@@ -77,7 +81,70 @@ final doubleNumberPlusArgProvider = Provider.withArgument((context, int arg) {
 });
 ```
 
-## Dispose and lazy parameters
+## Lazy creation of the values
+
+The value of a provider is **always created lazily**: the `create` function is called the first time the provider is injected, and never before. If a provider is never injected, its value is never created.
+
+<Aside>
+  This keeps the rule simple: a value exists if, and only if, something injected it. It is also the same behavior as Riverpod, which likewise has no way to flag a provider as eager.
+</Aside>
+
+### Creating a value as soon as a scope is mounted
+
+Sometimes a value has to exist even if no widget injects it yet, e.g. because it starts a subscription or warms up a cache. In that case, inject it in a widget placed **below** the scope providing it:
+
+```dart
+ProviderScope(
+  providers: [engineProvider(), userProvider(42)],
+  child: Builder(
+    builder: (context) {
+      engineProvider.of(context); // created here
+      userProvider.of(context); // works for argument providers too
+      return const MyPage();
+    },
+  ),
+)
+```
+
+The `Builder` is what makes this work: its context is a descendant of the `ProviderScope`, therefore the injection finds it. The value is created only once, even though the builder may run again.
+
+If you prefer the injection to happen exactly once per mount, do it in the `initState` of a widget placed below the scope. This is safe, since `of(context)` does not make the widget depend on the provider:
+
+```dart
+class EagerProviders extends StatefulWidget {
+  const EagerProviders({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  State<EagerProviders> createState() => _EagerProvidersState();
+}
+
+class _EagerProvidersState extends State<EagerProviders> {
+  @override
+  void initState() {
+    super.initState();
+    engineProvider.of(context);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+```
+
+<Aside type="caution">
+  Injecting from a context which is **not** below the scope (for example in the widget that creates the `ProviderScope` itself, or in its `initState`) does not work: that context cannot see the scope, therefore a `ProviderWithoutScopeError` is thrown.
+</Aside>
+
+<Aside type="tip">
+  Keep the `child` in a variable (or `const`), so that the widget performing the eager injection can be rebuilt without rebuilding the subtree below it.
+</Aside>
+
+<Aside>
+  Both approaches create the value while the widget tree is being built. If your `create` function notifies some listener, postpone the notification (e.g. with `WidgetsBinding.instance.addPostFrameCallback`), otherwise Flutter complains that a widget was marked as needing to be rebuilt during a build.
+</Aside>
+
+## Optional parameters
 
 When defining a provider, we need to pass the positional `create` argument, which is a function used to generate the value contained by the provider.
 
@@ -86,4 +153,24 @@ There are also two optional named parameters that can be specified.
 | Parameter | Default | Description |
 | -------------- | ------- | ----------- |
 | `dispose`      | null    | The function to call when the scope containing the provider gets disposed. It is used to dispose correctly the value held by the provider. |
-| `lazy`         | `DiscoConfig.lazy`, which defaults to true | The provider's value is created lazily, meaning it is only created when first injected.|
+| `debugName`    | null    | An optional name, shown in the error messages of this library, which makes a provider easier to recognize. |
+
+## Overriding a provider
+
+A provider can be replaced by another provider of the same type through `overrideWith`, which is meant to be used for testing:
+
+```dart
+final myProviderOverride = myProvider.overrideWith(
+  Provider((context) => MyMock()),
+);
+```
+
+The same works for providers with an argument, as long as the mock takes an argument of the same type:
+
+```dart
+final myArgProviderOverride = myArgProvider.overrideWith(
+  Provider.withArgument((context, int arg) => MyMock(arg)),
+);
+```
+
+Since the override is a provider itself, it also controls how the mocked value is created and disposed. Refer to the [Testing](https://disco.mariuti.com/core/testing/) page to see how overrides are inserted into the widget tree.

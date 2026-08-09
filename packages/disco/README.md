@@ -41,10 +41,12 @@ The package supports many features, like providers that accept arguments. But to
 
     ```dart
     ProviderScope(
-      providers: [modelProvider],
+      providers: [modelProvider()],
       child: MyWidget(),
     )
     ```
+
+    **Note:** calling the provider (i.e. `modelProvider()`) does not create anything by itself; it is just how a provider is inserted into a scope, and it is also what allows an argument to be passed to providers created with `Provider.withArgument`.
 
     **Note:** the actual state for the provider is created and stored inside the `ProviderScope` instance where the provider is referenced.
     This way, when the ProviderScope gets disposed, the state gets disposed — making it ideal for managing **local state**.
