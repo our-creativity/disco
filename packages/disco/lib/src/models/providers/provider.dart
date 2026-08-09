@@ -80,6 +80,15 @@ class Provider<T extends Object> {
     Provider<T> override,
   ) => ProviderOverride._withProvider(this, override);
 
+  /// Deprecated: Use [overrideWith] instead.
+  ///
+  /// This method is deprecated and will be removed in a future version.
+  /// Use `provider.overrideWith(Provider((_) => value))` instead.
+  @Deprecated('Use overrideWith(Provider((_) => value)) instead')
+  @visibleForTesting
+  ProviderOverride<T> overrideWithValue(T value) =>
+      overrideWith(Provider<T>((_) => value));
+
   // DI methods ---------------------------------------------------------------
 
   /// {@template Provider.of}

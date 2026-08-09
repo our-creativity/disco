@@ -89,7 +89,8 @@ The same reasoning applies to the `providers` list itself: it is read exactly on
 Since this would silently surface much later as a `ProviderWithoutScopeError`, it is reported as an error in debug mode:
 
 ```dart
-// Throws in debug mode as soon as `showDetails` changes.
+// Reports an error in debug mode as soon as `showDetails` changes, and
+// continues with the original providers.
 ProviderScope(
   providers: [
     modelProvider(),

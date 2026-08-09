@@ -44,9 +44,10 @@ ProviderScope(
 
 <Aside>
   Note the parentheses: a provider is never inserted into a `ProviderScope`
-  directly. Calling it is what tells the scope to instantiate it, and it is
-  also what allows an argument to be passed. This way, the syntax is the same
-  for both kinds of providers.
+  directly. Calling a provider returns the binding used to register it with
+  the scope. The provider value is created lazily, i.e. the first time it is
+  injected. Calling a provider is also what allows an argument to be passed.
+  This way, the syntax is the same for both kinds of providers.
 </Aside>
 
 ### How to inject

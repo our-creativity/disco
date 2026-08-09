@@ -1,7 +1,7 @@
 part of '../disco_internal.dart';
 
 /// A declarative configuration holding all the data needed to
-/// construct and register an mock provider within a
+/// construct and register a mock provider within a
 /// [ProviderScope].
 ///
 /// Concretely, it is either one of:

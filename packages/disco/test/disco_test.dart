@@ -2132,7 +2132,7 @@ void main() {
         }
 
         await tester.pumpWidget(buildTree(reversed: false));
-        // A brand new list, holding brand new InstantiableProviders, is built
+        // A brand new list, holding brand new ValueBinding instances, is built
         // every time: only the providers they refer to matter. Since the order
         // does not matter either, reordering them is not a change.
         await tester.pumpWidget(buildTree(reversed: true));

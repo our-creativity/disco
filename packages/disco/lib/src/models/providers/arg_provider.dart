@@ -37,6 +37,18 @@ class ArgProvider<T extends Object, A> {
     ArgProvider<T, A> override,
   ) => ArgProviderOverride._withArgProvider(this, override);
 
+  /// Deprecated: Use [overrideWith] instead.
+  ///
+  /// This method is deprecated and will be removed in a future version.
+  /// Use `provider.overrideWith(Provider.withArgument<T, A>((_, __) => value))`
+  /// instead.
+  @Deprecated(
+    'Use overrideWith(Provider.withArgument<T, A>((_, __) => value)) instead',
+  )
+  @visibleForTesting
+  ArgProviderOverride<T, A> overrideWithValue(T value) =>
+      overrideWith(Provider.withArgument<T, A>((_, __) => value));
+
   // ---
   // DI methods
   // ---

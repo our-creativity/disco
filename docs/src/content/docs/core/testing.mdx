@@ -7,7 +7,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 Testing is done with overrides. You need to place a `ProviderScopeOverride` and then specify the `overrides` argument with a list containing the providers followed by `.overrideWith(provider)`.
 
-An override replaces a provider **entirely**, and not just the value it holds: the provider passed to `overrideWith` is a regular provider, with its own `create` and `dispose`. This means a mock can, for instance, inject other providers through its context, exactly like the provider it replaces. The value of the original provider is never created at all.
+An override replaces a provider **entirely**, and not just the value it holds: the provider passed to `overrideWith` is a regular provider, with its own `create` and `dispose`. The replacement must use the same provider kind as the provider being overridden: use `Provider.withArgument` to override a provider created with `Provider.withArgument`. This means a mock can, for instance, inject other providers through its context, exactly like the provider it replaces. The value of the original provider is never created at all.
 
 An override also takes the place of the provider it replaces in every `ProviderScope` below the `ProviderScopeOverride`. The mock therefore has the very same lifecycle as the original provider: its value is created lazily where the value of the original provider would have been created, it is disposed when that `ProviderScope` is disposed, and there is one value per `ProviderScope` providing it.
 

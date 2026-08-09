@@ -11,7 +11,9 @@ topics:
 
 environment:
   sdk: ^3.10.0
-  flutter: ">=3.38.0"
+  # Flutter SDK constraint updated to a realistic lower bound.
+  # No APIs requiring Flutter 3.38.0 were found in the package.
+  flutter: ">=3.10.0"
 
 resolution: workspace
 

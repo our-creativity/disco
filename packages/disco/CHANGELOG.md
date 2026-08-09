@@ -1,7 +1,7 @@
 ## 3.0.0
 
 - **BREAKING**: A provider has to be called to be inserted into a `ProviderScope`, i.e. `providers: [myProvider()]` instead of `providers: [myProvider]`. This makes the syntax the same for both providers and argument providers.
-- **BREAKING**: `provider.overrideWithValue(value)` has been replaced by `provider.overrideWith(provider)`, which overrides a provider entirely (and not just its value). The mock is a regular provider, with its own `create` and `dispose`. Argument providers are overridden with argument providers, which receive the argument specified in the widget tree.
+- **BREAKING**: `provider.overrideWithValue(value)` is deprecated in favor of `provider.overrideWith(provider)`, which overrides a provider entirely (and not just its value). The mock is a regular provider, with its own `create` and `dispose`. Argument providers are overridden with argument providers, which receive the argument specified in the widget tree. Migrate by replacing `provider.overrideWithValue(value)` with `provider.overrideWith(Provider((_) => value))`.
 - **BREAKING**: The values of the providers are now always created lazily: the `lazy` parameter and `DiscoConfig` (whose only option was `lazy`) have been removed. To create a value as soon as its scope is mounted, inject it in a widget placed below the scope:
 
   ```dart

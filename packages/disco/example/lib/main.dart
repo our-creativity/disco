@@ -129,9 +129,7 @@ final loggerProvider = Provider(
   debugName: 'logger',
 );
 
-/// A provider depending on another provider of the **same** scope. This works
-/// only if `loggerProvider` is declared before this provider in the
-/// `providers` list, otherwise a `ProviderForwardReferenceError` is thrown.
+/// A provider depending on another provider of the **same** scope.
 final analyticsProvider = Provider(
   (context) {
     final logger = loggerProvider.of(context)..log('Analytics created lazily');
@@ -194,8 +192,6 @@ class MainApp extends StatelessWidget {
     return ProviderScope(
       providers: [
         loggerProvider(),
-        // NB: `analyticsProvider` injects `loggerProvider`, therefore it has
-        // to be declared after it.
         analyticsProvider(),
       ],
       // The values of the providers are always created lazily. Injecting the
