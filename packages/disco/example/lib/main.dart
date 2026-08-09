@@ -2,6 +2,8 @@
 // ProviderWithoutScopeError in the UI (see ErrorsPage).
 // ignore_for_file: avoid_catching_errors
 
+import 'dart:async';
+
 import 'package:disco/disco.dart';
 import 'package:flutter/material.dart';
 
@@ -121,7 +123,7 @@ final modelProvider = Provider<Model>(
 /// ProviderScope providing it is unmounted.
 ///
 /// See [MainApp] for how its value is created as soon as the app starts.
-final loggerProvider = Provider<Logger>(
+final loggerProvider = Provider(
   (context) => Logger()..log('Logger created'),
   dispose: (logger) => logger.dispose(),
   debugName: 'logger',
@@ -130,18 +132,17 @@ final loggerProvider = Provider<Logger>(
 /// A provider depending on another provider of the **same** scope. This works
 /// only if `loggerProvider` is declared before this provider in the
 /// `providers` list, otherwise a `ProviderForwardReferenceError` is thrown.
-final analyticsProvider = Provider<Analytics>(
+final analyticsProvider = Provider(
   (context) {
-    final logger = loggerProvider.of(context);
-    logger.log('Analytics created lazily');
+    final logger = loggerProvider.of(context)..log('Analytics created lazily');
     return Analytics(logger);
   },
   debugName: 'analytics',
 );
 
 /// A provider which needs an argument.
-final userProvider = Provider.withArgument<User, String>(
-  (context, id) {
+final userProvider = Provider.withArgument(
+  (context, String id) {
     loggerProvider.of(context).log('User $id created');
     return User(id: id, name: 'User $id');
   },
@@ -150,10 +151,10 @@ final userProvider = Provider.withArgument<User, String>(
 
 /// An argument provider which injects a provider of an **ancestor** scope and
 /// disposes its value.
-final cartProvider = Provider.withArgument<Cart, int>(
-  (context, initialItemCount) {
-    final logger = loggerProvider.of(context);
-    logger.log('Cart created with $initialItemCount item(s)');
+final cartProvider = Provider.withArgument(
+  (context, int initialItemCount) {
+    final logger = loggerProvider.of(context)
+      ..log('Cart created with $initialItemCount item(s)');
     return Cart(logger: logger, itemCount: initialItemCount);
   },
   dispose: (cart) => cart.dispose(),
@@ -163,14 +164,14 @@ final cartProvider = Provider.withArgument<Cart, int>(
 /// Provided by two nested scopes with different arguments, to show that the
 /// nearest scope wins.
 // ignore: specify_nonobvious_property_types
-final labelProvider = Provider.withArgument<String, String>(
-  (context, label) => label,
+final labelProvider = Provider.withArgument(
+  (context, String label) => label,
   debugName: 'label',
 );
 
 /// Deliberately never inserted into any ProviderScope, to show the difference
 /// between `of` and `maybeOf`.
-final missingProvider = Provider<String>(
+final missingProvider = Provider(
   (context) => 'unreachable',
   debugName: 'missing',
 );
@@ -323,8 +324,10 @@ class _DemoTile extends StatelessWidget {
         // `analyticsProvider` is lazy: its value is created here, the very
         // first time it gets injected.
         analyticsProvider.of(context).track('opened "$title"');
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: pageBuilder),
+        unawaited(
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: pageBuilder),
+          ),
         );
       },
     );

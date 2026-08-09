@@ -28,6 +28,8 @@
 - **FIX**: Reusing the same mock to override more than one provider no longer makes those providers share a single value.
 - **CHORE**: `ProviderScope.providers` and `ProviderScope.overrides` are no longer part of the public API, as exactly one of them was always null.
 - **CHORE**: The bookkeeping of `ProviderScopeState` (its maps of providers and values, and its lookup and creation methods) and `ProviderScopeOverrideState.providerScopeState` are now library-private.
+- **CHORE**: The bookkeeping of `ProviderScopeState` (its maps of providers and values, and its lookup and creation methods) and `ProviderScopeOverrideState.providerScopeState` are now library-private.
+- **CHORE**: Rename `InstantiableProvider` to `ValueBinding`.
 
 ## 2.0.0
 

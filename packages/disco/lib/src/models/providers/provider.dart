@@ -115,10 +115,13 @@ class Provider<T extends Object> {
     _disposeValue?.call(value as T);
   }
 
-  /// It creates an [InstantiableNoArgProvider].
+  /// This method creates a [ProviderValueBinding]. You should interpret this
+  /// as following: this method creates all necessary "instructions"/"data" for
+  /// [ProviderScope] to actually generate an intermediate provider, and thus
+  /// also an actual value (note that the value is computed lazily).
   // ignore: use_to_and_as_if_applicable
-  InstantiableNoArgProvider<T> call() {
-    return InstantiableNoArgProvider._(this);
+  ProviderValueBinding<T> call() {
+    return ProviderValueBinding._(this);
   }
 
   /// Creates a new [Provider] behaving exactly like this one.

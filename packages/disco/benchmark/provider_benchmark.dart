@@ -24,7 +24,7 @@ final Map<String, int> _benchmarkResults = {};
 
 /// Instantiates all the [providers], so that they can be inserted into a
 /// [ProviderScope].
-List<InstantiableProvider> _instantiateAll(
+List<ValueBinding> _instantiateAll(
   Iterable<Provider<Object>> providers,
 ) => [for (final provider in providers) provider()];
 
@@ -337,7 +337,7 @@ void main() {
     });
 
     testWidgets('Benchmark: ArgProviders with dependencies', (tester) async {
-      final providers = <InstantiableProvider>[];
+      final providers = <ValueBinding>[];
       final argProviders = <ArgProvider<int, int>>[];
 
       // Base provider

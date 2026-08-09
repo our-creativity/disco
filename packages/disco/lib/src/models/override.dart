@@ -1,13 +1,19 @@
-part of '../../disco_internal.dart';
+part of '../disco_internal.dart';
 
-/// Either a [ProviderOverride] or an [ArgProviderOverride].
+/// A declarative configuration holding all the data needed to
+/// construct and register an mock provider within a
+/// [ProviderScope].
+///
+/// Concretely, it is either one of:
+/// - [ProviderOverride]
+/// - [ArgProviderOverride].
 @immutable
 sealed class Override {
   Override._();
 }
 
-/// Override that, if inserted into the widget tree, takes precedence over
-/// [_originalArgProvider].
+/// Override that, if inserted into the widget tree, gives [_mockArgProvider]
+/// precedence over [_originalArgProvider].
 @immutable
 class ArgProviderOverride<T extends Object, A> extends Override {
   ArgProviderOverride._withArgProvider(
@@ -22,8 +28,8 @@ class ArgProviderOverride<T extends Object, A> extends Override {
   final ArgProvider<T, A> _mockArgProvider;
 }
 
-/// Override that, if inserted into the widget tree, takes precedence over
-/// [_originalProvider].
+/// Override that, if inserted into the widget tree, gives [_mockProvider]
+/// precedence over [_originalProvider].
 @immutable
 class ProviderOverride<T extends Object> extends Override {
   ProviderOverride._withProvider(

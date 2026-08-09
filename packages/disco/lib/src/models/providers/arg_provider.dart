@@ -59,11 +59,15 @@ class ArgProvider<T extends Object, A> {
   // Utils leveraged by ProviderScope
   // ---
 
-  /// It creates an [InstantiableArgProvider] with the passed argument.
+  /// It creates an [ArgProviderValueBinding] with the passed argument.
   /// This ensures that an [ArgProvider] inserted into the widget tree always
   /// has an initial argument and, thus, can be created.
-  InstantiableArgProvider<T, A> call(A arg) {
-    return InstantiableArgProvider._(this, arg);
+  /// You should interpret this as following: this method creates all necessary
+  /// "instructions"/"data" for [ProviderScope] to actually generate an
+  /// intermediate provider, and thus also an actual value
+  /// (note that the value is computed lazily).
+  ArgProviderValueBinding<T, A> call(A arg) {
+    return ArgProviderValueBinding._(this, arg);
   }
 
   /// Returns the type of the value

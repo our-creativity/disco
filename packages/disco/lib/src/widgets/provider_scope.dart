@@ -12,7 +12,7 @@ class ProviderScope extends StatefulWidget {
   /// {@macro ProviderScope}
   const ProviderScope({
     required this.child,
-    required List<InstantiableProvider> providers,
+    required List<ValueBinding> providers,
     super.key,
   }) : _providers = providers,
        _overrides = null;
@@ -32,7 +32,7 @@ class ProviderScope extends StatefulWidget {
   /// All the providers provided to all the descendants of this [ProviderScope].
   ///
   /// Exactly one of [_providers] and [_overrides] is non-null.
-  final List<InstantiableProvider>? _providers;
+  final List<ValueBinding>? _providers;
 
   /// All the overrides provided to all the descendants of a
   /// [ProviderScopeOverride].
@@ -252,9 +252,9 @@ class ProviderScopeState extends State<ProviderScope> {
       final providers = scope._providers;
       if (providers != null) {
         for (final item in providers) {
-          if (item is InstantiableNoArgProvider) {
+          if (item is ProviderValueBinding) {
             ids.add(item._provider);
-          } else if (item is InstantiableArgProvider) {
+          } else if (item is ArgProviderValueBinding) {
             ids.add(item._argProvider);
           }
         }
@@ -308,7 +308,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Validates that there are no duplicate providers in the list.
   void _validateProvidersUniqueness(
-    List<InstantiableProvider> allProviders,
+    List<ValueBinding> allProviders,
   ) {
     assert(
       () {
@@ -316,11 +316,11 @@ class ProviderScopeState extends State<ProviderScope> {
         final argProviderIds = <ArgProvider>{};
 
         for (final item in allProviders) {
-          if (item is InstantiableNoArgProvider) {
+          if (item is ProviderValueBinding) {
             if (!providerIds.add(item._provider)) {
               throw MultipleProviderOfSameInstance();
             }
-          } else if (item is InstantiableArgProvider) {
+          } else if (item is ArgProviderValueBinding) {
             if (!argProviderIds.add(item._argProvider)) {
               throw MultipleProviderOfSameInstance();
             }
@@ -337,7 +337,7 @@ class ProviderScopeState extends State<ProviderScope> {
   /// This is done as soon as the scope is mounted, before any value exists, so
   /// that a provider can inject the other providers of its own scope no matter
   /// the order in which they are declared.
-  void _registerAllProviders(List<InstantiableProvider> allProviders) {
+  void _registerAllProviders(List<ValueBinding> allProviders) {
     // The overrides of a ProviderScopeOverride, if present. They are needed to
     // regenerate the intermediate providers of the overridden providers.
     final overridesScope = ProviderScopeOverrideState.maybeOf(
@@ -345,7 +345,7 @@ class ProviderScopeState extends State<ProviderScope> {
     )?._providerScopeState;
 
     for (final item in allProviders) {
-      if (item is InstantiableNoArgProvider) {
+      if (item is ProviderValueBinding) {
         final id = item._provider;
 
         // If this provider is overridden, its mock generates the intermediate
@@ -353,7 +353,7 @@ class ProviderScopeState extends State<ProviderScope> {
         // intermediate provider itself.
         final mock = overridesScope?._getOverriddenProvider(id);
         _allProvidersInScope[id] = mock?._generateIntermediateProvider() ?? id;
-      } else if (item is InstantiableArgProvider) {
+      } else if (item is ArgProviderValueBinding) {
         final id = item._argProvider;
 
         // The argument provider generating the intermediate provider is either
@@ -369,7 +369,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Initializes providers by validating and registering them. Their values are
   /// always created lazily, i.e. the first time they are injected.
-  void _initializeProviders(List<InstantiableProvider> allProviders) {
+  void _initializeProviders(List<ValueBinding> allProviders) {
     _validateProvidersUniqueness(allProviders);
     _registerAllProviders(allProviders);
   }
