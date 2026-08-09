@@ -127,10 +127,9 @@ final loggerProvider = Provider<Logger>(
   debugName: 'logger',
 );
 
-/// A provider depending on another provider of the **same** scope. The order in
-/// which the two are declared in the `providers` list does not matter, as long
-/// as they do not depend on each other (which would be a
-/// `ProviderCircularDependencyError`).
+/// A provider depending on another provider of the **same** scope. This works
+/// only if `loggerProvider` is declared before this provider in the
+/// `providers` list, otherwise a `ProviderForwardReferenceError` is thrown.
 final analyticsProvider = Provider<Analytics>(
   (context) {
     final logger = loggerProvider.of(context);

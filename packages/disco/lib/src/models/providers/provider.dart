@@ -116,6 +116,7 @@ class Provider<T extends Object> {
   }
 
   /// It creates an [InstantiableNoArgProvider].
+  // ignore: use_to_and_as_if_applicable
   InstantiableNoArgProvider<T> call() {
     return InstantiableNoArgProvider._(this);
   }

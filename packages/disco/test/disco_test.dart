@@ -1430,6 +1430,7 @@ void main() {
                     int? value;
                     try {
                       value = throwingProvider.of(context);
+                    // ignore: avoid_catching_errors
                     } on StateError {
                       value = throwingProvider.of(context);
                     }
@@ -2049,6 +2050,95 @@ void main() {
         // The error is reported, but the disposal keeps going.
         expect(tester.takeException(), isA<StateError>());
         expect(disposals, ['ab', 'a']);
+      },
+    );
+  });
+
+  group('Immutability of a mounted scope', () {
+    testWidgets(
+      '''Inserting a provider into a mounted ProviderScope is an error''',
+      (tester) async {
+        final aProvider = Provider<int>((_) => 1);
+        final bProvider = Provider<int>((_) => 2);
+
+        Widget buildTree({required bool withB}) {
+          return MaterialApp(
+            home: ProviderScope(
+              providers: [aProvider(), if (withB) bProvider()],
+              child: Builder(
+                builder: (context) => Text(aProvider.of(context).toString()),
+              ),
+            ),
+          );
+        }
+
+        await tester.pumpWidget(buildTree(withB: false));
+        expect(find.text('1'), findsOneWidget);
+
+        // The new provider would silently be ignored, therefore it is reported.
+        await tester.pumpWidget(buildTree(withB: true));
+        expect(tester.takeException(), isA<FlutterError>());
+        // The error is reported and not thrown: the scope keeps working with
+        // the providers it has been mounted with.
+        expect(find.text('1'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''Changing the argument given to a mounted ProviderScope is allowed''',
+      (tester) async {
+        final numberProvider = Provider.withArgument<int, int>((_, arg) => arg);
+
+        Widget buildTree(int arg) {
+          return MaterialApp(
+            home: ProviderScope(
+              providers: [numberProvider(arg)],
+              child: Builder(
+                builder: (context) =>
+                    Text(numberProvider.of(context).toString()),
+              ),
+            ),
+          );
+        }
+
+        await tester.pumpWidget(buildTree(1));
+        expect(find.text('1'), findsOneWidget);
+
+        // The initial argument keeps winning: only the *identity* of the
+        // providers is guarded, since an argument is often rebuilt along with
+        // the widget providing it.
+        await tester.pumpWidget(buildTree(2));
+        expect(find.text('1'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''Rebuilding a ProviderScope with the same providers is fine''',
+      (tester) async {
+        var created = 0;
+        final aProvider = Provider<int>((_) => ++created);
+        final bProvider = Provider<int>((_) => 0);
+
+        Widget buildTree({required bool reversed}) {
+          final providers = [aProvider(), bProvider()];
+          return MaterialApp(
+            home: ProviderScope(
+              providers: reversed ? providers.reversed.toList() : providers,
+              child: Builder(
+                builder: (context) => Text(aProvider.of(context).toString()),
+              ),
+            ),
+          );
+        }
+
+        await tester.pumpWidget(buildTree(reversed: false));
+        // A brand new list, holding brand new InstantiableProviders, is built
+        // every time: only the providers they refer to matter. Since the order
+        // does not matter either, reordering them is not a change.
+        await tester.pumpWidget(buildTree(reversed: true));
+
+        expect(find.text('1'), findsOneWidget);
+        expect(created, 1);
       },
     );
   });

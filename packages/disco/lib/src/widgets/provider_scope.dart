@@ -5,36 +5,40 @@
 part of '../disco_internal.dart';
 
 /// {@template ProviderScope}
-/// Provides the passed [providers] to descendants (i.e. what is in [child]).
+/// Provides the passed [_providers] to descendants (i.e. what is in [child]).
 /// {@endtemplate}
 @immutable
 class ProviderScope extends StatefulWidget {
   /// {@macro ProviderScope}
   const ProviderScope({
     required this.child,
-    required List<InstantiableProvider> this.providers,
+    required List<InstantiableProvider> providers,
     super.key,
-  }) : overrides = null;
+  }) : _providers = providers,
+       _overrides = null;
 
   const ProviderScope._overrides({
     required this.child,
-    required List<Override> this.overrides,
+    required List<Override> overrides,
     super.key,
-  }) : providers = null;
+  }) : _overrides = overrides,
+       _providers = null;
 
   /// {@template ProviderScope.child}
-  /// The widget child that gets access to the [providers].
+  /// The widget child that gets access to the providers.
   /// {@endtemplate}
   final Widget child;
 
-  /// All the providers provided to all the descendants of [ProviderScope].
-  /// [providers] and [overrides] cannot coexist.
-  final List<InstantiableProvider>? providers;
+  /// All the providers provided to all the descendants of this [ProviderScope].
+  ///
+  /// Exactly one of [_providers] and [_overrides] is non-null.
+  final List<InstantiableProvider>? _providers;
 
-  /// All the overrides provided to all the descendants of
+  /// All the overrides provided to all the descendants of a
   /// [ProviderScopeOverride].
-  /// [providers] and [overrides] cannot coexist.
-  final List<Override>? overrides;
+  ///
+  /// Exactly one of [_providers] and [_overrides] is non-null.
+  final List<Override>? _overrides;
 
   @override
   State<ProviderScope> createState() => ProviderScopeState();
@@ -53,7 +57,7 @@ class ProviderScope extends StatefulWidget {
     Provider? providerId,
     ArgProvider? argProviderId,
   }) {
-    return _InheritedProvider.inheritFromNearest(
+    return _InheritedProvider.findNearestProviding(
       context,
       providerId,
       argProviderId,
@@ -95,7 +99,7 @@ class ProviderScope extends StatefulWidget {
   /// returns null.
   ///
   /// In case the [id] is found in some [ProviderScope], but the find fails
-  /// (no associated value in [ProviderScopeState.createdValues]),
+  /// (no associated value in [ProviderScopeState._createdValues]),
   /// the provider's value gets created.
   /// {@endtemplate}
   static T? _getOrCreateProviderValue<T extends Object>(
@@ -105,10 +109,10 @@ class ProviderScope extends StatefulWidget {
     return _getOrCreateValue<T, Provider<T>>(
       context: context,
       id: id,
-      getCreatedValue: (scope, id) => scope.getCreatedProviderValue(id) as T?,
+      getCreatedValue: (scope, id) => scope._getCreatedProviderValue(id) as T?,
       findState: (context, id) => _findState(context, providerId: id),
       createValue: (scope, id, context) =>
-          scope.createProviderValue(id, context) as T,
+          scope._createProviderValue(id, context) as T,
     );
   }
 
@@ -121,10 +125,10 @@ class ProviderScope extends StatefulWidget {
       context: context,
       id: id,
       getCreatedValue: (scope, id) =>
-          scope.getCreatedArgProviderValue(id) as T?,
+          scope._getCreatedArgProviderValue(id) as T?,
       findState: (context, id) => _findState(context, argProviderId: id),
       createValue: (scope, id, context) =>
-          scope.createProviderValueForArgProvider(id, context) as T,
+          scope._createProviderValueForArgProvider(id, context) as T,
     );
   }
 }
@@ -149,14 +153,14 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Stores all the argument providers in the current scope. The keys are the
   /// top-level argument providers, while the values are the intermediate
-  /// providers, which are used as internal IDs by [createdValues].
-  final allArgProvidersInScope = HashMap<ArgProvider, Provider>();
+  /// providers, which are used as internal IDs by [_createdValues].
+  final _allArgProvidersInScope = HashMap<ArgProvider, Provider>();
 
   /// Stores all the providers without argument in the current scope.
   /// The keys are the top-level providers, while the values are the
   /// intermediate providers, which are used as internal IDs by
-  /// [createdValues].
-  final allProvidersInScope = HashMap<Provider, Provider>();
+  /// [_createdValues].
+  final _allProvidersInScope = HashMap<Provider, Provider>();
 
   /// Stores the providers overridden by a [ProviderScopeOverride].
   ///
@@ -168,7 +172,7 @@ class ProviderScopeState extends State<ProviderScope> {
   /// intermediate providers, so that the value of an overridden provider lives
   /// in the very same scope where the value of the original provider would have
   /// lived, and therefore shares its exact lifecycle.
-  final overriddenProviders = HashMap<Provider, Provider>();
+  final _overriddenProviders = HashMap<Provider, Provider>();
 
   /// Stores the argument providers overridden by a [ProviderScopeOverride].
   ///
@@ -182,11 +186,11 @@ class ProviderScopeState extends State<ProviderScope> {
   /// only registered here and every [ProviderScope] looks them up while
   /// generating its intermediate providers.
   ///
-  /// NB: differently from [overriddenProviders], an overridden argument
+  /// NB: differently from [_overriddenProviders], an overridden argument
   /// provider cannot be provided by this scope as a fallback, since no argument
   /// is available here. Therefore, only the [ProviderScope]s that are
   /// descendants of the [ProviderScopeOverride] are affected.
-  final overriddenArgProviders = HashMap<ArgProvider, ArgProvider>();
+  final _overriddenArgProviders = HashMap<ArgProvider, ArgProvider>();
 
   /// Stores all the values created by this scope, no matter whether they come
   /// from a [Provider] or from an [ArgProvider].
@@ -196,7 +200,7 @@ class ProviderScopeState extends State<ProviderScope> {
   ///
   /// NB: this map preserves the insertion order, which is the order in which
   /// the values have been created. [dispose] relies on it.
-  final createdValues = <Provider, Object>{};
+  final _createdValues = <Provider, Object>{};
 
   /// The top-level providers whose values are currently being created by this
   /// scope, in order of creation. Used to detect circular dependencies.
@@ -208,11 +212,98 @@ class ProviderScopeState extends State<ProviderScope> {
   void initState() {
     super.initState();
 
-    if (widget.providers != null) {
-      _initializeProviders(widget.providers!);
-    } else if (widget.overrides != null) {
-      _initializeOverrides(widget.overrides!);
+    final providers = widget._providers;
+    if (providers != null) {
+      _initializeProviders(providers);
+    } else {
+      _initializeOverrides(widget._overrides!);
     }
+  }
+
+  @override
+  void didUpdateWidget(ProviderScope oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    assert(_debugCheckScopeDidNotChange(oldWidget), '');
+  }
+
+  /// Checks that the set of providers of this scope has not changed.
+  ///
+  /// The providers (or the overrides) of a [ProviderScope] are read exactly
+  /// once, when the scope is mounted. Inserting or removing one on a later
+  /// rebuild would silently have no effect, therefore it is reported as an
+  /// error in debug mode.
+  ///
+  /// NB: the error is *reported* and not thrown. Throwing here would abort the
+  /// update of the element tree halfway through, which makes the framework fail
+  /// again later on, in a much more confusing way. Reporting keeps this scope
+  /// working with the providers it has been mounted with, which is exactly what
+  /// the change amounts to.
+  ///
+  /// NB: only the *identity* of the providers is compared. Giving an argument
+  /// provider a different argument on a rebuild is deliberately allowed, since
+  /// the argument is often rebuilt along with the widget; the initial argument
+  /// keeps winning, as documented in
+  /// <https://disco.mariuti.com/core/immutability/>.
+  bool _debugCheckScopeDidNotChange(ProviderScope oldWidget) {
+    // The identity of every provider (or overridden provider) of a scope.
+    Set<Object> describe(ProviderScope scope) {
+      final ids = <Object>{};
+
+      final providers = scope._providers;
+      if (providers != null) {
+        for (final item in providers) {
+          if (item is InstantiableNoArgProvider) {
+            ids.add(item._provider);
+          } else if (item is InstantiableArgProvider) {
+            ids.add(item._argProvider);
+          }
+        }
+        return ids;
+      }
+
+      for (final item in scope._overrides!) {
+        if (item is ProviderOverride) {
+          ids.add(item._originalProvider);
+        } else if (item is ArgProviderOverride) {
+          ids.add(item._originalArgProvider);
+        }
+      }
+      return ids;
+    }
+
+    final oldIds = describe(oldWidget);
+    final newIds = describe(widget);
+
+    if (oldIds.length != newIds.length || !newIds.containsAll(oldIds)) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: FlutterError.fromParts([
+            ErrorSummary(
+              'The providers of a ProviderScope changed after it had been '
+              'mounted.',
+            ),
+            ErrorDescription(
+              'The providers (or the overrides) of a ProviderScope are read '
+              'exactly once, when the scope is mounted. Inserting a provider '
+              'into the list, or removing one from it, on a later rebuild '
+              'therefore has no effect, and it usually surfaces much later as '
+              'a ProviderWithoutScopeError.',
+            ),
+            ErrorHint(
+              'Provide a fixed set of providers, and use a nested '
+              'ProviderScope for the ones whose presence depends on the state '
+              'of your widget. If you really need this scope to be rebuilt '
+              'from scratch, give it a different key instead: that disposes '
+              'its values and creates them again.',
+            ),
+          ]),
+          library: 'disco',
+          context: ErrorDescription('while updating a ProviderScope'),
+        ),
+      );
+    }
+
+    return true;
   }
 
   /// Validates that there are no duplicate providers in the list.
@@ -251,7 +342,7 @@ class ProviderScopeState extends State<ProviderScope> {
     // regenerate the intermediate providers of the overridden providers.
     final overridesScope = ProviderScopeOverrideState.maybeOf(
       context,
-    )?.providerScopeState;
+    )?._providerScopeState;
 
     for (final item in allProviders) {
       if (item is InstantiableNoArgProvider) {
@@ -260,16 +351,16 @@ class ProviderScopeState extends State<ProviderScope> {
         // If this provider is overridden, its mock generates the intermediate
         // provider; otherwise the top-level provider can act as the
         // intermediate provider itself.
-        final mock = overridesScope?.getOverriddenProvider(id);
-        allProvidersInScope[id] = mock?._generateIntermediateProvider() ?? id;
+        final mock = overridesScope?._getOverriddenProvider(id);
+        _allProvidersInScope[id] = mock?._generateIntermediateProvider() ?? id;
       } else if (item is InstantiableArgProvider) {
         final id = item._argProvider;
 
         // The argument provider generating the intermediate provider is either
         // the top-level one or, if overridden, its mock.
-        final argProvider = overridesScope?.getOverriddenArgProvider(id) ?? id;
+        final argProvider = overridesScope?._getOverriddenArgProvider(id) ?? id;
 
-        allArgProvidersInScope[id] = argProvider._generateIntermediateProvider(
+        _allArgProvidersInScope[id] = argProvider._generateIntermediateProvider(
           item._arg,
         );
       }
@@ -312,12 +403,12 @@ class ProviderScopeState extends State<ProviderScope> {
       // regenerate its intermediate provider out of it. This is what makes the
       // value of an overridden provider live exactly where the value of the
       // original provider would have lived.
-      overriddenProviders[id] = mock;
+      _overriddenProviders[id] = mock;
 
       // The mock is also provided by this scope, so that an override works even
       // if no ProviderScope below provides the original provider at all. In
       // that case only, the value lives here.
-      allProvidersInScope[id] = mock._generateIntermediateProvider();
+      _allProvidersInScope[id] = mock._generateIntermediateProvider();
     }
   }
 
@@ -351,7 +442,7 @@ class ProviderScopeState extends State<ProviderScope> {
       // in this scope. It is only registered, so that the ProviderScopes
       // inserting this argument provider into the widget tree can generate
       // their intermediate providers out of the mock.
-      overriddenArgProviders[id] = override._mockArgProvider;
+      _overriddenArgProviders[id] = override._mockArgProvider;
     }
   }
 
@@ -373,11 +464,11 @@ class ProviderScopeState extends State<ProviderScope> {
   void dispose() {
     _disposeCreatedValues();
 
-    allArgProvidersInScope.clear();
-    allProvidersInScope.clear();
-    overriddenProviders.clear();
-    overriddenArgProviders.clear();
-    createdValues.clear();
+    _allArgProvidersInScope.clear();
+    _allProvidersInScope.clear();
+    _overriddenProviders.clear();
+    _overriddenArgProviders.clear();
+    _createdValues.clear();
     super.dispose();
   }
 
@@ -386,11 +477,11 @@ class ProviderScopeState extends State<ProviderScope> {
   ///
   /// The values are disposed in the reverse order of creation. Since a provider
   /// can inject the other providers of its own scope, and since every value is
-  /// created lazily, a value is always created *after* the values it depends on;
-  /// therefore, reversing the creation order guarantees that a value is always
-  /// disposed *before* the values it depends on.
+  /// created lazily, a value is always created *after* the values it depends on
+  /// ; therefore, reversing the creation order guarantees that a value is
+  /// always disposed *before* the values it depends on.
   void _disposeCreatedValues() {
-    for (final entry in createdValues.entries.toList().reversed) {
+    for (final entry in _createdValues.entries.toList().reversed) {
       try {
         entry.key._safeDisposeValue(entry.value);
       } on Object catch (error, stackTrace) {
@@ -413,7 +504,7 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Creates the value of [intermediateProvider], the intermediate provider
   /// generated for the top-level provider [id], and stores it into
-  /// [createdValues].
+  /// [_createdValues].
   dynamic _createAndStoreValue(
     Object id,
     Provider intermediateProvider,
@@ -434,7 +525,7 @@ class ProviderScopeState extends State<ProviderScope> {
       // Create the value (it may throw or trigger nested creations)
       final value = intermediateProvider._createValue(context);
       // Store the created value
-      createdValues[intermediateProvider] = value;
+      _createdValues[intermediateProvider] = value;
       return value;
     } finally {
       _idsBeingCreated.removeLast();
@@ -444,81 +535,81 @@ class ProviderScopeState extends State<ProviderScope> {
   // Providers logic ----------------------------------------------------------
 
   /// Tries to find the intermediate [Provider] associated with this [id].
-  Provider? getIntermediateProvider(Provider id) {
-    return allProvidersInScope[id];
+  Provider? _getIntermediateProvider(Provider id) {
+    return _allProvidersInScope[id];
   }
 
   /// Tries to find the [Provider] overriding this [id].
   ///
   /// It returns null if this [id] is not overridden. Only the internal
   /// [ProviderScope] of a [ProviderScopeOverride] can return a value here.
-  Provider? getOverriddenProvider(Provider id) {
-    return overriddenProviders[id];
+  Provider? _getOverriddenProvider(Provider id) {
+    return _overriddenProviders[id];
   }
 
   /// Tries to find the value already created for this [id].
   /// It returns null if the [id] is not in this scope or if its value has not
   /// been created yet.
-  Object? getCreatedProviderValue(Provider id) {
-    final provider = getIntermediateProvider(id);
+  Object? _getCreatedProviderValue(Provider id) {
+    final provider = _getIntermediateProvider(id);
     if (provider == null) return null;
-    return createdValues[provider];
+    return _createdValues[provider];
   }
 
-  /// Creates a provider value and stores it to [createdValues].
-  dynamic createProviderValue(Provider id, BuildContext context) {
-    return _createAndStoreValue(id, getIntermediateProvider(id)!, context);
+  /// Creates a provider value and stores it to [_createdValues].
+  dynamic _createProviderValue(Provider id, BuildContext context) {
+    return _createAndStoreValue(id, _getIntermediateProvider(id)!, context);
   }
 
   /// Used to determine if the requested provider is present in the current
   /// scope.
-  bool isProviderInScope(Provider id) {
+  bool _isProviderInScope(Provider id) {
     // Find the provider by type
-    return getIntermediateProvider(id) != null;
+    return _getIntermediateProvider(id) != null;
   }
 
   // ArgProviders logic -------------------------------------------------------
 
   /// Tries to find the intermediate [Provider] associated with this [id].
-  Provider? getIntermediateProviderForArgProvider(
+  Provider? _getIntermediateProviderForArgProvider(
     ArgProvider id,
   ) {
-    return allArgProvidersInScope[id];
+    return _allArgProvidersInScope[id];
   }
 
   /// Tries to find the [ArgProvider] overriding this [id].
   ///
   /// It returns null if this [id] is not overridden. Only the internal
   /// [ProviderScope] of a [ProviderScopeOverride] can return a value here.
-  ArgProvider? getOverriddenArgProvider(ArgProvider id) {
-    return overriddenArgProviders[id];
+  ArgProvider? _getOverriddenArgProvider(ArgProvider id) {
+    return _overriddenArgProviders[id];
   }
 
   /// Tries to find the value already created for this [id].
   /// It returns null if the [id] is not in this scope or if its value has not
   /// been created yet.
-  Object? getCreatedArgProviderValue(ArgProvider id) {
-    final provider = getIntermediateProviderForArgProvider(id);
+  Object? _getCreatedArgProviderValue(ArgProvider id) {
+    final provider = _getIntermediateProviderForArgProvider(id);
     if (provider == null) return null;
-    return createdValues[provider];
+    return _createdValues[provider];
   }
 
-  /// Creates a provider value and stores it to [createdValues].
-  dynamic createProviderValueForArgProvider(
+  /// Creates a provider value and stores it to [_createdValues].
+  dynamic _createProviderValueForArgProvider(
     ArgProvider id,
     BuildContext context,
   ) {
     return _createAndStoreValue(
       id,
-      getIntermediateProviderForArgProvider(id)!,
+      _getIntermediateProviderForArgProvider(id)!,
       context,
     );
   }
 
   /// Used to determine if the requested provider is present in the current
   /// scope.
-  bool isArgProviderInScope(ArgProvider id) {
-    return getIntermediateProviderForArgProvider(id) != null;
+  bool _isArgProviderInScope(ArgProvider id) {
+    return _getIntermediateProviderForArgProvider(id) != null;
   }
 
   // Rest of _ProviderScopeState ----------------------------------------------
@@ -536,7 +627,7 @@ class ProviderScopeState extends State<ProviderScope> {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties.add(
-      IterableProperty('createdValues', createdValues.values),
+      IterableProperty('createdValues', _createdValues.values),
     );
   }
 
@@ -544,11 +635,14 @@ class ProviderScopeState extends State<ProviderScope> {
 }
 
 @immutable
-class _InheritedProvider extends InheritedModel<Object> {
+class _InheritedProvider extends InheritedWidget {
   const _InheritedProvider({required this.state, required super.child});
 
   final ProviderScopeState state;
 
+  /// The dependents of this widget are never notified: a [ProviderScope] hands
+  /// out values, and the values themselves never change. Reacting to a mutation
+  /// of a value is the job of the state management solution of choice.
   // coverage:ignore-start
   @override
   bool updateShouldNotify(covariant _InheritedProvider oldWidget) {
@@ -556,85 +650,69 @@ class _InheritedProvider extends InheritedModel<Object> {
   }
   // coverage:ignore-end
 
-  bool isSupportedAspectWithType(
-    Provider? providerId,
-    ArgProvider? argProviderId,
-  ) {
+  /// Whether the scope of this widget provides the given ID.
+  ///
+  /// Exactly one of [providerId] and [argProviderId] must be given.
+  bool _provides(Provider? providerId, ArgProvider? argProviderId) {
     assert(
       (providerId != null) ^ (argProviderId != null),
       'Either a Provider or an ArgProvider must be used as ID.',
     );
     if (providerId != null) {
-      return state.isProviderInScope(providerId);
+      return state._isProviderInScope(providerId);
     }
-    return state.isArgProviderInScope(argProviderId!);
+    return state._isArgProviderInScope(argProviderId!);
   }
 
-  // coverage:ignore-start
-  @override
-  bool updateShouldNotifyDependent(
-    covariant _InheritedProvider oldWidget,
-    Set<dynamic> dependencies,
-  ) {
-    return false;
-  }
-  // coverage:ignore-end
-
-  /// The following two methods are taken from [InheritedModel] and modified
-  /// in order to find the first [_InheritedProvider] ancestor that contains
-  /// the searched provider (aspect).
-  /// This is a small optimization that avoids traversing all of the
-  /// [ProviderScope] ancestors.
-  static InheritedElement? _findNearestModel(
+  /// Returns the element of the nearest [_InheritedProvider] ancestor whose
+  /// scope provides the given ID, or null if there is none.
+  ///
+  /// This logic is adapted from [InheritedModel]: instead of stopping at the
+  /// nearest ancestor of this type, it keeps walking up until one of them
+  /// actually provides the ID. This is a small optimization that avoids
+  /// traversing every single element between two [ProviderScope]s.
+  static InheritedElement? _findNearestElementProviding(
     BuildContext context,
     Provider? providerId,
     ArgProvider? argProviderId,
   ) {
-    assert(
-      (providerId != null) ^ (argProviderId != null),
-      'Either a Provider or an ArgProvider must be used as ID.',
-    );
-    final model = context
+    final element = context
         .getElementForInheritedWidgetOfExactType<_InheritedProvider>();
     // No ancestors of type _InheritedProvider found, exit.
-    if (model == null) {
+    if (element == null) {
       return null;
     }
 
-    assert(
-      model.widget is _InheritedProvider,
-      'The widget must be of type _InheritedProvider',
-    );
-    final modelWidget = model.widget as _InheritedProvider;
+    final widget = element.widget as _InheritedProvider;
 
-    // The model contains the aspect, the ancestor has been found, return it.
-    if (modelWidget.isSupportedAspectWithType(providerId, argProviderId)) {
-      return model;
+    // The ancestor providing the ID has been found, return it.
+    if (widget._provides(providerId, argProviderId)) {
+      return element;
     }
 
-    // The aspect has not been found in the current ancestor, go up to other
-    // ancestors and try to find it.
-    Element? modelParent;
-    model.visitAncestorElements((Element ancestor) {
-      modelParent = ancestor;
+    // This ancestor does not provide the ID: go further up and try again.
+    Element? parent;
+    element.visitAncestorElements((ancestor) {
+      parent = ancestor;
       return false;
     });
     // Return null if we've reached the root.
-    if (modelParent == null) {
+    if (parent == null) {
       return null;
     }
 
-    return _findNearestModel(modelParent!, providerId, argProviderId);
+    return _findNearestElementProviding(parent!, providerId, argProviderId);
   }
 
-  /// Makes [context] dependent on the specified [providerId] of an
-  /// [_InheritedProvider] (or [argProviderId], alternatively).
+  /// Returns the nearest [_InheritedProvider] ancestor whose scope provides the
+  /// given ID, or null if there is none.
   ///
-  /// The dependencies created by this method target the nearest
-  /// [_InheritedProvider] ancestor whose [isSupportedAspect] returns true.
+  /// Exactly one of [providerId] and [argProviderId] must be given.
   ///
-  /// If no ancestor of type _InheritedProvider exists, null is returned.
-  static _InheritedProvider? inheritFromNearest(
+  /// NB: no dependency is registered on the returned widget, since the values
+  /// of a [ProviderScope] never change and, thus, there would be nothing to
+  /// rebuild. The widget tree is merely walked.
+  static _InheritedProvider? findNearestProviding(
     BuildContext context,
     Provider? providerId,
     ArgProvider? argProviderId,
@@ -644,14 +722,16 @@ class _InheritedProvider extends InheritedModel<Object> {
       'Either a Provider or an ArgProvider must be used as ID.',
     );
 
-    // Try and find a model in the ancestors for which isSupportedAspect(aspect)
-    // is true.
-    final model = _findNearestModel(context, providerId, argProviderId);
-    if (model == null) {
+    final element = _findNearestElementProviding(
+      context,
+      providerId,
+      argProviderId,
+    );
+    if (element == null) {
       return null;
     }
 
-    return model.widget as _InheritedProvider;
+    return element.widget as _InheritedProvider;
   }
 }
 
