@@ -67,12 +67,16 @@ class ProviderScope extends StatefulWidget {
   /// Helper method to handle common logic between Provider and ArgProvider
   /// access during lazy creation.
   /// [id] can be either a `Provider<T>` or an `ArgProvider<T, A>`.
+  ///
+  /// NB: [context] is only used to find the scope providing [id]. The value is
+  /// never created with [context], but with the context of the scope owning
+  /// it (see [ProviderScopeState._valuesContext]).
   static T? _getOrCreateValue<T extends Object, ID extends Object>({
     required BuildContext context,
     required ID id,
     required T? Function(ProviderScopeState, ID) getCreatedValue,
     required ProviderScopeState? Function(BuildContext, ID) findState,
-    required T Function(ProviderScopeState, ID, BuildContext) createValue,
+    required T Function(ProviderScopeState, ID) createValue,
   }) {
     // Try to find the provider in the current widget tree.
     var state = findState(context, id);
@@ -89,7 +93,7 @@ class ProviderScope extends StatefulWidget {
     final createdValue = getCreatedValue(state, id);
     if (createdValue != null) return createdValue;
     // if the value has not been created yet, create it lazily
-    return createValue(state, id, context);
+    return createValue(state, id);
   }
 
   /// {@template _getOrCreateProviderValue}
@@ -111,8 +115,7 @@ class ProviderScope extends StatefulWidget {
       id: id,
       getCreatedValue: (scope, id) => scope._getCreatedProviderValue(id) as T?,
       findState: (context, id) => _findState(context, providerId: id),
-      createValue: (scope, id, context) =>
-          scope._createProviderValue(id, context) as T,
+      createValue: (scope, id) => scope._createProviderValue(id) as T,
     );
   }
 
@@ -127,8 +130,8 @@ class ProviderScope extends StatefulWidget {
       getCreatedValue: (scope, id) =>
           scope._getCreatedArgProviderValue(id) as T?,
       findState: (context, id) => _findState(context, argProviderId: id),
-      createValue: (scope, id, context) =>
-          scope._createProviderValueForArgProvider(id, context) as T,
+      createValue: (scope, id) =>
+          scope._createProviderValueForArgProvider(id) as T,
     );
   }
 }
@@ -205,15 +208,32 @@ class ProviderScopeState extends State<ProviderScope> {
   /// The top-level providers whose values are currently being created by this
   /// scope, in order of creation. Used to detect circular dependencies.
   ///
+  /// NB: since the values are always created with [_valuesContext], a value
+  /// can only inject the providers of its own scope and of the scopes above.
+  /// A cycle can therefore only involve the providers of a single scope, so
+  /// tracking the creations per scope is enough to report the whole cycle.
+  ///
   /// Every element is either a [Provider] or an [ArgProvider].
   final _idsBeingCreated = <Object>[];
 
   /// The top-level providers of this scope whose values are not lazy, in order
-  /// of declaration. Their values are created by [_NonLazyValuesCreator] as
-  /// soon as this scope is mounted.
+  /// of declaration. Their values are created by [_ProviderScopeValuesContext]
+  /// as soon as this scope is mounted.
   ///
   /// Every element is either a [Provider] or an [ArgProvider].
   final _nonLazyIds = <Object>[];
+
+  /// The context used to create all the values of this scope.
+  ///
+  /// It is the context of [_ProviderScopeValuesContext], i.e. a context placed
+  /// right below the [_InheritedProvider] of this scope and above
+  /// [ProviderScope.child]. This way, a value can inject the providers of its
+  /// own scope and of the scopes above, but never the providers of a scope
+  /// placed below, no matter which widget injected it first. Otherwise a value
+  /// could depend on a value living in a descendant scope, which could be
+  /// disposed earlier, and the dependencies of a value would depend on where
+  /// it was injected first.
+  BuildContext? _valuesContext;
 
   @override
   void initState() {
@@ -398,22 +418,20 @@ class ProviderScopeState extends State<ProviderScope> {
 
   /// Creates the values of the non-lazy providers, in order of declaration.
   ///
-  /// [context] has to be a descendant of this scope, so that the non-lazy
-  /// providers can inject the other providers of this scope (whose values,
-  /// lazy or not, get created on the fly if needed), exactly like a lazy
-  /// provider injected by a descendant would.
+  /// A non-lazy provider can inject the other providers of this scope, whose
+  /// values (lazy or not) get created on the fly if needed.
   ///
   /// NB: a value that has already been created, e.g. because a previous
   /// non-lazy provider injected it, is not created again.
-  void _createNonLazyValues(BuildContext context) {
+  void _createNonLazyValues() {
     for (final id in _nonLazyIds) {
       if (id is Provider) {
         if (_getCreatedProviderValue(id) == null) {
-          _createProviderValue(id, context);
+          _createProviderValue(id);
         }
       } else if (id is ArgProvider) {
         if (_getCreatedArgProviderValue(id) == null) {
-          _createProviderValueForArgProvider(id, context);
+          _createProviderValueForArgProvider(id);
         }
       }
     }
@@ -552,11 +570,15 @@ class ProviderScopeState extends State<ProviderScope> {
   /// Creates the value of [intermediateProvider], the intermediate provider
   /// generated for the top-level provider [id], and stores it into
   /// [_createdValues].
-  dynamic _createAndStoreValue(
-    Object id,
-    Provider intermediateProvider,
-    BuildContext context,
-  ) {
+  ///
+  /// The value is always created with [_valuesContext], and never with the
+  /// context of the widget injecting it.
+  dynamic _createAndStoreValue(Object id, Provider intermediateProvider) {
+    assert(
+      _valuesContext != null,
+      'The values of a ProviderScope can only be created once it is mounted.',
+    );
+
     // A provider that is injected while its own value is being created can only
     // be waiting for itself.
     final cycleStart = _idsBeingCreated.indexOf(id);
@@ -570,7 +592,7 @@ class ProviderScopeState extends State<ProviderScope> {
     _idsBeingCreated.add(id);
     try {
       // Create the value (it may throw or trigger nested creations)
-      final value = intermediateProvider._createValue(context);
+      final value = intermediateProvider._createValue(_valuesContext!);
       // Store the created value
       _createdValues[intermediateProvider] = value;
       return value;
@@ -604,8 +626,8 @@ class ProviderScopeState extends State<ProviderScope> {
   }
 
   /// Creates a provider value and stores it to [_createdValues].
-  dynamic _createProviderValue(Provider id, BuildContext context) {
-    return _createAndStoreValue(id, _getIntermediateProvider(id)!, context);
+  dynamic _createProviderValue(Provider id) {
+    return _createAndStoreValue(id, _getIntermediateProvider(id)!);
   }
 
   /// Used to determine if the requested provider is present in the current
@@ -642,14 +664,10 @@ class ProviderScopeState extends State<ProviderScope> {
   }
 
   /// Creates a provider value and stores it to [_createdValues].
-  dynamic _createProviderValueForArgProvider(
-    ArgProvider id,
-    BuildContext context,
-  ) {
+  dynamic _createProviderValueForArgProvider(ArgProvider id) {
     return _createAndStoreValue(
       id,
       _getIntermediateProviderForArgProvider(id)!,
-      context,
     );
   }
 
@@ -665,11 +683,7 @@ class ProviderScopeState extends State<ProviderScope> {
   Widget build(BuildContext context) {
     return _InheritedProvider(
       state: this,
-      // NB: whether this widget is inserted is decided once, when this scope
-      // is mounted, so that the subtree is never reparented.
-      child: _nonLazyIds.isEmpty
-          ? widget.child
-          : _NonLazyValuesCreator(scope: this, child: widget.child),
+      child: _ProviderScopeValuesContext(scope: this, child: widget.child),
     );
   }
 
@@ -786,34 +800,50 @@ class _InheritedProvider extends InheritedWidget {
   }
 }
 
-/// Creates the values of the non-lazy providers of [scope] as soon as it is
-/// mounted, before [child] is built.
+/// Provides [scope] with the context used to create all of its values (see
+/// [ProviderScopeState._valuesContext]), and creates the values of its
+/// non-lazy providers as soon as it is mounted, before [child] is built.
 ///
-/// The values cannot be created by [ProviderScopeState] itself, since its
-/// context is not a descendant of its own [_InheritedProvider]: a non-lazy
-/// provider would not be able to inject the other providers of its scope.
-class _NonLazyValuesCreator extends StatefulWidget {
-  const _NonLazyValuesCreator({required this.scope, required this.child});
+/// The context of [ProviderScopeState] itself cannot be used, since it is not
+/// a descendant of its own [_InheritedProvider]: a provider would not be able
+/// to inject the other providers of its scope.
+class _ProviderScopeValuesContext extends StatefulWidget {
+  const _ProviderScopeValuesContext({required this.scope, required this.child});
 
   final ProviderScopeState scope;
 
   final Widget child;
 
   @override
-  State<_NonLazyValuesCreator> createState() => _NonLazyValuesCreatorState();
+  State<_ProviderScopeValuesContext> createState() =>
+      _ProviderScopeValuesContextState();
 }
 
-class _NonLazyValuesCreatorState extends State<_NonLazyValuesCreator> {
-  bool _created = false;
+class _ProviderScopeValuesContextState
+    extends State<_ProviderScopeValuesContext> {
+  bool _nonLazyValuesCreated = false;
 
-  // The values are created here and not in initState, since a create function
-  // is allowed to depend on inherited widgets (e.g. with `Theme.of(context)`).
+  @override
+  void initState() {
+    super.initState();
+    widget.scope._valuesContext = context;
+  }
+
+  // The non-lazy values are created here and not in initState, since a create
+  // function is allowed to depend on inherited widgets (e.g. with
+  // `Theme.of(context)`).
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_created) return;
-    widget.scope._createNonLazyValues(context);
-    _created = true;
+    if (_nonLazyValuesCreated) return;
+    widget.scope._createNonLazyValues();
+    _nonLazyValuesCreated = true;
+  }
+
+  @override
+  void dispose() {
+    widget.scope._valuesContext = null;
+    super.dispose();
   }
 
   @override

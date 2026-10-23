@@ -1380,39 +1380,41 @@ void main() {
       },
     );
 
-    testWidgets('''Circular dependency spanning two nested scopes''', (
-      tester,
-    ) async {
-      late final Provider<int> providerA;
-      late final Provider<int> providerB;
+    testWidgets(
+      '''No cycle can span two nested scopes, since an outer provider cannot see the inner scope''',
+      (tester) async {
+        late final Provider<int> providerA;
+        late final Provider<int> providerB;
 
-      providerA = Provider<int>((context) => providerB.of(context) + 1);
-      providerB = Provider<int>((context) => providerA.of(context) + 1);
+        providerA = Provider<int>((context) => providerB.of(context) + 1);
+        providerB = Provider<int>((context) => providerA.of(context) + 1);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ProviderScope(
-              providers: [providerA()],
-              child: ProviderScope(
-                providers: [providerB()],
-                child: Builder(
-                  builder: (context) {
-                    providerA.of(context);
-                    return Container();
-                  },
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ProviderScope(
+                providers: [providerA()],
+                child: ProviderScope(
+                  providers: [providerB()],
+                  child: Builder(
+                    builder: (context) {
+                      providerA.of(context);
+                      return Container();
+                    },
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(
-        tester.takeException(),
-        isA<ProviderCircularDependencyError>(),
-      );
-    });
+        // providerA lives in the outer scope, therefore it cannot inject
+        // providerB, which lives in the inner one.
+        final error = tester.takeException();
+        expect(error, isA<ProviderWithoutScopeError>());
+        expect((error as ProviderWithoutScopeError).provider, providerB);
+      },
+    );
 
     testWidgets(
       '''The same provider can be created again after a failed creation''',
@@ -2649,6 +2651,323 @@ void main() {
         );
 
         expect(mockCreated, true);
+      },
+    );
+  });
+
+  group('A value is created in the scope owning it', () {
+    testWidgets(
+      '''A value injects the providers seen by its own scope, not the ones seen by the widget injecting it''',
+      (tester) async {
+        final numberProvider = Provider.withArgument<int, int>((_, n) => n);
+        final doubleProvider = Provider<int>(
+          (context) => numberProvider.of(context) * 2,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ProviderScope(
+              providers: [numberProvider(1), doubleProvider()],
+              child: ProviderScope(
+                // Shadows the numberProvider of the outer scope.
+                providers: [numberProvider(100)],
+                child: Builder(
+                  builder: (context) {
+                    return Text(
+                      '${numberProvider.of(context)} '
+                      '${doubleProvider.of(context)}',
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        // doubleProvider lives in the outer scope, therefore it doubles the
+        // outer number (1), and not the inner one (100), even though it has
+        // been injected from below the inner scope.
+        expect(find.text('100 2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''A value is the same no matter which scope injects it first''',
+      (tester) async {
+        final numberProvider = Provider.withArgument<int, int>((_, n) => n);
+        final doubleProvider = Provider<int>(
+          (context) => numberProvider.of(context) * 2,
+        );
+
+        Widget build({required bool innerFirst}) {
+          final outerText = Builder(
+            builder: (context) => Text('outer ${doubleProvider.of(context)}'),
+          );
+          final innerScope = ProviderScope(
+            providers: [numberProvider(100)],
+            child: Builder(
+              builder: (context) => Text('inner ${doubleProvider.of(context)}'),
+            ),
+          );
+          return MaterialApp(
+            home: ProviderScope(
+              providers: [numberProvider(1), doubleProvider()],
+              child: Column(
+                children: innerFirst
+                    ? [innerScope, outerText]
+                    : [outerText, innerScope],
+              ),
+            ),
+          );
+        }
+
+        await tester.pumpWidget(build(innerFirst: true));
+        expect(find.text('inner 2'), findsOneWidget);
+        expect(find.text('outer 2'), findsOneWidget);
+
+        // Start over with a fresh tree.
+        await tester.pumpWidget(Container());
+        await tester.pumpWidget(build(innerFirst: false));
+        expect(find.text('inner 2'), findsOneWidget);
+        expect(find.text('outer 2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''A value of an outer scope cannot inject a provider of an inner scope''',
+      (tester) async {
+        final innerProvider = Provider<int>((_) => 1, debugName: 'inner');
+        final outerProvider = Provider<String>(
+          (context) => innerProvider.maybeOf(context)?.toString() ?? 'none',
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ProviderScope(
+              providers: [outerProvider()],
+              child: ProviderScope(
+                providers: [innerProvider()],
+                child: Builder(
+                  builder: (context) {
+                    // The inner provider is visible from here...
+                    expect(innerProvider.of(context), 1);
+                    // ...but not from the outer value.
+                    return Text(outerProvider.of(context));
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('none'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''An outer value never holds a value disposed together with an inner scope''',
+      (tester) async {
+        final events = <String>[];
+
+        final numberProvider = Provider.withArgument<int, int>(
+          (_, n) => n,
+          dispose: (n) => events.add('number $n disposed'),
+        );
+        final doubleProvider = Provider<int>(
+          (context) => numberProvider.of(context) * 2,
+        );
+
+        Widget build({required bool showInner}) => MaterialApp(
+          home: ProviderScope(
+            providers: [numberProvider(1), doubleProvider()],
+            child: showInner
+                ? ProviderScope(
+                    providers: [numberProvider(100)],
+                    child: Builder(
+                      builder: (context) {
+                        return Text(
+                          '${numberProvider.of(context)} '
+                          '${doubleProvider.of(context)}',
+                        );
+                      },
+                    ),
+                  )
+                : Builder(
+                    builder: (context) {
+                      return Text('${doubleProvider.of(context)}');
+                    },
+                  ),
+          ),
+        );
+
+        await tester.pumpWidget(build(showInner: true));
+        expect(find.text('100 2'), findsOneWidget);
+
+        // Removing the inner scope disposes its number only. The outer value
+        // depends on the outer number, which is still alive.
+        await tester.pumpWidget(build(showInner: false));
+        expect(events, ['number 100 disposed']);
+        expect(find.text('2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''A value of an outer scope injected from a ProviderScopePortal is created in its own scope''',
+      (tester) async {
+        final numberProvider = Provider.withArgument<int, int>((_, n) => n);
+        final doubleProvider = Provider<int>(
+          (context) => numberProvider.of(context) * 2,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ProviderScope(
+                providers: [numberProvider(1), doubleProvider()],
+                child: Builder(
+                  builder: (context) {
+                    return ElevatedButton(
+                      onPressed: () {
+                        showDialog<void>(
+                          context: context,
+                          builder: (_) => ProviderScopePortal(
+                            mainContext: context,
+                            child: ProviderScope(
+                              providers: [numberProvider(100)],
+                              child: Builder(
+                                builder: (innerContext) => Text(
+                                  'dialog ${doubleProvider.of(innerContext)}',
+                                ),
+                              ),
+                            ),
+                          ),
+                        ).ignore();
+                      },
+                      child: const Text('show dialog'),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('show dialog'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('dialog 2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''A non-lazy value of an outer scope uses its own scope as well''',
+      (tester) async {
+        final numberProvider = Provider.withArgument<int, int>((_, n) => n);
+        int? created;
+        final doubleProvider = Provider<int>((context) {
+          return created = numberProvider.of(context) * 2;
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ProviderScope(
+              providers: [numberProvider(1), doubleProvider(lazy: false)],
+              child: ProviderScope(
+                providers: [numberProvider(100)],
+                child: Builder(
+                  builder: (context) {
+                    return Text('${doubleProvider.of(context)}');
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(created, 2);
+        expect(find.text('2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''A mock provided by a ProviderScopeOverride cannot inject the providers of the scopes below it''',
+      (tester) async {
+        final innerProvider = Provider<int>((_) => 1);
+        final numberProvider = Provider<String>((_) => 'original');
+
+        await tester.pumpWidget(
+          ProviderScopeOverride(
+            overrides: [
+              numberProvider.overrideWith(
+                Provider<String>(
+                  (context) =>
+                      innerProvider.maybeOf(context)?.toString() ?? 'none',
+                ),
+              ),
+            ],
+            child: MaterialApp(
+              // numberProvider is not provided by any scope below, therefore
+              // the mock lives in the ProviderScopeOverride itself.
+              home: ProviderScope(
+                providers: [innerProvider()],
+                child: Builder(
+                  builder: (context) {
+                    return Text(numberProvider.of(context));
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('none'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '''The inherited widgets read in create are resolved where the scope is placed, not where the value is injected''',
+      (tester) async {
+        final navigatorProvider = Provider<NavigatorState>(Navigator.of);
+        final colorProvider = Provider<Color>(
+          (context) => Theme.of(context).primaryColor,
+        );
+
+        // The scope is placed above MaterialApp: its values cannot see the
+        // Theme and the Navigator of the app.
+        await tester.pumpWidget(
+          ProviderScope(
+            providers: [navigatorProvider(), colorProvider()],
+            child: MaterialApp(
+              theme: ThemeData(primaryColor: Colors.red),
+              home: Builder(
+                builder: (context) {
+                  expect(colorProvider.of(context), isNot(Colors.red));
+                  navigatorProvider.of(context);
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        );
+        expect(tester.takeException(), isA<FlutterError>());
+
+        // The scope is placed below MaterialApp: its values see them.
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(primaryColor: Colors.red),
+            home: ProviderScope(
+              providers: [navigatorProvider(), colorProvider()],
+              child: Builder(
+                builder: (context) {
+                  expect(colorProvider.of(context), Colors.red);
+                  expect(navigatorProvider.of(context), isA<NavigatorState>());
+                  return const SizedBox();
+                },
+              ),
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
       },
     );
   });
