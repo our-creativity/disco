@@ -16,4 +16,4 @@ runApp(
 
 | Option         | Default | Description |
 | -------------- | ------- | ----------- |
-| `lazy`         | true    | The values of the providers provided in a `ProviderScope` are created lazily. |
+| `lazy`         | true    | Whether the values of the providers are created lazily. It is only used for the providers whose laziness is specified neither when they are inserted into a `ProviderScope` (e.g. `myProvider(lazy: false)`) nor when they are defined (e.g. `Provider(create, lazy: false)`). See [Lazy creation of the values](https://disco.mariuti.com/core/providers/#lazy-creation-of-the-values). |

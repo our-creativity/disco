@@ -46,7 +46,7 @@ runApp(
   MaterialApp(
     home: Scaffold(
       body: ProviderScope(
-        providers: [numberProvider],
+        providers: [numberProvider()],
         child: Builder(
           builder: (context) {
             return ElevatedButton(

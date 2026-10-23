@@ -21,7 +21,9 @@ Widget wrapWithMockedTodosController({
   return MaterialApp(
     home: ProviderScopeOverride(
       overrides: [
-        todosControllerProvider.overrideWithValue(todosController),
+        todosControllerProvider.overrideWith(
+          Provider((context) => todosController),
+        ),
       ],
       child: child,
     ),

@@ -35,6 +35,10 @@ class MyDatabase {
   While providers can be declared globally, they **do not function globally**. They are just used as **identifiers** when registered in a scope.
 </Aside>
 
+<Aside>
+  As a consequence, the `create` function above is never called directly by you: a provider is called (i.e. `numberProvider()`) only to insert it into a `ProviderScope`, which is what creates and owns the value. See [Scoped DI](https://disco.mariuti.com/core/scoped-di/).
+</Aside>
+
 ### Injection of other providers with context
 
 Providers can leverage the context to inject other providers. The context will be relative to the scope in which they are provided.
@@ -77,13 +81,75 @@ final doubleNumberPlusArgProvider = Provider.withArgument((context, int arg) {
 });
 ```
 
-## Dispose and lazy parameters
+## Lazy creation of the values
+
+By default, the value of a provider is **created lazily**: the `create` function is called the first time the provider is injected, and never before. If a provider is never injected, its value is never created.
+
+### Creating a value as soon as a scope is mounted
+
+Sometimes a value has to exist even if no widget injects it yet, e.g. because it starts a subscription or warms up a cache. In that case, pass `lazy: false`. This can be done in three places:
+
+1. When inserting the provider into a `ProviderScope`. This only affects that scope, so the very same provider can be eager in one scope and lazy in another one:
+
+   ```dart
+   ProviderScope(
+     providers: [
+       engineProvider(lazy: false), // created as soon as the scope is mounted
+       userProvider(42, lazy: false), // works for argument providers too
+       settingsProvider(), // lazy
+     ],
+     child: const MyPage(),
+   )
+   ```
+
+2. When defining the provider. This affects every scope providing it:
+
+   ```dart
+   final engineProvider = Provider((_) => Engine(), lazy: false);
+   final userProvider = Provider.withArgument(
+     (_, int id) => User(id),
+     lazy: false,
+   );
+   ```
+
+3. Globally, with [`DiscoConfig.lazy`](https://disco.mariuti.com/core/configuration/).
+
+The first non-null option wins: the `lazy` given in the `ProviderScope` takes precedence over the `lazy` given to the provider, which takes precedence over `DiscoConfig.lazy` (which defaults to `true`). For example, `engineProvider(lazy: true)` makes a provider defined with `lazy: false` lazy in that scope only. The laziness is resolved when the `ProviderScope` is mounted.
+
+The non-lazy values are created in the order in which they are declared, right after the scope is mounted and before its descendants are built. A non-lazy provider can inject the other providers of its own scope, no matter whether they are lazy or not and no matter the order in which they are declared: a value that is injected and not created yet is simply created on the fly. Every value is created only once.
+
+<Aside>
+  A non-lazy value is created while the widget tree is being built. If your `create` function notifies some listener, postpone the notification (e.g. with `WidgetsBinding.instance.addPostFrameCallback`), otherwise Flutter complains that a widget was marked as needing to be rebuilt during a build.
+</Aside>
+
+## Optional parameters
 
 When defining a provider, we need to pass the positional `create` argument, which is a function used to generate the value contained by the provider.
 
-There are also two optional named parameters that can be specified.
+There are also three optional named parameters that can be specified.
 
 | Parameter | Default | Description |
 | -------------- | ------- | ----------- |
 | `dispose`      | null    | The function to call when the scope containing the provider gets disposed. It is used to dispose correctly the value held by the provider. |
-| `lazy`         | `DiscoConfig.lazy`, which defaults to true | The provider's value is created lazily, meaning it is only created when first injected.|
+| `lazy`         | null    | Whether the value is created lazily. If null, `DiscoConfig.lazy` is used. It can be overridden in each `ProviderScope`, see [Lazy creation of the values](#lazy-creation-of-the-values). |
+| `debugName`    | null    | An optional name, shown in the error messages of this library, which makes a provider easier to recognize. |
+
+## Overriding a provider
+
+A provider can be replaced by another provider of the same type through `overrideWith`, which is meant to be used for testing:
+
+```dart
+final myProviderOverride = myProvider.overrideWith(
+  Provider((context) => MyMock()),
+);
+```
+
+The same works for providers with an argument, as long as the mock takes an argument of the same type:
+
+```dart
+final myArgProviderOverride = myArgProvider.overrideWith(
+  Provider.withArgument((context, int arg) => MyMock(arg)),
+);
+```
+
+Since the override is a provider itself, it also controls how the mocked value is created and disposed. Refer to the [Testing](https://disco.mariuti.com/core/testing/) page to see how overrides are inserted into the widget tree.

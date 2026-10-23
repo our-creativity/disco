@@ -55,7 +55,7 @@ class ProviderScopeOverrideState extends State<ProviderScopeOverride> {
   final _providerScopeStateKey = GlobalKey<ProviderScopeState>();
 
   /// The [ProviderScopeState] of the [ProviderScopeOverride] widget.
-  ProviderScopeState get providerScopeState =>
+  ProviderScopeState get _providerScopeState =>
       _providerScopeStateKey.currentState!;
 
   @override

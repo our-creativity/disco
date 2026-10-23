@@ -136,7 +136,7 @@ class BooksWrapperPage extends StatelessWidget implements AutoRouteWrapper {
   Widget wrappedRoute(BuildContext context) {
     // Provide the books controller to descendants
     return ProviderScope(
-      providers: [booksControllerProvider],
+      providers: [booksControllerProvider()],
       child: this,
     );
   }

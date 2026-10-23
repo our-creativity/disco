@@ -3,11 +3,9 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-part 'models/overrides/override.dart';
-part 'models/overrides/provider_argument_override.dart';
-part 'models/overrides/provider_override.dart';
-part 'models/providers/instantiable_provider.dart';
-part 'models/providers/provider_argument.dart';
+part 'models/override.dart';
+part 'models/value_binding.dart';
+part 'models/providers/arg_provider.dart';
 part 'models/providers/provider.dart';
 part 'utils/disco_config.dart';
 part 'utils/extensions.dart';
