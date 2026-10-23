@@ -48,7 +48,7 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Provide the modelProvider to descendants
     return ProviderScope(
-      providers: [modelProvider],
+      providers: [modelProvider()],
       // This builder gives a descendant context, only descendants can access
       // this scope
       child: Builder(

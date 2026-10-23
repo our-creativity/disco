@@ -10,7 +10,7 @@ class TodosPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Using ProviderScope here to provide the [TodosController] to descendants.
     return ProviderScope(
-      providers: [todosControllerProvider],
+      providers: [todosControllerProvider()],
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Todos'),

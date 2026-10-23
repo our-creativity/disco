@@ -34,7 +34,7 @@ class _TodosBodyState extends State<TodosBody> {
       providers: [
         // make the active filter signal visible only to descendants.
         // scoped here because this is where it starts to be necessary.
-        todosFilterProvider,
+        todosFilterProvider(),
       ],
       child: Column(
         children: [
