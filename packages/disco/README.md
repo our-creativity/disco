@@ -41,10 +41,12 @@ The package supports many features, like providers that accept arguments. But to
 
     ```dart
     ProviderScope(
-      providers: [modelProvider],
+      providers: [modelProvider()],
       child: MyWidget(),
     )
     ```
+
+    **Note:** calling the provider (i.e. `modelProvider()`) does not create anything by itself; it is just how a provider is inserted into a scope, and it is also what allows an argument to be passed to providers created with `Provider.withArgument`.
 
     **Note:** the actual state for the provider is created and stored inside the `ProviderScope` instance where the provider is referenced.
     This way, when the ProviderScope gets disposed, the state gets disposed — making it ideal for managing **local state**.
@@ -67,7 +69,7 @@ The package supports many features, like providers that accept arguments. But to
 
 ## What makes this library unique
 
-**Disco** draws inspiration from both [Provider](https://pub.dev/packages/provider) and [Riverpod](https://pub.dev/packages/riverpod) — the two most widely used DI libraries in Flutter, both built around the concept of providers — while aiming to overcome their respective limitations. These libraries have significantly shaped how developers manage state and dependencies: **Provider** supports a simple, **widget-tree–aligned scoping model**, but does not allow multiple providers of the same type. **Riverpod**, by contrast, supports **multiple providers of the same type**, but relies on a globally structured architecture that breaks away from the widget tree.
+**Disco** draws inspiration from both [Provider](https://pub.dev/packages/provider) and [Riverpod](https://pub.dev/packages/riverpod) — the two most widely used DI libraries in Flutter, both built around the concept of providers — while aiming to overcome their respective limitations. These libraries have significantly shaped how developers manage state and dependencies: **Provider** supports a simple, **widget-tree–aligned scoping model**, but does not allow multiple providers of the same type. **Riverpod**, by contrast, supports **multiple providers of the same type**, but its state is held by a `ProviderScope` that is recommended to be placed at the root of the app: although Riverpod is not global per se, its state is thus effectively global and detached from the widget tree.
 
 **Disco** builds on the strengths of both while taking a different path. It is — **to our knowledge** — the **first and only solution** that supports **multiple providers of the same type** (without wrapper types or string keys) using a model that remains **fully local and naturally integrated into the Flutter widget tree** — while reducing the downsides of both to a minimum.
 
@@ -85,12 +87,12 @@ Below is a comparison of the trade-offs between the primary provider-based depen
 | **Lifecycle management**            | ✅ Widget tree    | ❌ Top-level `ProviderScope` by default, or manual | ✅ Widget tree |
 | **Works with default Flutter widgets**      | ✅ Compatible             | ❌ `ConsumerWidget` required        | ✅  Compatible                                      |
 | **Local state endorsed**            | ✅ Yes             | ❌ No                                   | ✅ Yes                                       |
-| **Circular dependencies possible**    | ✅ Never             | ❌ Yes, if the app is not carefully architected        | ✅ Never   |
+| **Circular dependencies possible**    | ✅ Never             | ❌ Yes, if the app is not carefully architected        | ⚠️ Only within a single `ProviderScope`, reported with the whole dependency chain   |
 | **Reactivity methods included**             | ✅ `context.watch`              | ✅ `ref.watch`, `ref.listen`                                       | ❌ Deliberately unopinionated¹  |
 | **Mutable state support**           | ⚠️ Usually done via `ChangeNotifier`       | ✅ Built-in                                                           | ⚠️ Allows mutable inner state via observables/signals             |
 | **Compile-time safety**             | ❌ Runtime error if provider not found | ✅ No runtime error possible                          | ❌ Runtime error if provider not found² |
 | **Fallback support**                | ❌ Not available; try-catch block necessary                                        | ✅ No need                                        | ✅ `maybeOf(context)` for optional injection                      |
-| **Modal compatibility**             | ⚠️ Needs to specify all required providers one by one                  | ✅ Scoped globally, no special handling needed                                                    | ✅ Needs `ProviderPortal`, which is a portal to the main tree (all providers are available)      |
+| **Modal compatibility**             | ⚠️ Needs to specify all required providers one by one                  | ✅ Usually placed at the root, no special handling needed                                              | ✅ Needs `ProviderPortal`, which is a portal to the main tree (all providers are available)      |
 | **API simplicity**                  | ✅ Simple                             | ⚠️ Requires learning `WidgetRef`, `ConsumerWidget`, ... | ✅ Very simple                   |
 | **Ease of integration into 3rd-party state management solutions** | ❌ Requires wiring | ❌ Requires wiring   | ✅ No integration needed, works out of the box |
 
@@ -133,7 +135,7 @@ Compatible state management solutions are those whose signals/observables can be
 
 #### Incompatible solutions
 
-State management solution entirely leveraging or endorsing global state, such as [`riverpod`](https://pub.dev/packages/riverpod), are not compatible with this library.
+State management solutions that come with their own dependency injection built around a root-level scope, such as [`riverpod`](https://pub.dev/packages/riverpod), are not meant to be combined with this library.
 
 ### Contributions
 

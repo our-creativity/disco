@@ -23,7 +23,7 @@ The package supports many features, like providers that accept arguments. But to
 
     ```dart
     ProviderScope(
-      providers: [modelProvider],
+      providers: [modelProvider()],
       child: MyWidget(),
     )
     ```
@@ -49,7 +49,7 @@ The package supports many features, like providers that accept arguments. But to
 
 ## What makes this library unique
 
-**Disco** draws inspiration from both [Provider](https://pub.dev/packages/provider) and [Riverpod](https://pub.dev/packages/riverpod) — the two most widely used DI libraries in Flutter, both built around the concept of providers — while aiming to overcome their respective limitations. These libraries have significantly shaped how developers manage state and dependencies: **Provider** supports a simple, **widget-tree–aligned scoping model**, but does not allow multiple providers of the same type. **Riverpod**, by contrast, supports **multiple providers of the same type**, but relies on a globally structured architecture that breaks away from the widget tree.
+**Disco** draws inspiration from both [Provider](https://pub.dev/packages/provider) and [Riverpod](https://pub.dev/packages/riverpod) — the two most widely used DI libraries in Flutter, both built around the concept of providers — while aiming to overcome their respective limitations. These libraries have significantly shaped how developers manage state and dependencies: **Provider** supports a simple, **widget-tree–aligned scoping model**, but does not allow multiple providers of the same type. **Riverpod**, by contrast, supports **multiple providers of the same type**, but its state is held by a `ProviderScope` that is recommended to be placed at the root of the app: although Riverpod is not global per se, its state is thus effectively global and detached from the widget tree.
 
 **Disco** builds on the strengths of both while taking a different path. It is — **to our knowledge** — the **first and only solution** that supports **multiple providers of the same type** (without wrapper types or string keys) using a model that remains **fully local and naturally integrated into the Flutter widget tree** — while reducing the downsides of both to a minimum.
 
@@ -64,8 +64,10 @@ The pros of Disco are:
 - The providers are scoped.
   - The widget tree is fully leveraged.
     - This keeps the architecture simple.
-- No global state is possible.
-  - Circular dependencies are impossible.
+- Global state is possible, but much harder to misuse than with typical global solutions.
+  - A value is only global if its `ProviderScope` is placed at the root of the widget tree. Even then, it can only be injected through `BuildContext` by the widgets below that scope, and it is disposed together with the scope.
+- Circular dependencies are confined to a single `ProviderScope`.
+  - A provider can only inject the providers of its own scope and of the scopes above, and a cycle is reported with its whole dependency chain as soon as a value taking part in it is created.
 - Multiple providers of the same type are possible.
   - There is no need to create wrapper types or rely on IDs such as strings.
 - The API is very simple and feels natural to Flutter.

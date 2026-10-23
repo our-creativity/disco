@@ -21,7 +21,7 @@ runApp(
   MaterialApp(
     home: Scaffold(
       body: ProviderScope(
-        providers: [counterProvider, doubleCounterProvider],
+        providers: [counterProvider(), doubleCounterProvider()],
         child: SignalBuilder(
             builder: (context, child) {
               final counter = counterProvider.of(context);

@@ -45,19 +45,20 @@ Libraries built on top of Provider, like the [`BlocProvider` component from the 
 
 ## Riverpod
 
-Libraries such as [Riverpod](https://pub.dev/packages/riverpod) address Provider's limitations by allowing multiple providers of the same type. This is achieved by using globally defined provider *instances* as unique identifiers.
+Libraries such as [Riverpod](https://pub.dev/packages/riverpod) address Provider's limitations by allowing multiple providers of the same type. This is achieved by using top-level provider *instances* as unique identifiers.
 
 ```dart
 final modelProvider = Provider((ref) => Model());
 final secondModelProvider = Provider((ref) => Model());
 ```
 
-In Riverpod, the state for all providers is managed from a single, top-level `ProviderScope`; without it, accessing any provider is impossible. To access a provider, you must use specialized widgets like `ConsumerWidget` instead of Flutter's native ones.
+In Riverpod, the state of the providers is held by a `ProviderScope`; without it, accessing any provider is impossible. Riverpod is not global per se, but it recommends placing a single `ProviderScope` at the root of the app (nested scopes exist, but they are mainly meant for overrides). In practice, the state of the providers is therefore effectively global. To access a provider, you must use specialized widgets like `ConsumerWidget` instead of Flutter's native ones.
 
 ```dart
 void main() {
   runApp(
-    // The state for all providers is handled here, not in the providers themselves.
+    // The recommended setup: a single ProviderScope at the root of the app
+    // holds the state of the providers, not the providers themselves.
     ProviderScope(
       child: MyApp(),
     ),
@@ -67,16 +68,16 @@ void main() {
 
 #### Parameterized providers and lifecycle in Riverpod
 
-Riverpod offers modifiers like `family` and `autoDispose` to add flexibility, but they operate within the global scope. These modifiers are outlined below separately, but can also be used together.
+Riverpod offers modifiers like `family` and `autoDispose` to add flexibility, but they operate within the (usually root-level) `ProviderScope`. These modifiers are outlined below separately, but can also be used together.
 
-  * **`family`**: This modifier enables parameterized providers, creating the illusion of scoped instances. However, all instances are stored globally in the `ProviderScope`, and their lifecycle is not tightly bound to the widget tree, which breaks the Flutter principle of "let the tree define scope."
+  * **`family`**: This modifier enables parameterized providers, creating the illusion of scoped instances. However, all instances are stored in the root `ProviderScope`, and their lifecycle is not tightly bound to the widget tree, which breaks the Flutter principle of "let the tree define scope."
     ```dart
     final userProvider = Provider.family<User, int>((ref, userId) {
       return fetchUser(userId);
     });
     ```
 
-  * **`autoDispose`**: This modifier cleans up a provider's state when it is no longer being used. Yet, this is not true local scoping, as it operates within the global `ProviderScope`. The provider's lifecycle can be extended unexpectedly if any widget is still listening, and fast navigation can cause unintended disposal and recreation.
+  * **`autoDispose`**: This modifier cleans up a provider's state when it is no longer being used. Yet, this is not true local scoping, as it operates within the root `ProviderScope`. The provider's lifecycle can be extended unexpectedly if any widget is still listening, and fast navigation can cause unintended disposal and recreation.
 
     ```dart
     final userProvider = Provider.autoDispose<User>((ref) {
@@ -86,10 +87,10 @@ Riverpod offers modifiers like `family` and `autoDispose` to add flexibility, bu
 
 #### Challenges
 
-Riverpod and similar other global state-management solutions solve issues like shadowing and improve compile-time safety. They also help separate business logic from the UI and can function as service locators. However, this global approach introduces new challenges:
+Riverpod and similar solutions built around a root-level scope solve issues like shadowing and improve compile-time safety. They also help separate business logic from the UI and can function as service locators. However, this effectively global approach introduces new challenges:
 
   * **Unrestricted access**: Unrestricted access, where components can be accessed from anywhere, can lead to highly coupled components that are difficult to maintain.
-  * **Circular dependencies**: A global architecture can make it easier to introduce circular dependencies between services.
+  * **Circular dependencies**: An effectively global architecture can make it easier to introduce circular dependencies between services.
   * **Complex local-state logic**: These solutions can introduce logic that mimics local state but doesn't behave identically, which complicates development, especially for beginners. Some packages require using special classes to manage the global state, and passing these objects around can feel inconsistent with the framework's design.
   * **Code generation**: Some solutions rely on code generation, which can create a high learning curve for new developers and is not strictly necessary.
 
@@ -114,7 +115,7 @@ You insert a `ProviderScope` **where** you want the providers to be active — n
 
 ```dart
 ProviderScope(
-  providers: [modelProvider, secondModelProvider],
+  providers: [modelProvider(), secondModelProvider()],
   child: MyWidget(),
 )
 ```
@@ -145,11 +146,11 @@ class InjectingWidget extends StatelessWidget {
 Disco brings together the best of both worlds:
 
 * **Widget tree–aligned scoping (from Provider)**: Disco adopts Provider’s approach to scoping through the widget tree, which aligns naturally with Flutter’s declarative UI model.
-* **Support for multiple providers of the same type (from Riverpod)**: Like Riverpod, Disco allows multiple providers of the same type — without relying on wrapper types or global identifiers.
+* **Support for multiple providers of the same type (from Riverpod)**: Like Riverpod, Disco allows multiple providers of the same type — without relying on wrapper types or string keys.
 
 At the same time, Disco inherits one suboptimal trade-off:
 
-* **Lack of compile-time safety (from Provider)**: Because Disco uses locally scoped providers rather than global ones, it cannot offer the same level of compile-time safety as Riverpod. This is a known trade-off for gaining flexibility and locality.
+* **Lack of compile-time safety (from Provider)**: Because Disco uses locally scoped providers rather than a single root-level scope, it cannot offer the same level of compile-time safety as Riverpod. This is a known trade-off for gaining flexibility and locality.
 
 Additionally, Disco emphasizes:
 

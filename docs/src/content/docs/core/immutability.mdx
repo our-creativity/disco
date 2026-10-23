@@ -82,7 +82,35 @@ The typical usage for a provider is to provide a value for a specific page or wi
 When the page or widget is disposed, the provider gets also disposed, and the value is no longer available.
 When the Page is opened again, a new instance of the provider is created, and the value is provided again.
 
-### Force the recreation of a provider
+## The set of providers is fixed
+
+The same reasoning applies to the `providers` list itself: it is read exactly once, when the `ProviderScope` is mounted. Inserting a provider into it, or removing one from it, on a later rebuild has no effect at all.
+
+Since this would silently surface much later as a `ProviderWithoutScopeError`, it is reported as an error in debug mode:
+
+```dart
+// Reports an error in debug mode as soon as `showDetails` changes, and
+// continues with the original providers.
+ProviderScope(
+  providers: [
+    modelProvider(),
+    if (showDetails) detailsProvider(),
+  ],
+  child: // ...
+)
+```
+
+<Aside type="tip">
+  Provide a fixed set of providers, and put the conditional ones in a nested `ProviderScope` that is itself inserted conditionally. That way, their values are created when the scope appears and disposed when it goes away.
+</Aside>
+
+Note that only the *identity* of the providers is checked. Giving an argument provider a different argument on a rebuild remains allowed — and keeps being ignored, as shown in the example above.
+
+<Aside>
+  The error is *reported* and not thrown: the `ProviderScope` keeps working with the providers it was mounted with. The check also only runs in debug mode; in release builds, a changed list is silently ignored, exactly as before.
+</Aside>
+
+## Force the recreation of a provider
 
 There is one way to force the recreation of a provider, _which we discourage_, but can be used if you know what you are doing.
 
